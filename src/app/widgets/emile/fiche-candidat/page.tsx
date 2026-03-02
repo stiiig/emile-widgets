@@ -632,7 +632,7 @@ function TelSpecialField({ value, onChange, disabled, col }: {
           className="emile-input"
           type="tel"
           value={telNum}
-          onChange={(e) => { setTelNum(e.target.value); update(telCode, e.target.value); }}
+          onChange={(e) => { const v = e.target.value.replace(/[^0-9 \-]/g, ""); setTelNum(v); update(telCode, v); }}
           disabled={disabled}
           style={{ flex: 1 }}
         />

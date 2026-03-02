@@ -19,10 +19,11 @@ export function validatePhone(
   required = false,
   min = 6,
 ): string | null {
-  const digits = tel.replace(/\D/g, "").length;
   if (!tel.trim()) {
     return required ? "Le téléphone est requis." : null;
   }
+  if (/[^0-9 \-]/.test(tel)) return "Le téléphone ne peut contenir que des chiffres, espaces et tirets.";
+  const digits = tel.replace(/\D/g, "").length;
   if (digits < min) return `Le téléphone doit contenir au moins ${min} chiffres.`;
   return null;
 }

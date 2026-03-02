@@ -535,7 +535,7 @@ export default function OrienteurPage() {
                     type="tel"
                     inputMode="numeric"
                     value={form.Tel}
-                    onChange={(e) => set("Tel", e.target.value.replace(/\D/g, ""))}
+                    onChange={(e) => set("Tel", e.target.value.replace(/[^0-9 \-]/g, ""))}
                     autoComplete="tel"
                     style={{ flex: 1 }}
                     placeholder="Votre numéro de téléphone"

@@ -483,7 +483,7 @@ function TelField({
           inputMode="numeric"
           className="ins-input"
           value={value}
-          onChange={(e) => onValueChange(e.target.value.replace(/\D/g, ""))}
+          onChange={(e) => onValueChange(e.target.value.replace(/[^0-9 \-]/g, ""))}
           style={{ flex: 1 }}
           placeholder={placeholder}
         />
@@ -1173,27 +1173,11 @@ function EligibilityScreen({
             }}
           >
             <i className="fa-solid fa-users" />
-            Voir mes candidats
+            Voir mes candidat·e·s
           </a>
         </div>
       )}
 
-      {/* ── Lien retour accueil ── */}
-      <div style={{ ...W, textAlign: "center" }}>
-        <button
-          type="button"
-          onClick={onNew}
-          style={{
-            background: "none", border: "none", cursor: "pointer",
-            color: "#000091", fontSize: "0.83rem", fontFamily: "inherit",
-            display: "inline-flex", alignItems: "center", gap: "0.35rem",
-            padding: "0.3rem 0", textDecoration: "underline", textUnderlineOffset: "3px",
-          }}
-        >
-          <i className="fa-solid fa-arrow-left" style={{ fontSize: "0.7rem" }} />
-          Revenir à l&apos;accueil
-        </button>
-      </div>
 
     </div>
   );
