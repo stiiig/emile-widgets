@@ -78,7 +78,7 @@ export default function RecupererLienValidationPage() {
             Recevoir mon lien de validation
           </h1>
           <p className="rlv-subtitle">
-            Saisissez l'adresse email utilisée lors de votre inscription.
+            Saisissez l'adresse email associée à votre compte orienteur·rice.
             Vous recevrez un lien pour valider votre compte.
           </p>
 
@@ -151,8 +151,8 @@ export default function RecupererLienValidationPage() {
             <div className="rlv-alert rlv-alert--warning">
               <i className="fa-solid fa-triangle-exclamation" />
               <span>
-                Aucun dossier de candidature trouvé avec cette adresse email.
-                Vérifiez l'adresse ou contactez votre référent·e.
+                Aucun compte orienteur·rice trouvé avec cette adresse email.
+                Vérifiez l'adresse ou contactez votre administrateur·ice.
               </span>
             </div>
           )}
