@@ -185,12 +185,26 @@
   gap: 0.5rem;
   margin-top: 0.1rem;
 }
-.lc-item__email {
+.lc-item__contact {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  min-width: 0;
+}
+.lc-item__contact-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
   font-size: 0.78rem;
-  color: #666;
+  color: #555;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+.lc-item__contact-item i {
+  font-size: 0.7rem;
+  color: #888;
+  flex-shrink: 0;
 }
 
 /* ── Chips ───────────────────────────────────────────────────── */

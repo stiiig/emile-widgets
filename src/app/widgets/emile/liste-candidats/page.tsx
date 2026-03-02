@@ -139,7 +139,7 @@ export default function ListeCandidatsPage() {
                       </div>
                     </div>
                     {/* Ligne 2 — Chips info */}
-                    {(c.age != null || c.genre || c.nationalite || c.tel) && (
+                    {(c.age != null || c.genre || c.nationalite) && (
                       <div className="lc-item__meta">
                         {c.age != null && (
                           <span className="lc-chip"><i className="fa-solid fa-cake-candles" />{c.age} ans</span>
@@ -150,14 +150,20 @@ export default function ListeCandidatsPage() {
                         {c.nationalite && (
                           <span className="lc-chip"><i className="fa-solid fa-passport" />{c.nationalite}</span>
                         )}
-                        {c.tel && (
-                          <span className="lc-chip"><i className="fa-solid fa-phone" />{c.tel}</span>
-                        )}
                       </div>
                     )}
-                    {/* Ligne 3 — Email + bouton */}
+                    {/* Ligne 3 — Contact + bouton */}
                     <div className="lc-item__footer">
-                      <span className="lc-item__email">{c.email}</span>
+                      <div className="lc-item__contact">
+                        {c.tel && (
+                          <span className="lc-item__contact-item">
+                            <i className="fa-solid fa-phone" />{c.tel}
+                          </span>
+                        )}
+                        <span className="lc-item__contact-item">
+                          <i className="fa-solid fa-envelope" />{c.email}
+                        </span>
+                      </div>
                       <a
                         href={`${ficheBase}?token=${occToken}&id=${c.id}`}
                         className="lc-btn lc-btn--sm"
@@ -178,7 +184,7 @@ export default function ListeCandidatsPage() {
                   className="lc-btn lc-btn--outline"
                 >
                   <i className="fa-solid fa-user-plus" />
-                  Inscrire un·e candidat·e
+                  Inscrire un·e autre candidat·e
                 </a>
               </div>
             )}
