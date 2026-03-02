@@ -10,8 +10,8 @@ function proxyUrl(): string {
 
 /**
  * Construit l'URL du proxy n8n.
- * GET /webhook/grist?table=TABLE[&filter=JSON]   — requêtes classiques (métadonnées, ref tables)
- * GET /webhook/grist?table=TABLE&token=ID.HMAC   — magic link (vérification HMAC côté n8n)
+ * GET /webhook/grist-proxy?table=TABLE[&filter=JSON]   — requêtes classiques (métadonnées, ref tables)
+ * GET /webhook/grist-proxy?table=TABLE&token=ID.HMAC   — magic link (vérification HMAC côté n8n)
  */
 function tableUrl(tableId: string, params?: Record<string, string>): string {
   const allParams = new URLSearchParams({ table: tableId, ...params });
