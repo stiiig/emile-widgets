@@ -1,6 +1,6 @@
 # Mode REST standalone — Architecture et configuration
 
-Les widgets EMILE fonctionnent normalement dans un **iframe Grist** (mode plugin). Le mode REST permet d'y accéder depuis une **URL publique**, sans iframe — pour partage externe (email, SMS) ou formulaires autonomes.
+Les widgets EMILE fonctionnent normalement dans un **iframe Grist** (mode plugin). Le mode REST permet d'y accéder depuis une **URL publique**, sans iframe — pour accès orienteur standalone ou formulaires autonomes.
 
 ---
 
@@ -8,11 +8,15 @@ Les widgets EMILE fonctionnent normalement dans un **iframe Grist** (mode plugin
 
 | Widget | URL directe | Usage |
 |--------|-------------|-------|
-| `fiche-candidat` | `/widgets/emile/fiche-candidat?token=ID.HMAC` | Consultation/édition d'un dossier candidat via magic link signé |
-| `ajout-etablissement` | `/widgets/emile/ajout-etablissement` | Formulaire d'ajout d'un établissement |
-| `creation-compte-orienteur` | `/widgets/emile/creation-compte-orienteur` | Formulaire de création d'un compte orienteur — AddRecord + génération automatique du magic link OCC |
-| `inscription-candidat` | `/widgets/emile/inscription-candidat` | Formulaire d'inscription candidat — AddRecord + génération automatique du magic link fiche-candidat |
-| `validation-compte` | `/widgets/emile/validation-compte?token=ID.HMAC` | Activation d'un compte orienteur via magic link OCC |
+| `fiche-candidat` | `/widgets/emile/fiche-candidat/` | Auto-sélection du candidat le plus récent (session localStorage) |
+| `fiche-candidat` | `/widgets/emile/fiche-candidat/?token=OCC&id=ROW_ID` | Accès orienteur à un candidat précis via token OCC |
+| `liste-candidats` | `/widgets/emile/liste-candidats/?token=OCC` | Liste des candidats de l'orienteur via token OCC |
+| `ajout-etablissement` | `/widgets/emile/ajout-etablissement/` | Formulaire d'ajout d'un établissement |
+| `creation-compte-orienteur` | `/widgets/emile/creation-compte-orienteur/` | Formulaire de création d'un compte orienteur — AddRecord + génération automatique du token OCC |
+| `inscription-candidat` | `/widgets/emile/inscription-candidat/` | Formulaire d'inscription candidat — AddRecord + génération token OCC pour l'orienteur |
+| `validation-compte` | `/widgets/emile/validation-compte/?token=X.HMAC` | Activation d'un compte orienteur via token signé |
+| `recuperer-lien-connexion` | `/widgets/emile/recuperer-lien-connexion/` | Envoi du lien de connexion orienteur par email |
+| `recuperer-lien-validation` | `/widgets/emile/recuperer-lien-validation/` | Envoi du lien de validation de compte par email |
 
 ---
 
@@ -21,9 +25,9 @@ Les widgets EMILE fonctionnent normalement dans un **iframe Grist** (mode plugin
 ```
 Navigateur (GitHub Pages, CORS bloqué vers Grist)
     │
-    │  GET ?table=CANDIDATS&token=ID.HMAC
+    │  GET ?table=CANDIDATS  (ou POST text/plain pour écriture)
     ▼
-https://n8n.incubateur.../webhook/grist   ← proxy
+https://n8n.incubateur.../webhook/grist-proxy   ← proxy
     │  vérifie HMAC-SHA256 du token
     │  Bearer <clé API>  (jamais exposée au navigateur)
     │  GET https://grist.incubateur.dnum.din.developpement-durable.gouv.fr
@@ -53,22 +57,24 @@ Contrôlé par la variable d'environnement `NEXT_PUBLIC_GRIST_PROXY_URL` (baked 
 
 | Variable | Valeur | Obligatoire |
 |----------|--------|------------|
-| `NEXT_PUBLIC_GRIST_PROXY_URL` | `https://n8n.incubateur.dnum.din.developpement-durable.gouv.fr/webhook/grist` | ✅ — active le mode REST |
-| `NEXT_PUBLIC_GRIST_GENERATE_URL` | `https://n8n.incubateur.dnum.din.developpement-durable.gouv.fr/webhook/grist-generate` | ✅ — génération du magic link fiche-candidat dans `inscription-candidat` |
-| `NEXT_PUBLIC_OCC_GENERATE_URL` | `https://n8n.incubateur.dnum.din.developpement-durable.gouv.fr/webhook/occ-generate` | ✅ — génération du magic link orienteur dans `creation-compte-orienteur` et `inscription-candidat` |
-| `NEXT_PUBLIC_OCC_VALIDATE_URL` | `https://n8n.incubateur.dnum.din.developpement-durable.gouv.fr/webhook/occ-validate` | ✅ — vérification et activation du compte orienteur dans `validation-compte` |
-| `NEXT_PUBLIC_GRIST_GENERATE_AUTH` | *(non utilisée)* | ❌ — legacy, supprimable |
-
-> ℹ️ `NEXT_PUBLIC_GRIST_GENERATE_AUTH` a été ajoutée quand le webhook GENERATE était en `POST + Basic Auth`. Depuis la migration vers `GET` sans authentification, cette variable n'est plus lue par le code. Le secret GitHub correspondant peut rester vide ou être supprimé.
+| `NEXT_PUBLIC_GRIST_PROXY_URL` | `https://n8n.incubateur.dnum.din.developpement-durable.gouv.fr/webhook/grist-proxy` | ✅ — active le mode REST (proxy principal Grist) |
+| `NEXT_PUBLIC_OCC_GENERATE_URL` | `https://n8n.incubateur.dnum.din.developpement-durable.gouv.fr/webhook/occ-generate` | ✅ — génération du token OCC orienteur |
+| `NEXT_PUBLIC_OCC_VALIDATE_URL` | `https://n8n.incubateur.dnum.din.developpement-durable.gouv.fr/webhook/occ-validate` | ✅ — vérification et activation du compte orienteur |
+| `NEXT_PUBLIC_OCC_LIST_URL` | `https://n8n.incubateur.dnum.din.developpement-durable.gouv.fr/webhook/occ-list` | ✅ — liste des candidats d'un orienteur |
+| `NEXT_PUBLIC_OCC_GET_CANDIDAT_URL` | `https://n8n.incubateur.dnum.din.developpement-durable.gouv.fr/webhook/occ-get-candidat` | ✅ — fiche d'un candidat pour un orienteur |
+| `NEXT_PUBLIC_OCC_REQUEST_LINK_URL` | `https://n8n.incubateur.dnum.din.developpement-durable.gouv.fr/webhook/occ-request-link` | ✅ — renvoi lien de connexion orienteur |
+| `NEXT_PUBLIC_OCC_REQUEST_VALIDATION_URL` | `https://n8n.incubateur.dnum.din.developpement-durable.gouv.fr/webhook/occ-request-validation-link` | ✅ — renvoi lien de validation de compte |
 
 Déclarées dans `.github/workflows/deploy.yml` :
 ```yaml
 env:
-  NEXT_PUBLIC_GRIST_PROXY_URL:    ${{ secrets.NEXT_PUBLIC_GRIST_PROXY_URL }}
-  NEXT_PUBLIC_GRIST_GENERATE_URL: ${{ secrets.NEXT_PUBLIC_GRIST_GENERATE_URL }}
-  NEXT_PUBLIC_OCC_GENERATE_URL:   ${{ secrets.NEXT_PUBLIC_OCC_GENERATE_URL }}
-  NEXT_PUBLIC_OCC_VALIDATE_URL:   ${{ secrets.NEXT_PUBLIC_OCC_VALIDATE_URL }}
-  # NEXT_PUBLIC_GRIST_GENERATE_AUTH — non utilisée (legacy POST+BasicAuth, supprimable)
+  NEXT_PUBLIC_GRIST_PROXY_URL:              ${{ secrets.NEXT_PUBLIC_GRIST_PROXY_URL }}
+  NEXT_PUBLIC_OCC_GENERATE_URL:             ${{ secrets.NEXT_PUBLIC_OCC_GENERATE_URL }}
+  NEXT_PUBLIC_OCC_VALIDATE_URL:             ${{ secrets.NEXT_PUBLIC_OCC_VALIDATE_URL }}
+  NEXT_PUBLIC_OCC_LIST_URL:                 ${{ secrets.NEXT_PUBLIC_OCC_LIST_URL }}
+  NEXT_PUBLIC_OCC_GET_CANDIDAT_URL:         ${{ secrets.NEXT_PUBLIC_OCC_GET_CANDIDAT_URL }}
+  NEXT_PUBLIC_OCC_REQUEST_LINK_URL:         ${{ secrets.NEXT_PUBLIC_OCC_REQUEST_LINK_URL }}
+  NEXT_PUBLIC_OCC_REQUEST_VALIDATION_URL:   ${{ secrets.NEXT_PUBLIC_OCC_REQUEST_VALIDATION_URL }}
 ```
 
 Quand cette variable est définie, `src/lib/grist/init.ts` bascule automatiquement en mode `rest` et utilise `createRestDocApi()` au lieu du plugin Grist.
