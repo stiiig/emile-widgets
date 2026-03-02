@@ -164,14 +164,14 @@ export default function ListeCandidatsPage() {
                     {/* Ligne 3 — Contact + bouton */}
                     <div className="lc-item__footer">
                       <div className="lc-item__contact">
+                        <span className="lc-item__contact-item">
+                          <i className="fa-solid fa-envelope" />{c.email}
+                        </span>
                         {c.tel && (
                           <span className="lc-item__contact-item">
                             <i className="fa-solid fa-phone" />{c.tel}
                           </span>
                         )}
-                        <span className="lc-item__contact-item">
-                          <i className="fa-solid fa-envelope" />{c.email}
-                        </span>
                       </div>
                       <a
                         href={`${ficheBase}?token=${occToken}&id=${c.id}`}
