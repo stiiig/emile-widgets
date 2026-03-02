@@ -16,6 +16,8 @@ interface Candidat {
   genre?: string | null;
   age?: number | null;
   reference?: string | null;
+  nationalite?: string | null;
+  statut?: string | null;
 }
 
 export default function ListeCandidatsPage() {
@@ -138,8 +140,14 @@ export default function ListeCandidatsPage() {
                         {c.genre && (
                           <span className="lc-chip"><i className="fa-solid fa-venus-mars" />{c.genre}</span>
                         )}
+                        {c.nationalite && (
+                          <span className="lc-chip"><i className="fa-solid fa-flag" />{c.nationalite}</span>
+                        )}
                         {c.tel && (
                           <span className="lc-chip"><i className="fa-solid fa-phone" />{c.tel}</span>
+                        )}
+                        {c.statut && (
+                          <span className="lc-chip lc-chip--statut">{c.statut}</span>
                         )}
                       </div>
                       {c.email && (

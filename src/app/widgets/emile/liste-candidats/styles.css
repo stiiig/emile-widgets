@@ -208,6 +208,11 @@
   color: #000091;
   font-weight: 700;
 }
+.lc-chip--statut {
+  background: #fff3cd;
+  color: #664d03;
+  font-weight: 700;
+}
 
 /* ── Boutons ─────────────────────────────────────────────────── */
 .lc-btn {
