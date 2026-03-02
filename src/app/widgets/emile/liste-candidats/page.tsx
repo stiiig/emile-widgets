@@ -8,7 +8,7 @@
  *
  * Flux :
  *  1. Le token est extrait de l'URL et transmis au workflow n8n `occ-list`.
- *  2. n8n vérifie le HMAC, lit la table CANDIDATS filtrée sur Accompagnant,
+ *  2. n8n vérifie le HMAC, lit la table CANDIDATS filtrée sur Responsable_candidat,
  *     et renvoie { status, orienteurNom, candidats[] }.
  *  3. Chaque card candidat affiche : nom/prénom, référence, statut coloré,
  *     chips (âge + tooltip date de naissance, genre, nationalité),
