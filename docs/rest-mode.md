@@ -89,13 +89,11 @@ Implémente `GristDocAPI` via le proxy n8n :
 
 | Méthode | Requête vers n8n | Traduite par n8n en | Workflow |
 |---------|-----------------|---------------------|----------|
-| `fetchTable(tableId)` | `GET ?table=TABLE` | `GET /tables/TABLE/records` | GET |
-| `fetchSingleRowRest(tableId, rowId, token)` | `GET ?table=TABLE&token=ID.HMAC` | Vérif HMAC → `GET /tables/TABLE/records?filter={"id":[rowId]}` | GET |
-| `fetchSingleRowRest(tableId, rowId)` | `GET ?table=TABLE&filter={"id":[rowId]}` | `GET /tables/TABLE/records?filter=...` (dev fallback, sans vérif) | GET |
-| `getAttachmentDownloadUrl(id)` | `GET ?attachId=ID` | `GET /attachments/ID/download` | GET |
-| `uploadAttachments(files)` | `POST multipart/form-data` (champ `upload`) | `POST /attachments` | POST |
-| `applyUserActions([["AddRecord", ...]])` | `POST text/plain { _action:"add", fields }` | `POST /tables/TABLE/records` | POST |
-| `applyUserActions([["UpdateRecord", ...]])` | `POST text/plain { _action:"update", id, fields }` | `PATCH /tables/TABLE/records/{id}` | POST |
+| `fetchTable(tableId)` | `GET ?table=TABLE` | `GET /tables/TABLE/records` | `grist-proxy-get` |
+| `getAttachmentDownloadUrl(id)` | `GET ?attachId=ID` | `GET /attachments/ID/download` | `grist-proxy-get` |
+| `uploadAttachments(files)` | `POST multipart/form-data` (champ `upload`) | `POST /attachments` | `grist-proxy-post` |
+| `applyUserActions([["AddRecord", ...]])` | `POST text/plain { _action:"add", fields }` | `POST /tables/TABLE/records` | `grist-proxy-post` |
+| `applyUserActions([["UpdateRecord", ...]])` | `POST text/plain { _action:"update", id, fields }` | `PATCH /tables/TABLE/records/{id}` | `grist-proxy-post` |
 
 > `text/plain;charset=UTF-8` est une *simple CORS request* (spec WHATWG Fetch) — pas de preflight OPTIONS. Le champ `_action` permet à n8n de distinguer AddRecord d'UpdateRecord dans le même workflow POST.
 
@@ -116,34 +114,43 @@ Ces deux tables sont accessibles via le proxy n8n comme n'importe quelle table n
 
 ## Configuration n8n
 
-### Cinq workflows
+### Workflows actifs
 
-| Workflow | Méthode | Path | Usage |
-|----------|---------|------|-------|
-| GET | GET | `/webhook/grist` | Lecture records, métadonnées, téléchargement PJ, vérification magic link fiche-candidat |
-| POST | POST | `/webhook/grist` | Écritures Grist (AddRecord/UpdateRecord), upload pièces jointes |
-| GENERATE | GET | `/webhook/grist-generate` | Génération de magic links signés pour fiche-candidat |
-| OCC-GENERATE | GET | `/webhook/occ-generate` | Génération de magic links signés pour validation de compte orienteur |
-| OCC-VALIDATE | GET | `/webhook/occ-validate` | Vérification du token OCC + activation du compte orienteur (Compte_valide → "Oui") |
+| Workflow n8n | Méthode | Path | Usage |
+|-------------|---------|------|-------|
+| `grist-proxy-get` | GET | `/webhook/grist-proxy` | Lecture records, métadonnées, téléchargement PJ |
+| `grist-proxy-post` | POST | `/webhook/grist-proxy` | Écritures Grist (AddRecord/UpdateRecord), upload pièces jointes |
+| `occ-generate` | GET | `/webhook/occ-generate` | Génération du token OCC orienteur |
+| `occ-validate` | GET | `/webhook/occ-validate` | Vérification token OCC + activation compte orienteur |
+| `occ-list` | GET | `/webhook/occ-list` | Liste des candidats d'un orienteur (token OCC) |
+| `occ-get-candidat` | GET | `/webhook/occ-get-candidat` | Fiche d'un candidat pour un orienteur (token OCC) |
+| `occ-request-link` | POST | `/webhook/occ-request-link` | Renvoi du lien de connexion orienteur par email |
+| `occ-request-validation-link` | POST | `/webhook/occ-request-validation-link` | Renvoi du lien de validation de compte par email |
+
+**Archivé** : `grist-generate` (magic link candidat — remplacé par token OCC orienteur).
+
+> ℹ️ `grist-proxy-get` et `grist-proxy-post` partagent le même path webhook `/webhook/grist-proxy`. n8n route automatiquement selon la méthode HTTP. Le code n'utilise qu'une seule variable d'environnement `NEXT_PUBLIC_GRIST_PROXY_URL` pour les deux.
 
 ---
 
-## Workflow GET — magic link + records + téléchargement
+## Workflow `grist-proxy-get` — records + métadonnées + téléchargement (GET)
 
 **URL (production) :**
 ```
-https://n8n.incubateur.dnum.din.developpement-durable.gouv.fr/webhook/grist
+https://n8n.incubateur.dnum.din.developpement-durable.gouv.fr/webhook/grist-proxy
 ```
+
+> ℹ️ Ancien nom : `grist - GET fiche-candidat`, ancien path : `/webhook/grist`. Renommé et déplacé vers `/webhook/grist-proxy` lors de la refonte du proxy.
 
 ### Nœud 1 — Webhook (GET)
 
 | Paramètre | Valeur |
 |-----------|--------|
 | HTTP Method | **GET** |
-| Path | `grist` |
+| Path | `grist-proxy` |
 | Response Mode | Using Respond to Webhook Node |
 
-### Nœud 2 — IF token présent (magic link)
+### Nœud 2 — IF token présent (usage interne legacy)
 
 | Paramètre | Valeur |
 |-----------|--------|
@@ -273,10 +280,10 @@ Cas couverts :
 
 ---
 
-### Schéma — Workflow GET
+### Schéma — Workflow `grist-proxy-get`
 
 ```
-Webhook GET (path: grist)
+Webhook GET (path: grist-proxy)
     │
     ▼
 IF query.token is not empty
@@ -296,13 +303,15 @@ IF query.token is not empty
 
 ---
 
-## Workflow POST — écritures Grist (AddRecord/UpdateRecord) + upload de pièces jointes
+## Workflow `grist-proxy-post` — écritures Grist (AddRecord/UpdateRecord) + upload de pièces jointes (POST)
 
 **URL (production) :**
 ```
-https://n8n.incubateur.dnum.din.developpement-durable.gouv.fr/webhook/grist
+https://n8n.incubateur.dnum.din.developpement-durable.gouv.fr/webhook/grist-proxy
 ```
-*(même path que le workflow GET — n8n route par méthode HTTP)*
+*(même path que `grist-proxy-get` — n8n route par méthode HTTP)*
+
+> ℹ️ Ancien nom : `grist - POST fiche-candidat`, ancien path : `/webhook/grist`. Renommé et déplacé vers `/webhook/grist-proxy` lors de la refonte du proxy.
 
 > ℹ️ Le workflow POST reçoit deux types de requêtes, toutes deux sans preflight CORS OPTIONS :
 > - `text/plain;charset=UTF-8` (écritures Grist — AddRecord/UpdateRecord)
@@ -315,7 +324,7 @@ https://n8n.incubateur.dnum.din.developpement-durable.gouv.fr/webhook/grist
 | Paramètre | Valeur |
 |-----------|--------|
 | HTTP Method | **POST** |
-| Path | `grist` |
+| Path | `grist-proxy` |
 | Response Mode | Using Respond to Webhook Node |
 
 ### Nœud 2 — IF Content-Type text/plain (écritures)
@@ -465,10 +474,10 @@ return [{ json: { retValues: [newId] } }];
 
 ---
 
-### Schéma complet — Workflow POST
+### Schéma complet — Workflow `grist-proxy-post`
 
 ```
-Webhook POST (path: grist)
+Webhook POST (path: grist-proxy)
     │
     ▼
 IF content-type contains "text/plain"         [Noeud 2]
@@ -491,9 +500,13 @@ IF content-type contains "text/plain"         [Noeud 2]
 
 ---
 
-## Workflow GENERATE — génération de magic links
+## ~~Workflow GENERATE — génération de magic links~~ (ARCHIVÉ)
 
-**URL (production) :**
+> ⚠️ **Ce workflow est archivé.** Le mode "magic link candidat" a été remplacé par le token OCC orienteur. Le workflow `grist-generate` peut être désactivé dans n8n — il n'est plus appelé par aucun widget.
+>
+> La documentation ci-dessous est conservée à titre de référence historique.
+
+**URL (ancienne) :**
 ```
 https://n8n.incubateur.dnum.din.developpement-durable.gouv.fr/webhook/grist-generate
 ```
@@ -925,35 +938,9 @@ Le code `uploadAttachmentsRest` dans `rest.ts` gère tous ces formats — **ne p
 
 ---
 
-## Générer un magic link fiche-candidat
+## ~~Générer un magic link fiche-candidat~~ (ARCHIVÉ)
 
-### Automatiquement (depuis le formulaire d'inscription)
-
-Le formulaire `inscription-candidat` génère le magic link automatiquement après la soumission réussie (`NEXT_PUBLIC_GRIST_GENERATE_URL`). Le lien s'affiche avec un bouton "Copier" pour être partagé par email ou SMS.
-
-En parallèle, le workflow GENERATE sauvegarde le lien dans le champ `Lien_acces` de la table `CANDIDATS` via un HTTP PATCH Grist (après le Respond to Webhook, en background).
-
-Il suffit de déployer le formulaire avec `NEXT_PUBLIC_GRIST_GENERATE_URL` configurée — aucune action manuelle nécessaire.
-
-### Manuellement (curl ou automation Grist)
-
-```bash
-# Générer un token signé pour le rowId 42
-curl "https://n8n.incubateur.dnum.din.developpement-durable.gouv.fr/webhook/grist-generate?rowId=42"
-```
-
-Réponse :
-```json
-{
-  "rowId": 42,
-  "token": "42.a3f9b2c4...",
-  "url": "https://stiiig.github.io/grist-widgets/widgets/emile/fiche-candidat?token=42.a3f9b2c4..."
-}
-```
-
-Partager le champ `url` par email ou SMS au candidat.
-
-> ⚠️ Le fallback `?rowId=42` (sans token) reste fonctionnel pour le développement local — ne pas l'utiliser en production car il ne nécessite aucune authentification.
+> ⚠️ Ce mode d'accès est archivé. L'accès à `fiche-candidat` se fait désormais exclusivement via **token OCC orienteur** (`?token=OCC&id=ROW_ID` ou session localStorage). Le workflow `grist-generate` peut être désactivé.
 
 ---
 

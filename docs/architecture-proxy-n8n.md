@@ -66,11 +66,13 @@ Le proxy joue quatre rôles :
 
 ## Architecture actuelle — workflows n8n actifs
 
-### Workflow `grist-proxy` — proxy principal Grist (GET + POST)
+### Workflows `grist-proxy-get` + `grist-proxy-post` — proxy principal Grist
 
-Workflow central. Gère **toutes** les interactions avec l'API Grist : lectures, écritures, pièces jointes, FAQ. Correspond à `NEXT_PUBLIC_GRIST_PROXY_URL`.
+Deux workflows n8n distincts sur le **même path** `/webhook/grist-proxy`, routés par méthode HTTP. Ensemble, ils gèrent toutes les interactions avec l'API Grist : lectures, écritures, pièces jointes, FAQ. Correspondent tous les deux à `NEXT_PUBLIC_GRIST_PROXY_URL`.
 
-#### Branche GET — lecture + téléchargement
+> ℹ️ n8n permet d'avoir deux workflows sur le même path webhook avec des méthodes différentes (GET et POST). Le browser appelle toujours la même URL — n8n route vers le bon workflow automatiquement.
+
+#### `grist-proxy-get` — lecture + téléchargement (GET)
 
 ```
 Webhook GET (?table=X&filter=JSON  ou  ?table=X  ou  ?attachId=Y)
@@ -83,7 +85,7 @@ IF query.attachId est présent
 
 Couvre toutes les requêtes de lecture : tables de données (`CANDIDATS`, `ACCOMPAGNANTS`…), tables de référence (`DPTS_REGIONS`, `ETABLISSEMENTS`…), métadonnées Grist (`_grist_Tables`, `_grist_Tables_column`, `_grist_Attachments`).
 
-#### Branche POST — écritures Grist + upload de pièces jointes
+#### `grist-proxy-post` — écritures Grist + upload de pièces jointes (POST)
 
 ```
 Webhook POST
@@ -359,9 +361,10 @@ token = rowId + "." + HMAC-SHA256(rowId.toString(), SECRET)
 | Workflow | Raison |
 |----------|--------|
 | `grist-generate` | Générait un magic link par candidat — remplacé par le token OCC orienteur |
-| `grist - GET fiche-candidat` | Validait le magic link candidat — inutile depuis la suppression du mode magic link |
 
 Le mode "magic link candidat" (`fiche-candidat?token=rowId.HMAC` côté candidat) a été retiré. L'accès à la fiche se fait désormais exclusivement via token OCC orienteur.
+
+> **Historique** : l'ancien workflow `grist - GET fiche-candidat` (GET sur path `/webhook/grist`) gérait les lectures Grist. Il a été renommé et déplacé vers `grist-proxy-get` (GET sur path `/webhook/grist-proxy`) lors de la refonte du proxy. Il est toujours actif sous ce nouveau nom.
 
 ---
 
