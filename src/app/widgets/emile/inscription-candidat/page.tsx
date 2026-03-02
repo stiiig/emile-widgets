@@ -1091,7 +1091,7 @@ function EligibilityScreen({
             </div>
             {orienteurInfo && (
               <div style={{ marginTop: "0.3rem", display: "flex", alignItems: "center", gap: "0.4rem", flexWrap: "wrap" }}>
-                <i className="fa-solid fa-user-tie" style={{ color: "#000091", fontSize: "0.75rem" }} />
+                <i className="fa-solid fa-user" style={{ color: "#000091", fontSize: "0.75rem" }} />
                 <strong style={{ color: "#000091" }}>{orienteurInfo.nom}</strong>
                 <span style={{ color: "#6b7280" }}>·</span>
                 <span style={{ color: "#1e3a8a" }}>{orienteurInfo.email}</span>
@@ -2173,7 +2173,7 @@ export default function InscriptionPage() {
                     background: "#f5f5fe", border: "1px solid #c8c8e8",
                     borderRadius: "0.5rem", marginBottom: "0.25rem",
                   }}>
-                    <i className="fa-solid fa-user-tie" style={{ color: "#000091", fontSize: "0.9rem", flexShrink: 0 }} />
+                    <i className="fa-solid fa-user" style={{ color: "#000091", fontSize: "0.9rem", flexShrink: 0 }} />
                     <div style={{ fontSize: "0.82rem", lineHeight: 1.4 }}>
                       <span style={{ fontWeight: 700, color: "#000091" }}>{orienteurFound.nom}</span>
                       <span style={{ color: "#6b7280", margin: "0 0.3rem" }}>·</span>
