@@ -812,8 +812,7 @@ export default function Page() {
     const effectiveToken = token ?? localStorage.getItem(STORAGE_KEY);
 
     if (effectiveToken && id) {
-      // Mode orienteur : ?token=<OCC>&id=<candidatRowId>
-      // Le token peut venir de l'URL ou du localStorage (navigation directe avec ?id= seulement)
+      // Mode orienteur : token (URL ou localStorage) + ?id=<candidatRowId>
       const candidatId = parseInt(id, 10);
       if (!isNaN(candidatId)) {
         setIsOrienteurMode(true);
@@ -824,22 +823,25 @@ export default function Page() {
           .replace(/\/fiche-candidat\/?$/, "/liste-candidats");
         setOrienteurListUrl(`${listBase}?token=${effectiveToken}`);
       }
-    } else if (token) {
+    } else if (token && !id) {
       // Mode candidat magic link : ?token=rowId.HMAC (sans ?id=)
       const rowId = parseInt(token.split(".")[0], 10);
       if (!isNaN(rowId)) {
         setTokenFromUrl(token);
         setRowIdFromUrl(rowId);
       }
+    } else if (effectiveToken && !id) {
+      // Token en localStorage mais pas d'id candidat → rediriger vers la liste
+      // (on ne peut pas afficher une fiche sans savoir quel candidat afficher)
+      const listBase = window.location.href
+        .split("?")[0]
+        .replace(/\/fiche-candidat\/?$/, "/liste-candidats");
+      window.location.replace(`${listBase}?token=${effectiveToken}`);
     } else {
       // Fallback dev : ?rowId=123 sans signature
       const v = p.get("rowId");
-      if (v) {
-        setRowIdFromUrl(parseInt(v, 10));
-      } else if (!effectiveToken) {
-        // Ni token en URL ni en localStorage → pas connecté (mode standalone)
-        setAuthStatus("no_token");
-      }
+      if (v) setRowIdFromUrl(parseInt(v, 10));
+      // sinon : authStatus reste "no_token" (valeur initiale)
     }
   }, []);
 
