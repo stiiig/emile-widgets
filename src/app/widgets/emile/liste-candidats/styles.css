@@ -198,6 +198,9 @@
 .lc-item:hover {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
+/* Bordure colorée pour les nouvelles inscriptions selon éligibilité */
+.lc-item--eligible     { border-left-color: #18753c; }
+.lc-item--non-eligible { border-left-color: #ce0500; }
 
 /* Ligne 1 */
 .lc-item__header {
@@ -206,6 +209,13 @@
   justify-content: space-between;
   gap: 0.5rem;
   flex-wrap: wrap;
+}
+.lc-item__chips-right {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 .lc-item__name {
   font-weight: 700;
@@ -217,6 +227,11 @@
 /* Ligne 2 — référence seule */
 .lc-item__ref {
   display: flex;
+  overflow: visible;
+}
+/* Le chip ref peut déborder vers le haut (tooltip) */
+.lc-item {
+  overflow: visible;
 }
 
 /* Ligne 2 */
@@ -302,6 +317,16 @@
   color: #000091;
   font-weight: 700;
 }
+.lc-chip--eligible {
+  background: #b8fec9;
+  color: #18753c;
+  font-weight: 700;
+}
+.lc-chip--non-eligible {
+  background: #ffe9e9;
+  color: #ce0500;
+  font-weight: 700;
+}
 .lc-chip--statut-traiter {
   background: #fff3cd;
   color: #7a5200;
@@ -376,6 +401,48 @@
   background: #e3e3fd !important;
   border-color: #000091 !important;
   color: #000091 !important;
+}
+
+/* ── En-têtes de section ─────────────────────────────────────── */
+.lc-section-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding-bottom: 0.25rem;
+  border-bottom: 2px solid #e0e0e0;
+  flex-wrap: wrap;
+}
+.lc-section-header--new {
+  margin-top: 0.5rem;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
+}
+.lc-section-header__top {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.lc-section-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #555;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.lc-section-subtitle {
+  font-size: 0.75rem;
+  color: #888;
+  margin: 0;
+  font-style: italic;
+}
+.lc-badge--sm {
+  font-size: 0.7rem;
+  padding: 0.1rem 0.45rem;
 }
 
 /* ── Actions pied de page ────────────────────────────────────── */

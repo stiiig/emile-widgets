@@ -39,10 +39,14 @@ interface Candidat {
   /** Timestamp Unix en secondes (format natif Grist pour les colonnes Date) */
   dateNaissance?: number | string | null;
   reference?: string | null;
+  /** Timestamp Unix en secondes (colonne CreateAt de Grist) */
+  createdAt?: number | string | null;
   /** Libellé de la nationalité (colonne formule $Nationalite_Nom_du_pays) */
   nationalite?: string | null;
   /** Valeur du Choice Statut dans CANDIDATS */
   statut?: string | null;
+  /** "✅ OK" | "❌ KO" — colonne formula Eligibilite_overall */
+  eligibilite?: string | null;
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -138,6 +142,93 @@ export default function ListeCandidatsPage() {
       .catch(() => setStatus("error")); // erreur réseau : on garde le token, c'est peut-être temporaire
   }, []);
 
+  // ── Sections ──────────────────────────────────────────────────────────────
+  const avecStatut   = candidats.filter((c) => !!c.statut);
+  const sansStatut   = candidats.filter((c) => !c.statut);
+  const showSections = avecStatut.length > 0 && sansStatut.length > 0;
+
+  /**
+   * Rendu d'une card candidat.
+   * - Sans statut → bordure colorée par éligibilité, pas de chip statut.
+   * - Avec statut → bordure bleue standard, chip statut affiché.
+   */
+  const renderCard = (c: Candidat) => {
+    const eligCls = !c.statut
+      ? c.eligibilite === "✅ OK" ? " lc-item--eligible"
+      : c.eligibilite === "❌ KO" ? " lc-item--non-eligible" : ""
+      : "";
+    return (
+      <li key={c.id} className={`lc-item${eligCls}`}>
+        {/* Ligne 1 — Nom + chips droite */}
+        <div className="lc-item__header">
+          <span className="lc-item__name">
+            {[c.prenom, c.nom].filter(Boolean).join(" ") || "—"}
+          </span>
+          <div className="lc-item__chips-right">
+            {c.eligibilite === "✅ OK" && (
+              <span className="lc-chip lc-chip--eligible">Éligible</span>
+            )}
+            {c.eligibilite === "❌ KO" && (
+              <span className="lc-chip lc-chip--non-eligible">Non éligible</span>
+            )}
+            {c.statut && (
+              <span className={`lc-chip ${statutChipClass(c.statut)}`}>{c.statut}</span>
+            )}
+          </div>
+        </div>
+        {/* Ligne 2 — Référence */}
+        {c.reference && (
+          <div className="lc-item__ref">
+            <span
+              className="lc-chip lc-chip--ref"
+              {...(c.createdAt != null
+                ? { "data-tooltip": `Candidature créée le ${formatDate(c.createdAt)}` }
+                : {})}
+            >
+              {c.reference}
+            </span>
+          </div>
+        )}
+        {/* Ligne 3 — Chips info */}
+        {(c.age != null || c.genre || c.nationalite) && (
+          <div className="lc-item__meta">
+            {c.age != null && (
+              <span className="lc-chip" data-tooltip={formatDate(c.dateNaissance)}>
+                <i className="fa-solid fa-cake-candles" />{c.age} ans
+              </span>
+            )}
+            {c.genre && (
+              <span className="lc-chip"><i className="fa-solid fa-venus-mars" />{c.genre}</span>
+            )}
+            {c.nationalite && (
+              <span className="lc-chip"><i className="fa-solid fa-passport" />{c.nationalite}</span>
+            )}
+          </div>
+        )}
+        {/* Ligne 4 — Contact + bouton */}
+        <div className="lc-item__footer">
+          <div className="lc-item__contact">
+            <span className="lc-item__contact-item">
+              <i className="fa-solid fa-envelope" />{c.email}
+            </span>
+            {c.tel && (
+              <span className="lc-item__contact-item">
+                <i className="fa-solid fa-phone" />{c.tel}
+              </span>
+            )}
+          </div>
+          <a
+            href={`${ficheBase}?token=${occToken}&id=${c.id}`}
+            className="lc-btn lc-btn--sm"
+          >
+            <i className="fa-solid fa-folder-open" />
+            Voir la fiche
+          </a>
+        </div>
+      </li>
+    );
+  };
+
   return (
     <div className="lc-shell">
       <header className="lc-header">
@@ -204,83 +295,55 @@ export default function ListeCandidatsPage() {
               <div className="lc-card lc-card--center">
                 <i className="fa-solid fa-inbox lc-icon lc-icon--muted" />
                 <p className="lc-message">Aucun candidat·e inscrit·e pour le moment.</p>
-                <a
-                  href="/widgets/emile/inscription-candidat/"
-                  className="lc-btn"
-                >
+                <a href="/widgets/emile/inscription-candidat/" className="lc-btn">
                   <i className="fa-solid fa-user-plus" />
                   Inscrire un·e candidat·e
                 </a>
               </div>
             ) : (
-              <ul className="lc-list">
-                {candidats.map((c) => (
-                  <li key={c.id} className="lc-item">
-                    {/* Ligne 1 — Nom + statut */}
-                    <div className="lc-item__header">
-                      <span className="lc-item__name">
-                        {[c.prenom, c.nom].filter(Boolean).join(" ") || "—"}
-                      </span>
-                      {c.statut && (
-                        <span className={`lc-chip ${statutChipClass(c.statut)}`}>{c.statut}</span>
-                      )}
-                    </div>
-                    {/* Ligne 2 — Référence */}
-                    {c.reference && (
-                      <div className="lc-item__ref">
-                        <span className="lc-chip lc-chip--ref">{c.reference}</span>
+              <>
+                {/* ── Section 1 — En accompagnement (candidats avec statut) ── */}
+                {avecStatut.length > 0 && (
+                  <>
+                    {showSections && (
+                      <div className="lc-section-header">
+                        <h2 className="lc-section-title">
+                          <i className="fa-solid fa-user-check" />
+                          En accompagnement
+                        </h2>
+                        <span className="lc-badge lc-badge--sm">{avecStatut.length}</span>
                       </div>
                     )}
-                    {/* Ligne 3 — Chips info */}
-                    {(c.age != null || c.genre || c.nationalite) && (
-                      <div className="lc-item__meta">
-                        {c.age != null && (
-                          <span
-                            className="lc-chip"
-                            data-tooltip={formatDate(c.dateNaissance)}
-                          >
-                            <i className="fa-solid fa-cake-candles" />{c.age} ans
-                          </span>
-                        )}
-                        {c.genre && (
-                          <span className="lc-chip"><i className="fa-solid fa-venus-mars" />{c.genre}</span>
-                        )}
-                        {c.nationalite && (
-                          <span className="lc-chip"><i className="fa-solid fa-passport" />{c.nationalite}</span>
-                        )}
+                    <ul className="lc-list">{avecStatut.map(renderCard)}</ul>
+                  </>
+                )}
+
+                {/* ── Section 2 — Nouvelles inscriptions (candidats sans statut) ── */}
+                {sansStatut.length > 0 && (
+                  <>
+                    {showSections && (
+                      <div className="lc-section-header lc-section-header--new">
+                        <div className="lc-section-header__top">
+                          <h2 className="lc-section-title">
+                            <i className="fa-solid fa-user-clock" />
+                            Nouvelles inscriptions
+                          </h2>
+                          <span className="lc-badge lc-badge--sm">{sansStatut.length}</span>
+                        </div>
+                        <p className="lc-section-subtitle">
+                          En attente de validation dans le programme
+                        </p>
                       </div>
                     )}
-                    {/* Ligne 3 — Contact + bouton */}
-                    <div className="lc-item__footer">
-                      <div className="lc-item__contact">
-                        <span className="lc-item__contact-item">
-                          <i className="fa-solid fa-envelope" />{c.email}
-                        </span>
-                        {c.tel && (
-                          <span className="lc-item__contact-item">
-                            <i className="fa-solid fa-phone" />{c.tel}
-                          </span>
-                        )}
-                      </div>
-                      <a
-                        href={`${ficheBase}?token=${occToken}&id=${c.id}`}
-                        className="lc-btn lc-btn--sm"
-                      >
-                        <i className="fa-solid fa-folder-open" />
-                        Voir la fiche
-                      </a>
-                    </div>
-                  </li>
-                ))}
-              </ul>
+                    <ul className="lc-list">{sansStatut.map(renderCard)}</ul>
+                  </>
+                )}
+              </>
             )}
 
             {candidats.length > 0 && (
               <div className="lc-footer-actions">
-                <a
-                  href="/widgets/emile/inscription-candidat/"
-                  className="lc-btn lc-btn--outline"
-                >
+                <a href="/widgets/emile/inscription-candidat/" className="lc-btn lc-btn--outline">
                   <i className="fa-solid fa-user-plus" />
                   Inscrire un·e autre candidat·e
                 </a>
