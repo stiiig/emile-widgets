@@ -234,16 +234,16 @@
 .lc-btn:visited,
 .lc-btn:active,
 .lc-btn:focus {
-  background: #000091;
-  border-color: #000091;
-  color: #fff;
+  background: #000091 !important;
+  border-color: #000091 !important;
+  color: #fff !important;
 }
 .lc-btn:hover,
 .lc-btn:visited:hover,
 .lc-btn:focus:hover {
-  background: #1212ff;
-  border-color: #1212ff;
-  color: #fff;
+  background: #1212ff !important;
+  border-color: #1212ff !important;
+  color: #fff !important;
 }
 
 .lc-btn--sm {
@@ -256,15 +256,15 @@
 .lc-btn--outline:visited,
 .lc-btn--outline:active,
 .lc-btn--outline:focus {
-  background: #fff;
-  border-color: #000091;
-  color: #000091;
+  background: #fff !important;
+  border-color: #000091 !important;
+  color: #000091 !important;
 }
 .lc-btn--outline:hover,
 .lc-btn--outline:visited:hover {
-  background: #e3e3fd;
-  border-color: #000091;
-  color: #000091;
+  background: #e3e3fd !important;
+  border-color: #000091 !important;
+  color: #000091 !important;
 }
 
 /* ── Actions pied de page ────────────────────────────────────── */
