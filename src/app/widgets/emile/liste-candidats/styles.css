@@ -162,13 +162,9 @@
   text-transform: uppercase;
   letter-spacing: 0.03em;
 }
-/* Nom + chip référence côte à côte, à gauche */
-.lc-item__name-group {
+/* Ligne 2 — référence seule */
+.lc-item__ref {
   display: flex;
-  align-items: center;
-  gap: 0.45rem;
-  flex-wrap: wrap;
-  min-width: 0;
 }
 
 /* Ligne 2 */
