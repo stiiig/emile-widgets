@@ -1034,7 +1034,6 @@ function EligibilityScreen({
   niveauEligibilite,
   paysOptions,
   id2,
-  magicLink,
   onNew,
   orienteurNom,
   orienteurEmail: orienteurEmailProp,
@@ -1047,7 +1046,6 @@ function EligibilityScreen({
   niveauEligibilite: Map<number, string>;
   paysOptions: PaysOption[];
   id2?: string | null;
-  magicLink?: string | null;
   onNew: () => void;
   orienteurNom?: string | null;
   orienteurEmail?: string | null;
@@ -1157,65 +1155,6 @@ function EligibilityScreen({
           <i className="fa-solid fa-envelope" style={{ color: "#ea580c", fontSize: "1rem", flexShrink: 0, marginTop: "0.05rem" }} />
           <div style={{ fontSize: "0.82rem", color: "#7c2d12", lineHeight: 1.5 }}>
             Pour avoir plus d&apos;explications sur cette situation, vous pouvez nous envoyer un message en répondant à l&apos;email que vous venez de recevoir.
-          </div>
-        </div>
-      )}
-
-      {/* ── Magic link (usage interne — dev/test) ── */}
-      {magicLink && (
-        <div style={{
-          ...W,
-          background: "#fafafa", border: "1px dashed #c8c8e8",
-          borderRadius: "0.5rem", padding: "0.7rem 1rem",
-        }}>
-          <div style={{
-            fontSize: "0.65rem", fontWeight: 700, color: "#888",
-            textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: "0.45rem",
-            display: "flex", alignItems: "center", gap: "0.35rem",
-          }}>
-            <i className="fa-solid fa-link" style={{ fontSize: "0.7rem" }} />
-            Lien magic (test)
-          </div>
-          <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
-            <input
-              readOnly
-              value={magicLink}
-              onClick={(e) => (e.target as HTMLInputElement).select()}
-              style={{
-                flex: 1, fontSize: "0.72rem", fontFamily: "monospace",
-                border: "1px solid #d0d0d0", borderRadius: 4,
-                padding: "0.3rem 0.5rem", background: "#fff",
-                color: "#333", overflow: "hidden", textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-                cursor: "text",
-                outline: "none",
-              }}
-            />
-            <button
-              type="button"
-              onClick={() => {
-                navigator.clipboard.writeText(magicLink).then(() => {
-                  setCopied(true);
-                  setTimeout(() => setCopied(false), 2000);
-                });
-              }}
-              style={{
-                flexShrink: 0, height: "1.9rem", padding: "0 0.75rem",
-                border: "1px solid",
-                borderColor: copied ? "#16a34a" : "#000091",
-                borderRadius: 4,
-                background: copied ? "#f0fdf4" : "#000091",
-                color: copied ? "#15803d" : "#fff",
-                cursor: "pointer", fontSize: "0.75rem", fontFamily: "inherit", fontWeight: 600,
-                display: "flex", alignItems: "center", gap: "0.3rem",
-                transition: "all 0.15s",
-              }}
-            >
-              {copied
-                ? <><i className="fa-solid fa-check" /> Copié !</>
-                : <><i className="fa-solid fa-copy" /> Copier</>
-              }
-            </button>
           </div>
         </div>
       )}
@@ -1515,7 +1454,6 @@ export default function InscriptionPage() {
   const [dptsIsDepart, setDptsIsDepart]           = useState<Map<number, boolean>>(new Map());
   const [niveauEligibilite, setNiveauEligibilite] = useState<Map<number, string>>(new Map());
   const [submittedId2, setSubmittedId2]                   = useState<string | null>(null);
-  const [submittedMagicLink, setSubmittedMagicLink]       = useState<string | null>(null);
   const [submittedOrienteurListUrl, setSubmittedOrienteurListUrl] = useState<string | null>(null);
 
   // Étape 1 — Orienteur
@@ -1810,27 +1748,6 @@ export default function InscriptionPage() {
           if (idx >= 0) setSubmittedId2(String(table["ID2"]?.[idx] ?? "").trim() || null);
         } catch { /* non bloquant */ }
 
-        // Génération du magic link via le webhook n8n GENERATE (usage interne / test)
-        // GET simple (?rowId=X) = pas de preflight CORS (pas de header custom)
-        try {
-          const generateUrl = process.env.NEXT_PUBLIC_GRIST_GENERATE_URL;
-          if (generateUrl) {
-            const url = `${generateUrl.replace(/\/$/, "")}?rowId=${newRowId}`;
-            const genRes = await fetch(url); // GET sans header → "simple CORS request"
-            if (genRes.ok) {
-              const genData = await genRes.json();
-              if (genData?.url) {
-                const generatedUrl = genData.url as string;
-                setSubmittedMagicLink(generatedUrl);
-                // Écriture du magic link dans Lien_acces (non bloquant)
-                try {
-                  await docApi.applyUserActions([["UpdateRecord", TABLE_ID, newRowId, { Lien_acces: generatedUrl }]]);
-                } catch { /* non bloquant */ }
-              }
-            }
-          }
-        } catch { /* non bloquant — le formulaire est déjà soumis */ }
-
         // Lien "Voir mes candidats" pour l'orienteur (via token OCC)
         try {
           const occUrl = process.env.NEXT_PUBLIC_OCC_GENERATE_URL;
@@ -1882,11 +1799,10 @@ export default function InscriptionPage() {
             niveauEligibilite={niveauEligibilite}
             paysOptions={paysOptions}
             id2={submittedId2}
-            magicLink={submittedMagicLink}
             orienteurNom={orienteurFound?.nom ?? null}
             orienteurEmail={orienteurFound?.email ?? null}
             orienteurListUrl={submittedOrienteurListUrl}
-            onNew={() => { setForm(INITIAL); setDone(false); setShowSummary(false); setStep(1); setValidError(""); setSubmitError(""); setSubmittedId2(null); setSubmittedMagicLink(null); setSubmittedOrienteurListUrl(null); setOrienteurEmail(""); setOrienteurFound(null); setOrienteurError(""); setOrienteurResending(false); setOrienteurResent(false); }}
+            onNew={() => { setForm(INITIAL); setDone(false); setShowSummary(false); setStep(1); setValidError(""); setSubmitError(""); setSubmittedId2(null); setSubmittedOrienteurListUrl(null); setOrienteurEmail(""); setOrienteurFound(null); setOrienteurError(""); setOrienteurResending(false); setOrienteurResent(false); }}
           />
         </div>
       </div>

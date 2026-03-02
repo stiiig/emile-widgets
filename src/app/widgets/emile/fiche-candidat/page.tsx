@@ -6,7 +6,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import logoEmile from "../assets/logo-emile-white.png";
 import { useGristInit } from "@/lib/grist/hooks";
-import { fetchSingleRowRest } from "@/lib/grist/rest";
 import {
   loadColumnsMetaFor,
   buildColRowIdMap,
@@ -792,10 +791,7 @@ function DateNaissanceSpecialField({ value, onChange, disabled, col, genreValue 
 export default function Page() {
   const { mode, docApi } = useGristInit({ requiredAccess: "full" });
 
-  // ── Magic link : ?token=rowId.HMAC (prod) ou ?rowId=123 (dev fallback) ──
-  // ── Mode orienteur  : ?token=<OCC>&id=<candidatRowId> ──────────────────
-  const [rowIdFromUrl,        setRowIdFromUrl]        = useState<number | null>(null);
-  const [tokenFromUrl,        setTokenFromUrl]        = useState<string | null>(null);
+  // ── Mode orienteur : ?token=<OCC>&id=<candidatRowId> ──────────────────
   const [isOrienteurMode,     setIsOrienteurMode]     = useState(false);
   const [candidatRowIdFromUrl,setCandidatRowIdFromUrl]= useState<number | null>(null);
   const [occTokenForOrienteur,setOccTokenForOrienteur]= useState<string | null>(null);
@@ -825,13 +821,6 @@ export default function Page() {
           .replace(/\/fiche-candidat\/?$/, "/liste-candidats");
         setOrienteurListUrl(`${listBase}?token=${effectiveToken}`);
       }
-    } else if (token && !id) {
-      // Mode candidat magic link : ?token=rowId.HMAC (sans ?id=)
-      const rowId = parseInt(token.split(".")[0], 10);
-      if (!isNaN(rowId)) {
-        setTokenFromUrl(token);
-        setRowIdFromUrl(rowId);
-      }
     } else if (effectiveToken && !id) {
       // Token en localStorage mais pas d'id → mode orienteur, auto-sélection du candidat le plus récent
       setIsOrienteurMode(true);
@@ -842,12 +831,8 @@ export default function Page() {
       setOrienteurListUrl(`${listBase}?token=${effectiveToken}`);
       autoSelectCandidatRef.current = true;
       setLoadingRest(true); // spinner pendant le chargement de la liste
-    } else {
-      // Fallback dev : ?rowId=123 sans signature
-      const v = p.get("rowId");
-      if (v) setRowIdFromUrl(parseInt(v, 10));
-      // sinon : authStatus reste "no_token" (valeur initiale)
     }
+    // sinon : authStatus reste "no_token" (valeur initiale)
   }, []);
 
   const [cols, setCols] = useState<ColMeta[]>([]);
@@ -999,25 +984,6 @@ export default function Page() {
       .finally(() => setLoadingRest(false));
   }, [isOrienteurMode, occTokenForOrienteur, candidatRowIdFromUrl]);
 
-  // ── Mode REST (standalone magic link) : fetch par token ou rowId ─
-  useEffect(() => {
-    if (!docApi || mode !== "rest" || !rowIdFromUrl || isOrienteurMode) return;
-    setLoadingRest(true);
-    (async () => {
-      try {
-        // tokenFromUrl : "rowId.HMAC" → vérification HMAC côté n8n
-        // null         : dev fallback ?rowId= → filtre direct (pas de vérif HMAC)
-        const row = await fetchSingleRowRest(TABLE_ID, rowIdFromUrl, tokenFromUrl);
-        if (row) setSelected(row);
-        else setStatus("Dossier introuvable.");
-      } catch (e: any) {
-        setStatus("Erreur: " + (e?.message ?? String(e)));
-      } finally {
-        setLoadingRest(false);
-      }
-    })();
-  }, [docApi, mode, rowIdFromUrl, tokenFromUrl]);
-
   useEffect(() => {
     if (!selected) { setDraft({}); return; }
     const d: Record<string, any> = {};
@@ -1026,7 +992,7 @@ export default function Page() {
   }, [selected, cols]);
 
   useEffect(() => {
-    // En mode REST (magic link), pas besoin de la liste complète des candidats
+    // En mode REST (orienteur standalone), pas besoin de la liste complète des candidats
     if (!docApi || mode === "rest") return;
     (async () => {
       try {
