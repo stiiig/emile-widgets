@@ -35,11 +35,10 @@ interface Candidat {
   email: string;
   tel?: string | null;
   genre?: string | null;
-  age?: number | null;
-  /** Timestamp Unix en secondes (format natif Grist pour les colonnes Date) */
+  /** Timestamp Unix en secondes ($Date_de_naissance — seule source pour l'âge) */
   dateNaissance?: number | string | null;
   reference?: string | null;
-  /** Timestamp Unix en secondes (colonne CreateAt de Grist) */
+  /** Timestamp Unix en secondes (colonne CreatedAt de Grist) */
   createdAt?: number | string | null;
   /** Libellé de la nationalité (colonne formule $Nationalite_Nom_du_pays) */
   nationalite?: string | null;
@@ -51,6 +50,7 @@ interface Candidat {
    * Champs source pour le popover "Non éligible".
    * Les KO sont dérivés de ces valeurs brutes côté frontend,
    * sans passer par les colonnes calculées Eligibilite_*.
+   * La majorité est dérivée de `dateNaissance` via computeAge().
    */
   aie?:                 string | null;                     // "Oui" | "Non"
   territoireDepart?:    boolean | string | number | null;  // $Departement_domicile_inscription_Territoire_depart
@@ -58,7 +58,6 @@ interface Candidat {
   regulariteSituation?: string | null;                     // "Oui" | "Non"
   precariteLogement?:   string | null;                     // valeur du Choice
   volontariteMobilite?: string | null;                     // "Oui" | "Non"
-  // Note : majorité dérivée du champ `age` déjà présent
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
