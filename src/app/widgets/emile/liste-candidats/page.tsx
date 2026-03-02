@@ -220,7 +220,7 @@ function RefChip({ reference, createdAt }: {
   createdAt: string | number | null | undefined;
 }) {
   const [open, setOpen] = useState(false);
-  const line = createdAt ? `Dossier créé le ${formatDate(createdAt)}` : null;
+  const line = createdAt ? `Dossier créé le ${formatDateLong(createdAt)}` : null;
   return (
     <span
       className="lc-popover-anchor"
