@@ -35,7 +35,7 @@ export default function RecupererLienConnexionPage() {
       const res = await fetch(requestUrl.replace(/\/$/, ""), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim() }),
+        body: JSON.stringify({ email: email.trim().toLowerCase() }),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
