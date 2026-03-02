@@ -141,7 +141,7 @@ export default function ListeCandidatsPage() {
                           <span className="lc-chip"><i className="fa-solid fa-venus-mars" />{c.genre}</span>
                         )}
                         {c.nationalite && (
-                          <span className="lc-chip"><i className="fa-solid fa-flag" />{c.nationalite}</span>
+                          <span className="lc-chip"><i className="fa-solid fa-passport" />{c.nationalite}</span>
                         )}
                         {c.tel && (
                           <span className="lc-chip"><i className="fa-solid fa-phone" />{c.tel}</span>
