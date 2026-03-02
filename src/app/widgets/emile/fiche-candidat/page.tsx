@@ -803,25 +803,29 @@ export default function Page() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const p     = new URLSearchParams(window.location.search);
-    const token = p.get("token");
-    const id    = p.get("id");
+    const STORAGE_KEY    = "emile_occ_token";
+    const p              = new URLSearchParams(window.location.search);
+    const token          = p.get("token");
+    const id             = p.get("id");
 
-    if (token && id) {
+    // Résolution du token : URL d'abord, puis session localStorage partagée avec liste-candidats
+    const effectiveToken = token ?? localStorage.getItem(STORAGE_KEY);
+
+    if (effectiveToken && id) {
       // Mode orienteur : ?token=<OCC>&id=<candidatRowId>
+      // Le token peut venir de l'URL ou du localStorage (navigation directe avec ?id= seulement)
       const candidatId = parseInt(id, 10);
       if (!isNaN(candidatId)) {
         setIsOrienteurMode(true);
-        setOccTokenForOrienteur(token);
+        setOccTokenForOrienteur(effectiveToken);
         setCandidatRowIdFromUrl(candidatId);
-        // URL de retour vers la liste de l'orienteur
         const listBase = window.location.href
           .split("?")[0]
           .replace(/\/fiche-candidat\/?$/, "/liste-candidats");
-        setOrienteurListUrl(`${listBase}?token=${token}`);
+        setOrienteurListUrl(`${listBase}?token=${effectiveToken}`);
       }
     } else if (token) {
-      // Mode candidat : ?token=rowId.HMAC
+      // Mode candidat magic link : ?token=rowId.HMAC (sans ?id=)
       const rowId = parseInt(token.split(".")[0], 10);
       if (!isNaN(rowId)) {
         setTokenFromUrl(token);
@@ -830,7 +834,12 @@ export default function Page() {
     } else {
       // Fallback dev : ?rowId=123 sans signature
       const v = p.get("rowId");
-      if (v) setRowIdFromUrl(parseInt(v, 10));
+      if (v) {
+        setRowIdFromUrl(parseInt(v, 10));
+      } else if (!effectiveToken) {
+        // Ni token en URL ni en localStorage → pas connecté (mode standalone)
+        setAuthStatus("no_token");
+      }
     }
   }, []);
 
@@ -847,6 +856,10 @@ export default function Page() {
   const [status, setStatus] = useState("");
   const [loadingRest, setLoadingRest] = useState(false);
   const [showFaq, setShowFaq] = useState(false);
+
+  // ── Auth status — pour les écrans "Connexion requise" / "Lien invalide" ──
+  type AuthStatus = "pending" | "ok" | "no_token" | "invalid";
+  const [authStatus, setAuthStatus] = useState<AuthStatus>("pending");
 
   const [activeTab, setActiveTab] = useState<L1TabKey>(EMILE_TABS[0].key);
   const activeTabObj = useMemo(() => EMILE_TABS.find((t) => t.key === activeTab) ?? EMILE_TABS[0], [activeTab]);
@@ -918,6 +931,7 @@ export default function Page() {
   // ── Mode orienteur : fetch via occ-get-candidat ──────────────────
   useEffect(() => {
     if (!isOrienteurMode || !occTokenForOrienteur || !candidatRowIdFromUrl) return;
+    const STORAGE_KEY = "emile_occ_token";
     setLoadingRest(true);
     const getUrl = process.env.NEXT_PUBLIC_OCC_GET_CANDIDAT_URL;
     if (!getUrl) {
@@ -930,12 +944,20 @@ export default function Page() {
       .then((res) => { if (!res.ok) throw new Error(`HTTP ${res.status}`); return res.json(); })
       .then((data) => {
         if (data?.status === "ok" && data.candidat) {
+          // Token valide → mémoriser dans localStorage (session partagée avec liste-candidats)
+          localStorage.setItem(STORAGE_KEY, occTokenForOrienteur);
           setSelected({ id: data.candidat.id, ...data.candidat });
+          setAuthStatus("ok");
         } else {
-          setStatus("Dossier introuvable ou accès refusé.");
+          // Token invalide ou expiré → purger la session
+          localStorage.removeItem(STORAGE_KEY);
+          setAuthStatus("invalid");
         }
       })
-      .catch((e) => setStatus("Erreur: " + (e?.message ?? String(e))))
+      .catch((e) => {
+        setStatus("Erreur: " + (e?.message ?? String(e)));
+        setAuthStatus("invalid");
+      })
       .finally(() => setLoadingRest(false));
   }, [isOrienteurMode, occTokenForOrienteur, candidatRowIdFromUrl]);
 
@@ -1183,13 +1205,45 @@ export default function Page() {
             <i className="fa-solid fa-spinner fa-spin" style={{ fontSize: "1.5rem" }} />
           </div>
         ) : !selected || !docApi ? (
-          <div className="fr-alert fr-alert--info">
-            <p className="fr-alert__title">En attente</p>
-            <p>{mode === "rest"
-              ? "Aucun dossier chargé. Vérifie que le lien contient un paramètre ?token=."
-              : "Sélectionne un candidat dans Grist pour afficher son dossier."
-            }</p>
-          </div>
+          // ── Mode Grist : pas encore de candidat sélectionné ──
+          mode === "grist" ? (
+            <div className="fr-alert fr-alert--info">
+              <p className="fr-alert__title">En attente</p>
+              <p>Sélectionne un candidat dans Grist pour afficher son dossier.</p>
+            </div>
+          // ── Pas de token : invitation à se connecter ──
+          ) : authStatus === "no_token" ? (
+            <div style={{ display: "flex", justifyContent: "center", padding: "2.5rem 1rem" }}>
+              <div style={{ background: "#fff", border: "1px solid #e0e0e0", borderRadius: 8, padding: "2.5rem 2rem", maxWidth: 480, width: "100%", boxShadow: "0 2px 12px rgba(0,0,0,0.06)", display: "flex", flexDirection: "column", alignItems: "center", gap: "1rem", textAlign: "center" }}>
+                <i className="fa-solid fa-lock" style={{ fontSize: "2.5rem", color: "#b34000" }} />
+                <h2 style={{ fontSize: "1.15rem", fontWeight: 700, color: "#1e1e1e", margin: 0 }}>Connexion requise</h2>
+                <p style={{ fontSize: "0.875rem", color: "#555", margin: 0, lineHeight: 1.6 }}>
+                  Une connexion est nécessaire pour accéder à cet espace.<br />
+                  Utilisez votre lien personnel ou récupérez-le ci-dessous.
+                </p>
+                <a
+                  href="/grist-widgets/widgets/emile/recuperer-lien-connexion/"
+                  style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem", padding: "0.55rem 1.1rem", background: "#000091", color: "#fff", borderRadius: 4, fontSize: "0.85rem", fontWeight: 600, textDecoration: "none", marginTop: "0.25rem" }}
+                >
+                  <i className="fa-solid fa-envelope-open-text" />
+                  Récupérer mon lien de connexion
+                </a>
+              </div>
+            </div>
+          // ── Token invalide ou expiré ──
+          ) : authStatus === "invalid" ? (
+            <div style={{ display: "flex", justifyContent: "center", padding: "2.5rem 1rem" }}>
+              <div style={{ background: "#fff", border: "1px solid #e0e0e0", borderRadius: 8, padding: "2.5rem 2rem", maxWidth: 480, width: "100%", boxShadow: "0 2px 12px rgba(0,0,0,0.06)", display: "flex", flexDirection: "column", alignItems: "center", gap: "1rem", textAlign: "center" }}>
+                <i className="fa-solid fa-circle-xmark" style={{ fontSize: "2.5rem", color: "#ce0500" }} />
+                <h2 style={{ fontSize: "1.15rem", fontWeight: 700, color: "#1e1e1e", margin: 0 }}>Lien invalide</h2>
+                <p style={{ fontSize: "0.875rem", color: "#555", margin: 0, lineHeight: 1.6 }}>
+                  Ce lien est invalide ou a expiré.<br />
+                  Contactez votre administrateur·ice pour en obtenir un nouveau.
+                </p>
+              </div>
+            </div>
+          // ── Autre cas (pending sans résultat) : spinner déjà géré au-dessus ──
+          ) : null
         ) : !isTabMapped ? (
           <div className="fr-alert fr-alert--info">
             <p className="fr-alert__title">Onglet non mappé</p>
