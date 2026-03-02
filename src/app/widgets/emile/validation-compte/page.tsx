@@ -3,12 +3,14 @@
 import { useEffect, useState } from "react";
 import "./styles.css";
 import logoEmile from "../assets/logo-emile-white.png";
+import { FAQPanel } from "@/components/FAQPanel";
 
 type Status = "loading" | "ok" | "already_validated" | "invalid" | "no_token" | "error";
 
 export default function ValidationComptePage() {
-  const [status, setStatus] = useState<Status>("loading");
-  const [nom,    setNom]    = useState("");
+  const [status,  setStatus]  = useState<Status>("loading");
+  const [nom,     setNom]     = useState("");
+  const [showFaq, setShowFaq] = useState(false);
 
   useEffect(() => {
     const p     = new URLSearchParams(window.location.search);
@@ -51,6 +53,11 @@ export default function ValidationComptePage() {
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={logoEmile.src} alt="EMILE" style={{ height: "2rem", width: "auto" }} />
         <span className="vc-header__appname">Validation compte orienteur·ice</span>
+        <div className="vc-header__spacer" />
+        <button type="button" className="vc-faq-btn" onClick={() => setShowFaq(true)}>
+          <i className="fa-solid fa-circle-question" />
+          FAQ
+        </button>
       </header>
 
       <main className="vc-body">
@@ -125,6 +132,12 @@ export default function ValidationComptePage() {
 
         </div>
       </main>
+      {showFaq && (
+        <FAQPanel
+          proxyUrl={process.env.NEXT_PUBLIC_GRIST_PROXY_URL}
+          onClose={() => setShowFaq(false)}
+        />
+      )}
     </div>
   );
 }
