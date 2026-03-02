@@ -4,6 +4,7 @@ import { useState } from "react";
 import "./styles.css";
 import logoEmile from "../assets/logo-emile-white.png";
 import { EMAIL_REGEX } from "@/lib/emile/validators";
+import { FAQPanel } from "@/components/FAQPanel";
 
 type Status = "idle" | "loading" | "ok" | "not_found" | "error";
 
@@ -13,6 +14,7 @@ export default function RecupererLienConnexionPage() {
   const [status,     setStatus]     = useState<Status>("idle");
   const [lienUrl,    setLienUrl]    = useState<string | null>(null);
   const [copied,     setCopied]     = useState(false);
+  const [showFaq,    setShowFaq]    = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -69,6 +71,11 @@ export default function RecupererLienConnexionPage() {
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={logoEmile.src} alt="EMILE" style={{ height: "2rem", width: "auto" }} />
         <span className="rlc-header__appname">Accéder à mon espace</span>
+        <div className="rlc-header__spacer" />
+        <button type="button" className="rlc-faq-btn" onClick={() => setShowFaq(true)}>
+          <i className="fa-solid fa-circle-question" />
+          FAQ
+        </button>
       </header>
 
       <main className="rlc-body">
@@ -158,6 +165,13 @@ export default function RecupererLienConnexionPage() {
           )}
         </div>
       </main>
+
+      {showFaq && (
+        <FAQPanel
+          proxyUrl={process.env.NEXT_PUBLIC_GRIST_PROXY_URL}
+          onClose={() => setShowFaq(false)}
+        />
+      )}
     </div>
   );
 }

@@ -21,6 +21,7 @@
 import { useEffect, useState } from "react";
 import "./styles.css";
 import logoEmile from "../assets/logo-emile-white.png";
+import { FAQPanel } from "@/components/FAQPanel";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -86,6 +87,7 @@ export default function ListeCandidatsPage() {
   const [candidats,     setCandidats]     = useState<Candidat[]>([]);
   const [occToken,      setOccToken]      = useState<string | null>(null);
   const [ficheBase,     setFicheBase]     = useState("");
+  const [showFaq,       setShowFaq]       = useState(false);
 
   useEffect(() => {
     const p     = new URLSearchParams(window.location.search);
@@ -135,6 +137,17 @@ export default function ListeCandidatsPage() {
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={logoEmile.src} alt="EMILE" style={{ height: "2rem", width: "auto" }} />
         <span className="lc-header__appname">Mes candidat·e·s</span>
+        <div className="lc-header__spacer" />
+        {orienteurNom && (
+          <span className="lc-header__user">
+            <i className="fa-solid fa-circle-user" />
+            {orienteurNom}
+          </span>
+        )}
+        <button type="button" className="lc-faq-btn" onClick={() => setShowFaq(true)}>
+          <i className="fa-solid fa-circle-question" />
+          FAQ
+        </button>
       </header>
 
       <main className="lc-body">
@@ -280,6 +293,13 @@ export default function ListeCandidatsPage() {
         )}
 
       </main>
+
+      {showFaq && (
+        <FAQPanel
+          proxyUrl={process.env.NEXT_PUBLIC_GRIST_PROXY_URL}
+          onClose={() => setShowFaq(false)}
+        />
+      )}
     </div>
   );
 }
