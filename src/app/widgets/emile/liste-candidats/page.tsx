@@ -137,15 +137,17 @@ export default function ListeCandidatsPage() {
               </ul>
             )}
 
-            <div className="lc-footer-actions">
-              <a
-                href="/widgets/emile/inscription-candidat/"
-                className="lc-btn lc-btn--outline"
-              >
-                <i className="fa-solid fa-user-plus" />
-                Inscrire un·e candidat·e
-              </a>
-            </div>
+            {candidats.length > 0 && (
+              <div className="lc-footer-actions">
+                <a
+                  href="/widgets/emile/inscription-candidat/"
+                  className="lc-btn lc-btn--outline"
+                >
+                  <i className="fa-solid fa-user-plus" />
+                  Inscrire un·e candidat·e
+                </a>
+              </div>
+            )}
           </div>
         )}
 
