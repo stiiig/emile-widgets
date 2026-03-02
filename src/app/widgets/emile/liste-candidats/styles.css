@@ -64,6 +64,25 @@
   transition: background 0.15s;
 }
 .lc-faq-btn:hover { background: rgba(255, 255, 255, 0.25) !important; }
+.lc-logout-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0 0.65rem;
+  height: 2rem;
+  border: 1px solid rgba(255, 255, 255, 0.35) !important;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: rgba(255, 255, 255, 0.75) !important;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: Marianne, arial, sans-serif;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+.lc-logout-btn:hover { background: rgba(255, 255, 255, 0.18) !important; color: #fff !important; }
 
 /* ── Body ───────────────────────────────────────────────────── */
 .lc-body {

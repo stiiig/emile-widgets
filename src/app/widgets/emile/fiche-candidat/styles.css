@@ -586,3 +586,42 @@ body {
   background: rgba(255,255,255,.25) !important;
   color: #fff !important;
 }
+
+/* ── Nom orienteur dans le header ──────────────────────── */
+.emile-header__user {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.85);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 180px;
+  flex-shrink: 0;
+}
+
+/* ── Bouton déconnexion ─────────────────────────────────── */
+.emile-logout-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0 0.65rem;
+  height: 2rem;
+  border: 1px solid rgba(255, 255, 255, 0.35) !important;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: rgba(255, 255, 255, 0.75) !important;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: Marianne, arial, sans-serif;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+.emile-logout-btn:hover {
+  background: rgba(255, 255, 255, 0.18) !important;
+  color: #fff !important;
+}

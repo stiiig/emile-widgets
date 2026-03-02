@@ -151,6 +151,20 @@ export default function ListeCandidatsPage() {
             {orienteurNom}
           </span>
         )}
+        {orienteurNom && (
+          <button
+            type="button"
+            className="lc-logout-btn"
+            title="Se déconnecter"
+            onClick={() => {
+              localStorage.removeItem("emile_occ_token");
+              window.location.replace(window.location.pathname);
+            }}
+          >
+            <i className="fa-solid fa-right-from-bracket" />
+            Déconnexion
+          </button>
+        )}
         <button type="button" className="lc-faq-btn" onClick={() => setShowFaq(true)}>
           <i className="fa-solid fa-circle-question" />
           FAQ

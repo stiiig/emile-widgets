@@ -882,14 +882,20 @@ export default function Page() {
 
   // Liste des candidats de l'orienteur — pour le switcher dans la barre de navigation
   type CandidatSummary = { id: number; prenom: string; nom: string; reference?: string | null };
-  const [allCandidats, setAllCandidats] = useState<CandidatSummary[]>([]);
+  const [allCandidats,  setAllCandidats]  = useState<CandidatSummary[]>([]);
+  const [orienteurNom,  setOrienteurNom]  = useState("");
   useEffect(() => {
     if (!isOrienteurMode || !occTokenForOrienteur) return;
     const listUrl = process.env.NEXT_PUBLIC_OCC_LIST_URL;
     if (!listUrl) return;
     fetch(`${listUrl.replace(/\/$/, "")}?token=${encodeURIComponent(occTokenForOrienteur)}`)
       .then((r) => r.json())
-      .then((d) => { if (d?.status === "ok") setAllCandidats(d.candidats ?? []); })
+      .then((d) => {
+        if (d?.status === "ok") {
+          setAllCandidats(d.candidats ?? []);
+          setOrienteurNom(d.orienteurNom ?? "");
+        }
+      })
       .catch(() => {});
   }, [isOrienteurMode, occTokenForOrienteur]);
 
@@ -1066,7 +1072,7 @@ export default function Page() {
 
       {/* ===== HEADER ===== */}
       <header className="emile-header">
-        <img src={logoEmile.src} alt="EMILE" style={{ height: "1.8rem", width: "auto" }} />
+        <img src={logoEmile.src} alt="EMILE" style={{ height: "2rem", width: "auto" }} />
         {/* Nom + badge uniquement en mode Grist (iframe) — en mode orienteur c'est dans la barre de navigation */}
         {!isOrienteurMode && selectedName && (
           <>
@@ -1079,7 +1085,7 @@ export default function Page() {
         <div className="emile-header__spacer" />
 
         <div className="emile-header__search">
-          {/* Recherche candidat + FAQ : uniquement en mode Grist (iframe) */}
+          {/* Recherche candidat : uniquement en mode Grist (iframe) */}
           {mode !== "rest" && (
             <>
               <span className="emile-header__search-label">
@@ -1106,17 +1112,43 @@ export default function Page() {
                   variant="header"
                 />
               </div>
-              <button
-                type="button"
-                className="emile-faq-btn"
-                onClick={() => setShowFaq(true)}
-              >
-                <i className="fa-solid fa-circle-question" aria-hidden="true" />
-                FAQ
-              </button>
             </>
           )}
-          {!isOrienteurMode && (
+
+          {/* Nom orienteur + déconnexion : mode orienteur connecté */}
+          {isOrienteurMode && authStatus === "ok" && orienteurNom && (
+            <span className="emile-header__user">
+              <i className="fa-solid fa-circle-user" />
+              {orienteurNom}
+            </span>
+          )}
+          {isOrienteurMode && authStatus === "ok" && (
+            <button
+              type="button"
+              className="emile-logout-btn"
+              title="Se déconnecter"
+              onClick={() => {
+                localStorage.removeItem("emile_occ_token");
+                window.location.replace(window.location.pathname);
+              }}
+            >
+              <i className="fa-solid fa-right-from-bracket" />
+              Déconnexion
+            </button>
+          )}
+
+          {/* FAQ : toujours visible */}
+          <button
+            type="button"
+            className="emile-faq-btn"
+            onClick={() => setShowFaq(true)}
+          >
+            <i className="fa-solid fa-circle-question" aria-hidden="true" />
+            FAQ
+          </button>
+
+          {/* Enregistrer : mode Grist (iframe) uniquement */}
+          {mode === "grist" && (
             <button
               type="button"
               className="emile-save-btn"
@@ -1131,7 +1163,8 @@ export default function Page() {
       </header>
 
       {/* ===== BARRE NAVIGATION ORIENTEUR ===== */}
-      {isOrienteurMode && orienteurListUrl && (
+      {/* Masquée si lien invalide : pas de retour possible vers la liste */}
+      {isOrienteurMode && orienteurListUrl && authStatus !== "invalid" && (
         <div className="emile-orienteur-bar">
           {/* Retour + fil d'Ariane */}
           <a href={orienteurListUrl} className="emile-orienteur-bar__back">
@@ -1274,7 +1307,13 @@ export default function Page() {
       </div>
 
       {/* ===== FAQ PANEL ===== */}
-      {showFaq && docApi && <FAQPanel docApi={docApi} onClose={() => setShowFaq(false)} />}
+      {showFaq && (
+        <FAQPanel
+          docApi={docApi}
+          proxyUrl={process.env.NEXT_PUBLIC_GRIST_PROXY_URL}
+          onClose={() => setShowFaq(false)}
+        />
+      )}
 
     </div>
   );
