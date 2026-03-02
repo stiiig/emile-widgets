@@ -90,8 +90,11 @@ export default function ListeCandidatsPage() {
   const [showFaq,       setShowFaq]       = useState(false);
 
   useEffect(() => {
-    const p     = new URLSearchParams(window.location.search);
-    const token = p.get("token");
+    const STORAGE_KEY = "emile_occ_token";
+    const p           = new URLSearchParams(window.location.search);
+
+    // Priorité : token dans l'URL, sinon token sauvegardé en session
+    const token = p.get("token") ?? localStorage.getItem(STORAGE_KEY);
 
     if (!token) {
       setStatus("no_token");
@@ -121,14 +124,18 @@ export default function ListeCandidatsPage() {
       })
       .then((data) => {
         if (data?.status === "ok") {
+          // Token valide → on le mémorise pour les prochaines visites
+          localStorage.setItem(STORAGE_KEY, token);
           setOrienteurNom(data.orienteurNom ?? "");
           setCandidats(data.candidats ?? []);
           setStatus("ok");
         } else {
+          // Token invalide ou expiré → on purge la session
+          localStorage.removeItem(STORAGE_KEY);
           setStatus("invalid");
         }
       })
-      .catch(() => setStatus("error"));
+      .catch(() => setStatus("error")); // erreur réseau : on garde le token, c'est peut-être temporaire
   }, []);
 
   return (
@@ -268,8 +275,28 @@ export default function ListeCandidatsPage() {
           </div>
         )}
 
-        {/* ── Lien invalide / no_token ── */}
-        {(status === "invalid" || status === "no_token") && (
+        {/* ── Pas de token : invitation à se connecter ── */}
+        {status === "no_token" && (
+          <div className="lc-card lc-card--center">
+            <i className="fa-solid fa-lock lc-icon lc-icon--warning" />
+            <h2 className="lc-title">Connexion requise</h2>
+            <p className="lc-message">
+              Une connexion est nécessaire pour accéder à cet espace.<br />
+              Utilisez votre lien personnel ou récupérez-le ci-dessous.
+            </p>
+            <a
+              href="/widgets/emile/recuperer-lien-connexion/"
+              className="lc-btn"
+              style={{ marginTop: "0.25rem" }}
+            >
+              <i className="fa-solid fa-envelope-open-text" />
+              Récupérer mon lien de connexion
+            </a>
+          </div>
+        )}
+
+        {/* ── Token invalide / expiré ── */}
+        {status === "invalid" && (
           <div className="lc-card lc-card--center">
             <i className="fa-solid fa-circle-xmark lc-icon lc-icon--error" />
             <h2 className="lc-title">Lien invalide</h2>
