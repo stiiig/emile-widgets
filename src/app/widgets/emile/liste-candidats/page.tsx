@@ -288,7 +288,8 @@ export default function ListeCandidatsPage() {
           </div>
         )}
         {/* Ligne 3 — Chips info */}
-        {(c.age || c.genre || c.nationalite) && (
+        {/* showAge : age connu et > 0 (0 = Grist formula sur date absente) */}
+        {((c.age != null && c.age > 0) || c.genre || c.nationalite) && (
           <div className="lc-item__meta">
             {c.age != null && c.age > 0 && (
               <span className="lc-chip" data-tooltip={formatDate(c.dateNaissance)}>
