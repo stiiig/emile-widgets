@@ -387,7 +387,7 @@ export default function ListeCandidatsPage() {
             {[c.prenom, c.nom].filter(Boolean).join(" ") || "—"}
           </span>
           <div className="lc-item__chips-right">
-            {c.eligibilite === "✅ OK" && (
+            {c.eligibilite === "✅ OK" && !c.statut && (
               <span className="lc-chip lc-chip--eligible">Éligible<i className="fa-solid fa-check" /></span>
             )}
             {c.eligibilite === "❌ KO" && <EligibilitePopover c={c} />}
