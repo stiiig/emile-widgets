@@ -182,21 +182,19 @@ export default function ListeCandidatsPage() {
               <ul className="lc-list">
                 {candidats.map((c) => (
                   <li key={c.id} className="lc-item">
-                    {/* Ligne 1 — Nom + référence + statut */}
+                    {/* Ligne 1 — Nom (+ référence inline) + statut */}
                     <div className="lc-item__header">
-                      <span className="lc-item__name">
-                        {[c.prenom, c.nom].filter(Boolean).join(" ") || "—"}
-                      </span>
-                      <div className="lc-item__header-right">
+                      <div className="lc-item__name-group">
+                        <span className="lc-item__name">
+                          {[c.prenom, c.nom].filter(Boolean).join(" ") || "—"}
+                        </span>
                         {c.reference && (
-                          <span className="lc-chip lc-chip--ref">
-                            <i className="fa-solid fa-hashtag" />{c.reference}
-                          </span>
-                        )}
-                        {c.statut && (
-                          <span className={`lc-chip ${statutChipClass(c.statut)}`}>{c.statut}</span>
+                          <span className="lc-chip lc-chip--ref">{c.reference}</span>
                         )}
                       </div>
+                      {c.statut && (
+                        <span className={`lc-chip ${statutChipClass(c.statut)}`}>{c.statut}</span>
+                      )}
                     </div>
                     {/* Ligne 2 — Chips info */}
                     {(c.age != null || c.genre || c.nationalite) && (
