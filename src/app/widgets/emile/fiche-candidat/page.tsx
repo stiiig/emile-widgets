@@ -832,11 +832,11 @@ export default function Page() {
       }
     } else if (effectiveToken && !id) {
       // Token en localStorage mais pas d'id candidat → rediriger vers la liste
-      // (on ne peut pas afficher une fiche sans savoir quel candidat afficher)
+      // Le token est déjà en localStorage, pas besoin de le passer dans l'URL
       const listBase = window.location.href
         .split("?")[0]
-        .replace(/\/fiche-candidat\/?$/, "/liste-candidats");
-      window.location.replace(`${listBase}?token=${effectiveToken}`);
+        .replace(/\/fiche-candidat\/?$/, "/liste-candidats/");
+      window.location.replace(listBase);
     } else {
       // Fallback dev : ?rowId=123 sans signature
       const v = p.get("rowId");
