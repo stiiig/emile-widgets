@@ -800,6 +800,8 @@ export default function Page() {
   const [candidatRowIdFromUrl,setCandidatRowIdFromUrl]= useState<number | null>(null);
   const [occTokenForOrienteur,setOccTokenForOrienteur]= useState<string | null>(null);
   const [orienteurListUrl,    setOrienteurListUrl]    = useState<string | null>(null);
+  // true quand on est arrivé sans ?id= : on doit auto-sélectionner le candidat le plus récent
+  const autoSelectCandidatRef = useRef(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -831,12 +833,15 @@ export default function Page() {
         setRowIdFromUrl(rowId);
       }
     } else if (effectiveToken && !id) {
-      // Token en localStorage mais pas d'id candidat → rediriger vers la liste
-      // Le token est déjà en localStorage, pas besoin de le passer dans l'URL
+      // Token en localStorage mais pas d'id → mode orienteur, auto-sélection du candidat le plus récent
+      setIsOrienteurMode(true);
+      setOccTokenForOrienteur(effectiveToken);
       const listBase = window.location.href
         .split("?")[0]
-        .replace(/\/fiche-candidat\/?$/, "/liste-candidats/");
-      window.location.replace(listBase);
+        .replace(/\/fiche-candidat\/?$/, "/liste-candidats");
+      setOrienteurListUrl(`${listBase}?token=${effectiveToken}`);
+      autoSelectCandidatRef.current = true;
+      setLoadingRest(true); // spinner pendant le chargement de la liste
     } else {
       // Fallback dev : ?rowId=123 sans signature
       const v = p.get("rowId");
@@ -892,12 +897,34 @@ export default function Page() {
       .then((r) => r.json())
       .then((d) => {
         if (d?.status === "ok") {
-          setAllCandidats(d.candidats ?? []);
+          const candidats: CandidatSummary[] = d.candidats ?? [];
+          setAllCandidats(candidats);
           setOrienteurNom(d.orienteurNom ?? "");
+          // Auto-sélection du candidat le plus récent si on est arrivé sans ?id=
+          if (autoSelectCandidatRef.current) {
+            autoSelectCandidatRef.current = false;
+            if (candidats.length > 0) {
+              const mostRecent = candidats.reduce(
+                (max, c) => (c.id > max.id ? c : max),
+                candidats[0],
+              );
+              setCandidatRowIdFromUrl(mostRecent.id);
+              // loadingRest sera remis à false par l'effet orienteur fetch
+            } else {
+              // Orienteur loggué mais aucun candidat
+              setLoadingRest(false);
+              setAuthStatus("ok");
+            }
+          }
         }
       })
-      .catch(() => {});
-  }, [isOrienteurMode, occTokenForOrienteur]);
+      .catch(() => {
+        if (autoSelectCandidatRef.current) {
+          autoSelectCandidatRef.current = false;
+          setLoadingRest(false);
+        }
+      });
+  }, [isOrienteurMode, occTokenForOrienteur]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const switcherOptions = useMemo<Option[]>(
     () => allCandidats.map((c) => ({
@@ -1278,6 +1305,24 @@ export default function Page() {
                   Ce lien est invalide ou a expiré.<br />
                   Contactez votre administrateur·ice pour en obtenir un nouveau.
                 </p>
+              </div>
+            </div>
+          ) : authStatus === "ok" ? (
+            // Orienteur loggué mais aucun candidat inscrit
+            <div style={{ display: "flex", justifyContent: "center", padding: "2.5rem 1rem" }}>
+              <div style={{ background: "#fff", border: "1px solid #e0e0e0", borderRadius: 8, padding: "2.5rem 2rem", maxWidth: 480, width: "100%", boxShadow: "0 2px 12px rgba(0,0,0,0.06)", display: "flex", flexDirection: "column", alignItems: "center", gap: "1rem", textAlign: "center" }}>
+                <i className="fa-solid fa-user-slash" style={{ fontSize: "2.5rem", color: "#aaa" }} />
+                <h2 style={{ fontSize: "1.15rem", fontWeight: 700, color: "#1e1e1e", margin: 0 }}>Aucun candidat</h2>
+                <p style={{ fontSize: "0.875rem", color: "#555", margin: 0, lineHeight: 1.6 }}>
+                  Vous n&apos;avez pas encore inscrit de candidat·e.
+                </p>
+                <a
+                  href="/grist-widgets/widgets/emile/inscription-candidat/"
+                  style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem", padding: "0.55rem 1.1rem", background: "#000091", color: "#fff", borderRadius: 4, fontSize: "0.85rem", fontWeight: 600, textDecoration: "none", marginTop: "0.25rem" }}
+                >
+                  <i className="fa-solid fa-user-plus" />
+                  Inscrire un·e candidat·e
+                </a>
               </div>
             </div>
           ) : null
