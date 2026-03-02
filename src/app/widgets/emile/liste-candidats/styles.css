@@ -241,9 +241,10 @@
 .lc-btn:hover,
 .lc-btn:visited:hover,
 .lc-btn:focus:hover {
-  background: #1212ff !important;
-  border-color: #1212ff !important;
+  background: #000091 !important;
+  border-color: #000091 !important;
   color: #fff !important;
+  box-shadow: inset 0 0 0 200px rgba(255, 255, 255, 0.15) !important;
 }
 
 .lc-btn--sm {
