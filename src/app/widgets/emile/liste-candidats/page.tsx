@@ -64,6 +64,23 @@ interface Candidat {
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 /**
+ * Calcule l'âge en années depuis un timestamp Unix (secondes) ou une chaîne ISO.
+ * Renvoie null si la date est absente, invalide ou donne un âge ≤ 0.
+ * On ne se fie PAS à la colonne formule Grist `Age` (peut renvoyer 0).
+ */
+function computeAge(raw: string | number | null | undefined): number | null {
+  if (raw == null || raw === 0) return null;
+  const ms = typeof raw === "number" ? raw * 1000 : Date.parse(raw as string);
+  if (isNaN(ms)) return null;
+  const birth = new Date(ms);
+  const today = new Date();
+  let a = today.getUTCFullYear() - birth.getUTCFullYear();
+  const dm = today.getUTCMonth() - birth.getUTCMonth();
+  if (dm < 0 || (dm === 0 && today.getUTCDate() < birth.getUTCDate())) a--;
+  return a > 0 ? a : null;
+}
+
+/**
  * Formate une date Grist en JJ/MM/AAAA.
  * Grist renvoie les colonnes Date comme un timestamp Unix en secondes (number).
  * Fallback string accepté au cas où une version renverrait du YYYY-MM-DD.
@@ -124,10 +141,10 @@ function EligibilitePopover({ c }: { c: Candidat }) {
   if (c.territoireDepart != null && !terrOk)
     koItems.push({ label: "Territoire de départ", detail: "Hors territoire éligible" });
 
-  // 3. Majorité — dérivée du champ `age` déjà présent dans la card
-  // age === 0 signifie "non calculé" (date de naissance absente), on ignore
-  if (c.age != null && c.age > 0 && c.age < 18)
-    koItems.push({ label: "Majorité", detail: `${c.age} ans — mineur·e` });
+  // 3. Majorité — calculée depuis dateNaissance (bypass colonne formule Grist)
+  const ageCalc = computeAge(c.dateNaissance);
+  if (ageCalc != null && ageCalc < 18)
+    koItems.push({ label: "Majorité", detail: `${ageCalc} ans — mineur·e` });
 
   // 4. Niveau de langue — $Niveau_de_langue_Eligibilite booléen/chaîne truthy
   const langOk =
@@ -253,6 +270,8 @@ export default function ListeCandidatsPage() {
    * - Avec statut → bordure bleue standard, chip statut affiché.
    */
   const renderCard = (c: Candidat) => {
+    // Âge calculé depuis dateNaissance (bypass de la colonne formule Grist qui renvoie 0)
+    const displayAge = computeAge(c.dateNaissance);
     const eligCls = !c.statut
       ? c.eligibilite === "✅ OK" ? " lc-item--eligible"
       : c.eligibilite === "❌ KO" ? " lc-item--non-eligible" : ""
@@ -288,12 +307,11 @@ export default function ListeCandidatsPage() {
           </div>
         )}
         {/* Ligne 3 — Chips info */}
-        {/* showAge : age connu et > 0 (0 = Grist formula sur date absente) */}
-        {((c.age != null && c.age > 0) || c.genre || c.nationalite) && (
+        {(displayAge != null || c.genre || c.nationalite) && (
           <div className="lc-item__meta">
-            {c.age != null && c.age > 0 && (
+            {displayAge != null && (
               <span className="lc-chip" data-tooltip={formatDate(c.dateNaissance)}>
-                <i className="fa-solid fa-cake-candles" />{c.age} ans
+                <i className="fa-solid fa-cake-candles" />{displayAge} ans
               </span>
             )}
             {c.genre && (
