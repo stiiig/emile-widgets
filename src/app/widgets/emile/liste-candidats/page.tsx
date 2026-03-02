@@ -15,9 +15,18 @@ interface Candidat {
   tel?: string | null;
   genre?: string | null;
   age?: number | null;
+  dateNaissance?: string | null;
   reference?: string | null;
   nationalite?: string | null;
   statut?: string | null;
+}
+
+function formatDate(raw: string | null | undefined): string | undefined {
+  if (!raw) return undefined;
+  // Grist renvoie les dates au format YYYY-MM-DD
+  const m = raw.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (m) return `${m[3]}/${m[2]}/${m[1]}`;
+  return raw;
 }
 
 function statutChipClass(statut: string): string {
@@ -151,7 +160,12 @@ export default function ListeCandidatsPage() {
                     {(c.age != null || c.genre || c.nationalite) && (
                       <div className="lc-item__meta">
                         {c.age != null && (
-                          <span className="lc-chip"><i className="fa-solid fa-cake-candles" />{c.age} ans</span>
+                          <span
+                            className="lc-chip"
+                            data-tooltip={formatDate(c.dateNaissance)}
+                          >
+                            <i className="fa-solid fa-cake-candles" />{c.age} ans
+                          </span>
                         )}
                         {c.genre && (
                           <span className="lc-chip"><i className="fa-solid fa-venus-mars" />{c.genre}</span>
