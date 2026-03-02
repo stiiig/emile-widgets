@@ -3,18 +3,24 @@
 import { useState } from "react";
 import "./styles.css";
 import logoEmile from "../assets/logo-emile-white.png";
+import { EMAIL_REGEX } from "@/lib/emile/validators";
 
 type Status = "idle" | "loading" | "ok" | "not_found" | "error";
 
 export default function RecupererLienConnexionPage() {
-  const [email,    setEmail]    = useState("");
-  const [status,   setStatus]   = useState<Status>("idle");
-  const [lienUrl,  setLienUrl]  = useState<string | null>(null);
-  const [copied,   setCopied]   = useState(false);
+  const [email,      setEmail]      = useState("");
+  const [emailError, setEmailError] = useState<string | null>(null);
+  const [status,     setStatus]     = useState<Status>("idle");
+  const [lienUrl,    setLienUrl]    = useState<string | null>(null);
+  const [copied,     setCopied]     = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!email.trim()) return;
+    if (!EMAIL_REGEX.test(email.trim())) {
+      setEmailError("L'adresse email n'est pas valide.");
+      return;
+    }
+    setEmailError(null);
     setStatus("loading");
     setLienUrl(null);
     setCopied(false);
@@ -82,14 +88,16 @@ export default function RecupererLienConnexionPage() {
             </label>
             <input
               id="rlc-email"
-              type="email"
-              className="rlc-input"
+              type="text"
+              className={`rlc-input${emailError ? " rlc-input--error" : ""}`}
               value={email}
-              onChange={(e) => { setEmail(e.target.value); setStatus("idle"); }}
+              onChange={(e) => { setEmail(e.target.value); setEmailError(null); setStatus("idle"); }}
               disabled={status === "loading"}
-              required
               autoComplete="email"
             />
+            {emailError && (
+              <span className="rlc-field-error">{emailError}</span>
+            )}
 
             <button
               type="submit"

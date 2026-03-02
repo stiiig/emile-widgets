@@ -88,6 +88,8 @@ body { font-family: Marianne, arial, sans-serif; background: #f6f6f6; color: #1e
 }
 .rlc-input:focus { border-color: #000091; background: #fff; }
 .rlc-input:disabled { background: #f3f3f3; color: #999; }
+.rlc-input--error { border-color: #c0392b; }
+.rlc-field-error { display: block; color: #c0392b; font-size: 0.8rem; margin-top: 0.3rem; }
 
 /* ── Bouton principal ── */
 .rlc-btn {
