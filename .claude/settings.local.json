@@ -31,7 +31,23 @@
       "Bash(grep:*)",
       "Bash(git mv:*)",
       "Bash(cat:*)",
-      "Bash(git rm:*)"
+      "Bash(git rm:*)",
+      "Bash(pandoc:*)",
+      "Bash(npx --yes md-to-pdf:*)",
+      "Bash(npx md-to-pdf:*)",
+      "Bash(echo:*)",
+      "Bash(tectonic:*)",
+      "Bash(fc-list:*)",
+      "Bash(__NEW_LINE_b24ab523ce9deb8d__ MSG=\"docs: met a jour architecture-proxy-n8n et rest-mode apres resolution CORS:*)",
+      "Bash(__NEW_LINE_b24ab523ce9deb8d__ git commit -m \"$MSG\")",
+      "Bash(MSG=\"docs: complete workflow POST avec branche UpdateRecord \\(PATCH Grist\\):*)",
+      "Bash(MSG=\"docs/ci: supprime GENERATE_AUTH devenue inutile, met a jour la doc:*)",
+      "Bash(l 'email de validation\" link \\(calls NEXT_PUBLIC_OCC_GENERATE_URL\\):*)",
+      "Bash(find /Users/benjamin/grist-widgets/src/app/widgets/emile/ -type f -exec ls -lh {} ;)",
+      "Bash(find /Users/benjamin/grist-widgets/ -name \"*.md\" -type f -exec ls -lh {} ;)",
+      "Bash(find /Users/benjamin/grist-widgets/ -name \"*.md\" -type f ! -path \"*/node_modules/*\" -exec ls -lh {} ;)",
+      "Bash(find /Users/benjamin/grist-widgets/ -name \"*.md\" -type f -not -path \"*/node_modules/*\" -exec ls -lh {} ;)",
+      "Bash(done)"
     ]
   }
 }
