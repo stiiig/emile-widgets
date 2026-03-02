@@ -1040,6 +1040,28 @@ export default function Page() {
   const [rowIdByCandidateId, setRowIdByCandidateId] = useState<Map<number, number>>(new Map());
   const [candidateValueId, setCandidateValueId] = useState<number | null>(null);
 
+  // Liste des candidats de l'orienteur — pour le switcher dans la barre de navigation
+  type CandidatSummary = { id: number; prenom: string; nom: string; reference?: string | null };
+  const [allCandidats, setAllCandidats] = useState<CandidatSummary[]>([]);
+  useEffect(() => {
+    if (!isOrienteurMode || !occTokenForOrienteur) return;
+    const listUrl = process.env.NEXT_PUBLIC_OCC_LIST_URL;
+    if (!listUrl) return;
+    fetch(`${listUrl.replace(/\/$/, "")}?token=${encodeURIComponent(occTokenForOrienteur)}`)
+      .then((r) => r.json())
+      .then((d) => { if (d?.status === "ok") setAllCandidats(d.candidats ?? []); })
+      .catch(() => {});
+  }, [isOrienteurMode, occTokenForOrienteur]);
+
+  const switcherOptions = useMemo<Option[]>(
+    () => allCandidats.map((c) => ({
+      id: c.id,
+      label: `${c.prenom ?? ""} ${c.nom ?? ""}`.trim() || "—",
+      hint: c.reference ?? undefined,
+    })),
+    [allCandidats],
+  );
+
   // mode "none" → message d'aide
   useEffect(() => {
     if (mode === "none") setStatus("Ouvre ce widget dans Grist (ou /dev/harness).");
@@ -1195,22 +1217,9 @@ export default function Page() {
 
       {/* ===== HEADER ===== */}
       <header className="emile-header">
-        {isOrienteurMode && orienteurListUrl ? (
-          <a
-            href={orienteurListUrl}
-            style={{
-              display: "inline-flex", alignItems: "center", gap: "0.35rem",
-              color: "#fff", textDecoration: "none", fontSize: "0.82rem",
-              fontWeight: 600, opacity: 0.92,
-            }}
-          >
-            <i className="fa-solid fa-arrow-left" />
-            Mes candidat·e·s
-          </a>
-        ) : (
-          <img src={logoEmile.src} alt="EMILE" style={{ height: "1.8rem", width: "auto" }} />
-        )}
-        {selectedName && (
+        <img src={logoEmile.src} alt="EMILE" style={{ height: "1.8rem", width: "auto" }} />
+        {/* Nom + badge uniquement en mode Grist (iframe) — en mode orienteur c'est dans la barre de navigation */}
+        {!isOrienteurMode && selectedName && (
           <>
             <span className="emile-header__sep">›</span>
             <span className="emile-header__candidate">{selectedName}</span>
@@ -1271,6 +1280,43 @@ export default function Page() {
           )}
         </div>
       </header>
+
+      {/* ===== BARRE NAVIGATION ORIENTEUR ===== */}
+      {isOrienteurMode && orienteurListUrl && (
+        <div className="emile-orienteur-bar">
+          {/* Retour + fil d'Ariane */}
+          <a href={orienteurListUrl} className="emile-orienteur-bar__back">
+            <i className="fa-solid fa-arrow-left" />
+            Mes candidat·e·s
+          </a>
+          {selectedName && (
+            <>
+              <span className="emile-orienteur-bar__sep">›</span>
+              <span className="emile-orienteur-bar__name">{selectedName}</span>
+              {selectedHint && (
+                <span className="emile-orienteur-bar__ref">{selectedHint}</span>
+              )}
+            </>
+          )}
+          <div className="emile-orienteur-bar__spacer" />
+          {/* Switcher candidat·e·s */}
+          {switcherOptions.length > 1 && (
+            <div className="emile-orienteur-bar__switcher">
+              <SearchDropdown
+                options={switcherOptions}
+                valueId={candidatRowIdFromUrl}
+                onChange={(newId) => {
+                  if (!newId || newId === candidatRowIdFromUrl || !occTokenForOrienteur) return;
+                  const base = window.location.href.split("?")[0];
+                  window.location.href = `${base}?token=${occTokenForOrienteur}&id=${newId}`;
+                }}
+                placeholder="Changer de candidat·e…"
+                searchable={true}
+              />
+            </div>
+          )}
+        </div>
+      )}
 
       {/* ===== BARRE L1 ===== */}
       <nav className="emile-navbar" aria-label="Onglets principaux">
