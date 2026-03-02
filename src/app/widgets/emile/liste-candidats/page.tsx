@@ -20,6 +20,15 @@ interface Candidat {
   statut?: string | null;
 }
 
+function statutChipClass(statut: string): string {
+  if (statut === "À traiter")        return "lc-chip--statut-traiter";
+  if (statut === "En cours")         return "lc-chip--statut-en-cours";
+  if (statut === "Étape terminée")   return "lc-chip--statut-termine";
+  if (statut.startsWith("Suspension")) return "lc-chip--statut-suspension";
+  if (statut.startsWith("Sortie"))   return "lc-chip--statut-sortie";
+  return "lc-chip--statut-traiter";
+}
+
 export default function ListeCandidatsPage() {
   const [status,        setStatus]        = useState<Status>("loading");
   const [orienteurNom,  setOrienteurNom]  = useState("");
@@ -134,7 +143,7 @@ export default function ListeCandidatsPage() {
                           </span>
                         )}
                         {c.statut && (
-                          <span className="lc-chip lc-chip--statut">{c.statut}</span>
+                          <span className={`lc-chip ${statutChipClass(c.statut)}`}>{c.statut}</span>
                         )}
                       </div>
                     </div>

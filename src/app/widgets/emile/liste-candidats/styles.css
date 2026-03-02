@@ -226,9 +226,25 @@
   color: #000091;
   font-weight: 700;
 }
-.lc-chip--statut {
+.lc-chip--statut-traiter {
   background: #fff3cd;
-  color: #664d03;
+  color: #7a5200;
+  font-weight: 700;
+}
+.lc-chip--statut-en-cours,
+.lc-chip--statut-termine {
+  background: #d1fae5;
+  color: #065f46;
+  font-weight: 700;
+}
+.lc-chip--statut-suspension {
+  background: #ccfbf1;
+  color: #0f766e;
+  font-weight: 700;
+}
+.lc-chip--statut-sortie {
+  background: #fee2e2;
+  color: #991b1b;
   font-weight: 700;
 }
 
