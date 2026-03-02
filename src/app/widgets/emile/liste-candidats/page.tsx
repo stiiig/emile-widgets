@@ -8,7 +8,7 @@
  *
  * Flux :
  *  1. Le token est extrait de l'URL et transmis au workflow n8n `occ-list`.
- *  2. n8n vérifie le HMAC, lit la table CANDIDATS filtrée sur Responsable_candidat,
+ *  2. n8n vérifie le HMAC, lit la table CANDIDATS filtrée sur Accompagnant,
  *     et renvoie { status, orienteurNom, candidats[] }.
  *  3. Chaque card candidat affiche : nom/prénom, référence, statut coloré,
  *     chips (âge + tooltip date de naissance, genre, nationalité),
@@ -77,26 +77,6 @@ function computeAge(raw: string | number | null | undefined): number | null {
   const dm = today.getUTCMonth() - birth.getUTCMonth();
   if (dm < 0 || (dm === 0 && today.getUTCDate() < birth.getUTCDate())) a--;
   return a > 0 ? a : null;
-}
-
-/**
- * Formate une date Grist en JJ/MM/AAAA.
- * Grist renvoie les colonnes Date comme un timestamp Unix en secondes (number).
- * Fallback string accepté au cas où une version renverrait du YYYY-MM-DD.
- */
-function formatDate(raw: string | number | null | undefined): string | undefined {
-  if (raw == null) return undefined;
-  if (typeof raw === "number") {
-    const d   = new Date(raw * 1000);
-    const dd  = String(d.getUTCDate()).padStart(2, "0");
-    const mm  = String(d.getUTCMonth() + 1).padStart(2, "0");
-    const yyy = d.getUTCFullYear();
-    return `${dd}/${mm}/${yyy}`;
-  }
-  // Fallback YYYY-MM-DD
-  const m = raw.match(/^(\d{4})-(\d{2})-(\d{2})/);
-  if (m) return `${m[3]}/${m[2]}/${m[1]}`;
-  return raw;
 }
 
 /** Formate une date en toutes lettres françaises : "1er janvier 2008". */
@@ -214,7 +194,7 @@ function EligibilitePopover({ c }: { c: Candidat }) {
 
 // ── Popover info (ref / date de naissance) ────────────────────────────────────
 
-/** Chip de référence avec popover "Candidature créée le …" au survol. */
+/** Chip de référence avec popover "Dossier créé le …" au survol. */
 function RefChip({ reference, createdAt }: {
   reference: string;
   createdAt: string | number | null | undefined;
@@ -244,7 +224,7 @@ function RefChip({ reference, createdAt }: {
   );
 }
 
-/** Chip âge avec popover "Né·e le DD/MM/YYYY" au survol. */
+/** Chip âge avec popover "Né·e le [date en toutes lettres]" au survol. */
 function AgeChip({ displayAge, dateNaissance }: {
   displayAge: number;
   dateNaissance: string | number | null | undefined;
