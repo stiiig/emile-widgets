@@ -220,8 +220,6 @@
   align-items: center;
   gap: 0.4rem;
   padding: 0.55rem 1.1rem;
-  background: #000091;
-  color: #fff;
   border: 1.5px solid #000091;
   border-radius: 4px;
   font-size: 0.85rem;
@@ -229,24 +227,45 @@
   font-family: inherit;
   text-decoration: none;
   cursor: pointer;
-  transition: background 0.15s;
+  transition: background 0.15s, color 0.15s;
 }
-.lc-btn:hover   { background: #1212ff; border-color: #1212ff; color: #fff; }
-.lc-btn:visited { background: #000091; border-color: #000091; color: #fff; }
-.lc-btn:visited:hover { background: #1212ff; border-color: #1212ff; color: #fff; }
+.lc-btn,
+.lc-btn:link,
+.lc-btn:visited,
+.lc-btn:active,
+.lc-btn:focus {
+  background: #000091;
+  border-color: #000091;
+  color: #fff;
+}
+.lc-btn:hover,
+.lc-btn:visited:hover,
+.lc-btn:focus:hover {
+  background: #1212ff;
+  border-color: #1212ff;
+  color: #fff;
+}
 
 .lc-btn--sm {
   padding: 0.35rem 0.75rem;
   font-size: 0.78rem;
 }
 
-.lc-btn--outline {
+.lc-btn--outline,
+.lc-btn--outline:link,
+.lc-btn--outline:visited,
+.lc-btn--outline:active,
+.lc-btn--outline:focus {
   background: #fff;
+  border-color: #000091;
   color: #000091;
 }
-.lc-btn--outline:visited { background: #fff; color: #000091; }
 .lc-btn--outline:hover,
-.lc-btn--outline:visited:hover { background: #e3e3fd; border-color: #000091; color: #000091; }
+.lc-btn--outline:visited:hover {
+  background: #e3e3fd;
+  border-color: #000091;
+  color: #000091;
+}
 
 /* ── Actions pied de page ────────────────────────────────────── */
 .lc-footer-actions {
