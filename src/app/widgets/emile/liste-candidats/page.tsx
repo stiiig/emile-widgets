@@ -1,48 +1,82 @@
 "use client";
 
+/**
+ * liste-candidats — Vue orienteur·rice
+ *
+ * Affiche la liste des candidat·e·s rattaché·e·s à l'orienteur identifié
+ * par le token OCC passé en query string (?token=<rowId>.<HMAC-SHA256>).
+ *
+ * Flux :
+ *  1. Le token est extrait de l'URL et transmis au workflow n8n `occ-list`.
+ *  2. n8n vérifie le HMAC, lit la table CANDIDATS filtrée sur Responsable_candidat,
+ *     et renvoie { status, orienteurNom, candidats[] }.
+ *  3. Chaque card candidat affiche : nom/prénom, référence, statut coloré,
+ *     chips (âge + tooltip date de naissance, genre, nationalité),
+ *     ligne de contact (email + téléphone), lien vers la fiche.
+ *
+ * Variables d'environnement requises (baked au build) :
+ *  - NEXT_PUBLIC_OCC_LIST_URL  — URL du webhook n8n occ-list
+ */
+
 import { useEffect, useState } from "react";
 import "./styles.css";
 import logoEmile from "../assets/logo-emile-white.png";
 
+// ── Types ────────────────────────────────────────────────────────────────────
+
 type Status = "loading" | "ok" | "invalid" | "no_token" | "error";
 
+/** Données d'un candidat renvoyées par le workflow occ-list */
 interface Candidat {
   id: number;
   prenom: string;
   nom: string;
   email: string;
-  lienAcces?: string | null;
   tel?: string | null;
   genre?: string | null;
   age?: number | null;
+  /** Timestamp Unix en secondes (format natif Grist pour les colonnes Date) */
   dateNaissance?: number | string | null;
   reference?: string | null;
+  /** Libellé de la nationalité (colonne formule $Nationalite_Nom_du_pays) */
   nationalite?: string | null;
+  /** Valeur du Choice Statut dans CANDIDATS */
   statut?: string | null;
 }
 
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
+/**
+ * Formate une date Grist en JJ/MM/AAAA.
+ * Grist renvoie les colonnes Date comme un timestamp Unix en secondes (number).
+ * Fallback string accepté au cas où une version renverrait du YYYY-MM-DD.
+ */
 function formatDate(raw: string | number | null | undefined): string | undefined {
   if (raw == null) return undefined;
-  // Grist renvoie les dates comme timestamp Unix en secondes (number)
   if (typeof raw === "number") {
-    const d = new Date(raw * 1000);
+    const d   = new Date(raw * 1000);
     const dd  = String(d.getUTCDate()).padStart(2, "0");
     const mm  = String(d.getUTCMonth() + 1).padStart(2, "0");
     const yyy = d.getUTCFullYear();
     return `${dd}/${mm}/${yyy}`;
   }
-  // Fallback si jamais Grist renvoie une string YYYY-MM-DD
+  // Fallback YYYY-MM-DD
   const m = raw.match(/^(\d{4})-(\d{2})-(\d{2})/);
   if (m) return `${m[3]}/${m[2]}/${m[1]}`;
   return raw;
 }
 
+/**
+ * Retourne la classe CSS de couleur du chip statut selon la valeur.
+ * Les valeurs "Sortie (...)" et "Suspension (...)" sont traitées par préfixe
+ * pour couvrir tous les variants sans liste exhaustive.
+ */
 function statutChipClass(statut: string): string {
-  if (statut === "À traiter")        return "lc-chip--statut-traiter";
-  if (statut === "En cours")         return "lc-chip--statut-en-cours";
-  if (statut === "Étape terminée")   return "lc-chip--statut-termine";
+  if (statut === "À traiter")          return "lc-chip--statut-traiter";
+  if (statut === "En cours")           return "lc-chip--statut-en-cours";
+  if (statut === "Étape terminée")     return "lc-chip--statut-termine";
   if (statut.startsWith("Suspension")) return "lc-chip--statut-suspension";
-  if (statut.startsWith("Sortie"))   return "lc-chip--statut-sortie";
+  if (statut.startsWith("Sortie"))     return "lc-chip--statut-sortie";
   return "lc-chip--statut-traiter";
 }
 

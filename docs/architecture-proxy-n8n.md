@@ -64,7 +64,7 @@ Le proxy joue quatre rôles :
 
 ---
 
-## Architecture actuelle — cinq workflows n8n
+## Architecture actuelle — huit workflows n8n
 
 ### Workflow GET — lecture + téléchargement + vérification magic link fiche-candidat
 
@@ -186,6 +186,110 @@ HTTP PATCH ACCOMPAGNANTS.Lien_validation = url  ← sauvegarde en background dan
 
 OCC = **Orienteur Compte Créer**. Génère un lien d'activation de compte orienteur. Appelé automatiquement par `creation-compte-orienteur` après AddRecord dans `ACCOMPAGNANTS`. Même pattern HMAC que GENERATE, même credential secret — seule l'URL de destination change (`validation-compte` au lieu de `fiche-candidat`).
 
+### Workflow OCC-REQUEST-LINK — renvoi du lien de connexion orienteur
+
+```
+Webhook POST /webhook/occ-request-link  { email }
+    │
+    ▼
+Code (normalise email en minuscules)
+    │
+    ▼
+HTTP GET ACCOMPAGNANTS?filter={"Email":[email]}
+    │
+    ▼
+Code (extrait rowId du premier enregistrement trouvé)
+    │
+    ▼
+IF rowId trouvé
+    ├─ False → Respond { "status": "not_found" }
+    └─ True  → HTTP GET /webhook/occ-generate?rowId=X
+                │
+                ▼
+               Code (extrait le token depuis la réponse)
+                │
+                ▼
+               Code (construit l'URL liste-candidats?token=X.HMAC)
+                │
+                ▼
+               Respond { "status": "ok", "url": "https://.../liste-candidats/?token=..." }
+```
+
+Appelé par la page `recuperer-lien-connexion`. Renvoie un lien pointant vers
+`liste-candidats` (espace de travail de l'orienteur·rice).
+
+> ⚠️ **Attention au champ `url` de occ-generate** : ce workflow retourne une `url`
+> qui pointe vers `validation-compte` (lien créé à la genèse du compte). Il ne faut
+> **pas** utiliser ce champ directement — le Code node reconstruit l'URL manuellement
+> avec le token extrait, en ciblant `liste-candidats`.
+
+---
+
+### Workflow OCC-REQUEST-VALIDATION-LINK — renvoi du lien de validation orienteur
+
+```
+Webhook POST /webhook/occ-request-validation-link  { email }
+    │
+    ▼
+(idem OCC-REQUEST-LINK jusqu'à la résolution du rowId)
+    │
+    ▼
+IF rowId trouvé
+    ├─ False → Respond { "status": "not_found" }
+    └─ True  → HTTP GET /webhook/occ-generate?rowId=X
+                │
+                ▼
+               Respond { "status": "ok", "url": $json.url }
+               ← utilise directement l'url validation-compte retournée par occ-generate
+```
+
+Appelé par la page `recuperer-lien-validation`. Contrairement à OCC-REQUEST-LINK,
+utilise directement le champ `url` de occ-generate car il pointe déjà vers
+`validation-compte`.
+
+---
+
+### Workflow OCC-LIST — liste des candidats d'un orienteur
+
+```
+Webhook GET /webhook/occ-list?token=X.HMAC
+    │
+    ▼
+Code (extrait rowId + sig du token)
+    │
+    ▼
+Crypto HMAC-SHA256 (credential EMILE HMAC Secret)
+    │
+    ▼
+IF sig === HMAC calculé
+    ├─ False → Respond { "status": "invalid" }
+    └─ True  → HTTP GET ACCOMPAGNANTS?filter={"id":[rowId]}
+                │  (récupère le nom de l'orienteur)
+                ▼
+               HTTP GET CANDIDATS?filter={"Responsable_candidat":[rowId]}
+                │  (récupère les candidats rattachés)
+                ▼
+               Code (formate la réponse)
+                │  Pour chaque candidat : id, prenom, nom, email, tel,
+                │  genre, age, dateNaissance, reference, nationalite, statut
+                ▼
+               Respond {
+                 "status": "ok",
+                 "orienteurNom": "Prénom Nom",
+                 "candidats": [...]
+               }
+```
+
+Appelé par la page `liste-candidats` au chargement. Le token est le même format
+que les autres workflows OCC (`rowId.HMAC`) — l'orienteur est donc identifié de
+manière cryptographiquement vérifiée sans session ni cookie.
+
+> **Champ `Responsable_candidat`** : colonne Reference dans CANDIDATS pointant vers
+> ACCOMPAGNANTS. Grist renvoie un rowId entier — le filtre doit utiliser l'entier,
+> pas le nom affiché.
+
+---
+
 ### Workflow OCC-VALIDATE — vérification et activation du compte orienteur
 
 ```
@@ -221,18 +325,21 @@ Appelé par la page `validation-compte` au chargement. Vérifie le token, lit le
 
 Sans modifier Grist, sans plugin, sans compte Grist côté utilisateur :
 
-| Fonctionnalité | Mécanisme |
-|----------------|-----------|
-| Afficher la fiche d'un candidat via lien signé | `GET ?table=CANDIDATS&token=ID.HMAC` |
-| Charger les listes déroulantes (départements, établissements…) | `GET ?table=DPTS_REGIONS` etc. |
-| Lire les types/options de colonnes | `GET ?table=_grist_Tables` + `_grist_Tables_column` |
-| Afficher les pièces jointes (noms) | `GET ?table=_grist_Attachments` |
-| Télécharger une pièce jointe | `GET ?attachId=42` → binaire |
-| Uploader une pièce jointe | `POST multipart/form-data` |
-| Soumettre le formulaire d'inscription (AddRecord) | `POST text/plain { _action:"add", fields }` → workflow POST → branche AddRecord |
-| Générer un magic link fiche-candidat | `GET /webhook/grist-generate?rowId=X` (appelé automatiquement par `inscription-candidat`) + sauvegarde `Lien_acces` dans `CANDIDATS` en background |
-| Générer un magic link orienteur (OCC) | `GET /webhook/occ-generate?rowId=X` (appelé automatiquement par `creation-compte-orienteur`) + sauvegarde `Lien_validation` dans `ACCOMPAGNANTS` en background |
-| Activer un compte orienteur via lien signé | `GET /webhook/occ-validate?token=ID.HMAC` (appelé par `validation-compte`) → passe `Compte_valide` à `"Oui"` dans `ACCOMPAGNANTS` |
+| Fonctionnalité | Workflow | Page appelante |
+|----------------|----------|----------------|
+| Afficher la fiche d'un candidat via lien signé | GET `?table=CANDIDATS&token=ID.HMAC` | `fiche-candidat` |
+| Charger les listes déroulantes (départements, établissements…) | GET `?table=DPTS_REGIONS` etc. | `fiche-candidat`, `inscription-candidat` |
+| Lire les types/options de colonnes | GET `?table=_grist_Tables` + `_grist_Tables_column` | `fiche-candidat` |
+| Afficher les pièces jointes (noms) | GET `?table=_grist_Attachments` | `fiche-candidat` |
+| Télécharger une pièce jointe | GET `?attachId=42` → binaire | `fiche-candidat` |
+| Uploader une pièce jointe | POST `multipart/form-data` | `fiche-candidat` |
+| Soumettre le formulaire d'inscription (AddRecord) | POST `text/plain { _action:"add", fields }` | `inscription-candidat` |
+| Générer un magic link fiche-candidat | GET `occ-generate?rowId=X` + sauvegarde `Lien_acces` dans CANDIDATS | `inscription-candidat` (automatique) |
+| Générer un magic link orienteur (OCC) | GET `occ-generate?rowId=X` + sauvegarde `Lien_validation` dans ACCOMPAGNANTS | `creation-compte-orienteur` (automatique) |
+| Activer un compte orienteur via lien signé | GET `occ-validate?token=ID.HMAC` → passe `Compte_valide` à `"Oui"` | `validation-compte` |
+| Lister les candidats d'un orienteur | GET `occ-list?token=ID.HMAC` | `liste-candidats` |
+| Renvoyer le lien de connexion orienteur (liste-candidats) | POST `occ-request-link { email }` | `recuperer-lien-connexion` |
+| Renvoyer le lien de validation de compte orienteur | POST `occ-request-validation-link { email }` | `recuperer-lien-validation` |
 
 ---
 
@@ -291,7 +398,10 @@ Les magic links sont permanents. Pour des dossiers sensibles, une expiration (da
 | `src/lib/grist/init.ts` | Détecte `NEXT_PUBLIC_GRIST_PROXY_URL` et bascule en mode REST |
 | `src/lib/grist/meta.ts` | Charge métadonnées colonnes via `_grist_Tables` |
 | `src/components/AttachmentField.tsx` | Gestion pièces jointes (affichage, download fetch+blob, upload) |
-| `src/app/widgets/emile/inscription-candidat/page.tsx` | Formulaire d'inscription — AddRecord via `text/plain` + génération magic link fiche-candidat (`NEXT_PUBLIC_GRIST_GENERATE_URL`) + sauvegarde `Lien_acces` dans `CANDIDATS` |
-| `src/app/widgets/emile/creation-compte-orienteur/page.tsx` | Formulaire création compte orienteur — AddRecord `ACCOMPAGNANTS` (`Compte_valide: "En attente"`) + génération magic link OCC (`NEXT_PUBLIC_OCC_GENERATE_URL`) + sauvegarde `Lien_validation` dans `ACCOMPAGNANTS` |
-| `src/app/widgets/emile/validation-compte/page.tsx` | Page d'activation compte orienteur — appelle `NEXT_PUBLIC_OCC_VALIDATE_URL?token=X.HMAC`, affiche le résultat (`ok` / `already_validated` / `invalid` / `error`) |
-| `docs/rest-mode.md` | Config n8n pas-à-pas avec tous les pièges rencontrés (workflows GET, POST, GENERATE, OCC-GENERATE, OCC-VALIDATE) |
+| `src/app/widgets/emile/inscription-candidat/page.tsx` | Formulaire d'inscription — AddRecord via `text/plain` + génération magic link fiche-candidat (`NEXT_PUBLIC_GRIST_GENERATE_URL`) |
+| `src/app/widgets/emile/creation-compte-orienteur/page.tsx` | Formulaire création compte orienteur — AddRecord ACCOMPAGNANTS + génération magic link OCC (`NEXT_PUBLIC_OCC_GENERATE_URL`) |
+| `src/app/widgets/emile/validation-compte/page.tsx` | Activation compte orienteur — `NEXT_PUBLIC_OCC_VALIDATE_URL?token=X.HMAC` |
+| `src/app/widgets/emile/liste-candidats/page.tsx` | Espace orienteur — liste ses candidats via `NEXT_PUBLIC_OCC_LIST_URL?token=X.HMAC`, chips colorés, tooltip date de naissance |
+| `src/app/widgets/emile/recuperer-lien-connexion/page.tsx` | Renvoi du lien liste-candidats par email — `NEXT_PUBLIC_OCC_REQUEST_LINK_URL` |
+| `src/app/widgets/emile/recuperer-lien-validation/page.tsx` | Renvoi du lien validation-compte par email — `NEXT_PUBLIC_OCC_REQUEST_VALIDATION_URL` |
+| `docs/rest-mode.md` | Config n8n pas-à-pas avec tous les pièges rencontrés |

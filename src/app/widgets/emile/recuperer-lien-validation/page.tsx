@@ -1,5 +1,25 @@
 "use client";
 
+/**
+ * recuperer-lien-validation — Page orienteur·rice
+ *
+ * Permet à un·e orienteur·rice de re-recevoir son lien de validation de compte
+ * s'il a été perdu ou n'a pas été reçu à la création.
+ *
+ * Flux :
+ *  1. L'orienteur saisit son adresse email.
+ *  2. POST vers le workflow n8n `occ-request-validation-link` avec { email }.
+ *  3. n8n recherche le compte dans ACCOMPAGNANTS, appelle occ-generate,
+ *     et renvoie { status: "ok", url } où url pointe vers validation-compte.
+ *  4. Le lien est affiché avec un bouton "Copier".
+ *
+ * Cas d'erreur : `not_found` (email inconnu) et `error` (réseau)
+ * affichent le même message pour ne pas confirmer l'existence d'un compte.
+ *
+ * Variable d'environnement requise (baked au build) :
+ *  - NEXT_PUBLIC_OCC_REQUEST_VALIDATION_URL — URL du webhook n8n occ-request-validation-link
+ */
+
 import { useState } from "react";
 import "./styles.css";
 import logoEmile from "../assets/logo-emile-white.png";
