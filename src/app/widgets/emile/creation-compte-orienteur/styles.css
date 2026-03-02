@@ -32,6 +32,26 @@
   font-weight: 700;
   opacity: 0.95;
 }
+.occ-header__spacer { flex: 1; }
+.occ-faq-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0 0.75rem;
+  height: 2rem;
+  border: 1px solid rgba(255, 255, 255, 0.35) !important;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.12) !important;
+  color: #fff !important;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: Marianne, arial, sans-serif;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+.occ-faq-btn:hover { background: rgba(255, 255, 255, 0.25) !important; }
 
 /* ── Body ───────────────────────────────────────────────────── */
 .occ-body {

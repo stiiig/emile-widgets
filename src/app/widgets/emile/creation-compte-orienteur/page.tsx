@@ -9,6 +9,7 @@ import {
   normalizeChoices,
 } from "@/lib/grist/meta";
 import { SearchDropdown, Option } from "@/components/SearchDropdown";
+import { FAQPanel } from "@/components/FAQPanel";
 import { useGristInit } from "@/lib/grist/hooks";
 import { choicesToOptions } from "@/lib/emile/utils";
 import { FALLBACK_FONCTION_OPTIONS } from "@/lib/emile/constants";
@@ -44,6 +45,7 @@ export default function OrienteurPage() {
   const [copied, setCopied]         = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError]           = useState<string | null>(null);
+  const [showFaq, setShowFaq]       = useState(false);
 
   /* Options chargées depuis Grist */
   const [etablOptions,    setEtablOptions]    = useState<Option[]>([]);
@@ -187,6 +189,11 @@ export default function OrienteurPage() {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={logoEmile.src} alt="EMILE" style={{ height: "2rem", width: "auto" }} />
           <span className="occ-header__appname">Création compte orienteur·ice</span>
+          <div className="occ-header__spacer" />
+          <button type="button" className="occ-faq-btn" onClick={() => setShowFaq(true)}>
+            <i className="fa-solid fa-circle-question" />
+            FAQ
+          </button>
         </header>
         <main className="occ-body">
           <div className="fr-alert fr-alert--warning">
@@ -194,6 +201,7 @@ export default function OrienteurPage() {
             <p>Ce widget doit être ouvert dans Grist ou via une URL configurée.</p>
           </div>
         </main>
+        {showFaq && <FAQPanel docApi={docApi} onClose={() => setShowFaq(false)} />}
       </div>
     );
   }
@@ -206,10 +214,16 @@ export default function OrienteurPage() {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={logoEmile.src} alt="EMILE" style={{ height: "2rem", width: "auto" }} />
           <span className="occ-header__appname">Création compte orienteur·ice</span>
+          <div className="occ-header__spacer" />
+          <button type="button" className="occ-faq-btn" onClick={() => setShowFaq(true)}>
+            <i className="fa-solid fa-circle-question" />
+            FAQ
+          </button>
         </header>
         <main className="occ-body occ-body--center">
           <div style={{ color: "#bbb", fontSize: "1.5rem" }}><i className="fa-solid fa-spinner fa-spin" /></div>
         </main>
+        {showFaq && <FAQPanel docApi={docApi} onClose={() => setShowFaq(false)} />}
       </div>
     );
   }
@@ -222,6 +236,11 @@ export default function OrienteurPage() {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={logoEmile.src} alt="EMILE" style={{ height: "2rem", width: "auto" }} />
           <span className="occ-header__appname">Création compte orienteur·ice</span>
+          <div className="occ-header__spacer" />
+          <button type="button" className="occ-faq-btn" onClick={() => setShowFaq(true)}>
+            <i className="fa-solid fa-circle-question" />
+            FAQ
+          </button>
         </header>
         <main className="occ-body">
 
@@ -333,6 +352,7 @@ export default function OrienteurPage() {
           </div>
 
         </main>
+        {showFaq && <FAQPanel docApi={docApi} onClose={() => setShowFaq(false)} />}
       </div>
     );
   }
@@ -347,6 +367,11 @@ export default function OrienteurPage() {
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={logoEmile.src} alt="EMILE" style={{ height: "2rem", width: "auto" }} />
         <span className="occ-header__appname">Création compte orienteur·ice</span>
+        <div className="occ-header__spacer" />
+        <button type="button" className="occ-faq-btn" onClick={() => setShowFaq(true)}>
+          <i className="fa-solid fa-circle-question" />
+          FAQ
+        </button>
       </header>
       <main className="occ-body">
 
@@ -572,6 +597,7 @@ export default function OrienteurPage() {
         </form>
 
       </main>
+      {showFaq && <FAQPanel docApi={docApi} onClose={() => setShowFaq(false)} />}
     </div>
   );
 }

@@ -8,6 +8,7 @@ import {
   normalizeChoices,
 } from "@/lib/grist/meta";
 import { SearchDropdown, Option } from "@/components/SearchDropdown";
+import { FAQPanel } from "@/components/FAQPanel";
 import { useGristInit, useDepartementOptions } from "@/lib/grist/hooks";
 import { choicesToOptions } from "@/lib/emile/utils";
 
@@ -36,6 +37,7 @@ export default function EtablissementPage() {
   const [done, setDone]             = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError]           = useState<string | null>(null);
+  const [showFaq, setShowFaq]       = useState(false);
 
   /* Options */
   const [dispositifOptions, setDispositifOptions] = useState<Option[]>([]);
@@ -135,6 +137,11 @@ export default function EtablissementPage() {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={logoEmile.src} alt="EMILE" style={{ height: "2rem", width: "auto" }} />
           <span className="ae-header__appname">Ajout d&apos;un établissement</span>
+          <div className="ae-header__spacer" />
+          <button type="button" className="ae-faq-btn" onClick={() => setShowFaq(true)}>
+            <i className="fa-solid fa-circle-question" />
+            FAQ
+          </button>
         </header>
         <main className="ae-body">
           <div className="fr-alert fr-alert--warning">
@@ -142,6 +149,7 @@ export default function EtablissementPage() {
             <p>Ce widget doit être ouvert dans Grist ou via une URL configurée.</p>
           </div>
         </main>
+        {showFaq && <FAQPanel docApi={docApi} onClose={() => setShowFaq(false)} />}
       </div>
     );
   }
@@ -154,10 +162,16 @@ export default function EtablissementPage() {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={logoEmile.src} alt="EMILE" style={{ height: "2rem", width: "auto" }} />
           <span className="ae-header__appname">Ajout d&apos;un établissement</span>
+          <div className="ae-header__spacer" />
+          <button type="button" className="ae-faq-btn" onClick={() => setShowFaq(true)}>
+            <i className="fa-solid fa-circle-question" />
+            FAQ
+          </button>
         </header>
         <main className="ae-body ae-body--center">
           <div style={{ color: "#bbb", fontSize: "1.5rem" }}><i className="fa-solid fa-spinner fa-spin" /></div>
         </main>
+        {showFaq && <FAQPanel docApi={docApi} onClose={() => setShowFaq(false)} />}
       </div>
     );
   }
@@ -170,6 +184,11 @@ export default function EtablissementPage() {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={logoEmile.src} alt="EMILE" style={{ height: "2rem", width: "auto" }} />
           <span className="ae-header__appname">Ajout d&apos;un établissement</span>
+          <div className="ae-header__spacer" />
+          <button type="button" className="ae-faq-btn" onClick={() => setShowFaq(true)}>
+            <i className="fa-solid fa-circle-question" />
+            FAQ
+          </button>
         </header>
         <main className="ae-body ae-body--center">
           <div className="ae-done">
@@ -206,6 +225,7 @@ export default function EtablissementPage() {
             </div>
           </div>
         </main>
+        {showFaq && <FAQPanel docApi={docApi} onClose={() => setShowFaq(false)} />}
       </div>
     );
   }
@@ -217,6 +237,11 @@ export default function EtablissementPage() {
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={logoEmile.src} alt="EMILE" style={{ height: "2rem", width: "auto" }} />
         <span className="ae-header__appname">Ajout d&apos;un établissement</span>
+        <div className="ae-header__spacer" />
+        <button type="button" className="ae-faq-btn" onClick={() => setShowFaq(true)}>
+          <i className="fa-solid fa-circle-question" />
+          FAQ
+        </button>
       </header>
       <main className="ae-body">
 
@@ -308,6 +333,7 @@ export default function EtablissementPage() {
 
         </form>
       </main>
+      {showFaq && <FAQPanel docApi={docApi} onClose={() => setShowFaq(false)} />}
     </div>
   );
 }
