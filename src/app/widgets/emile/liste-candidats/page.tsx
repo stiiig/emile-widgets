@@ -285,7 +285,7 @@ export default function ListeCandidatsPage() {
               Utilisez votre lien personnel ou récupérez-le ci-dessous.
             </p>
             <a
-              href="/widgets/emile/recuperer-lien-connexion/"
+              href="/grist-widgets/widgets/emile/recuperer-lien-connexion/"
               className="lc-btn"
               style={{ marginTop: "0.25rem" }}
             >
