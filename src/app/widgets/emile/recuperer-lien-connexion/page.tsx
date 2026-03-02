@@ -72,7 +72,7 @@ export default function RecupererLienConnexionPage() {
             Recevoir mon lien de connexion
           </h1>
           <p className="rlc-subtitle">
-            Saisissez l'adresse email associée à votre compte orienteur.
+            Saisissez l'adresse email associée à votre compte orienteur·rice.
             Vous recevrez un lien pour accéder à votre espace.
           </p>
 
@@ -86,7 +86,6 @@ export default function RecupererLienConnexionPage() {
               className="rlc-input"
               value={email}
               onChange={(e) => { setEmail(e.target.value); setStatus("idle"); }}
-              placeholder="exemple@domaine.fr"
               disabled={status === "loading"}
               required
               autoComplete="email"
@@ -139,23 +138,13 @@ export default function RecupererLienConnexionPage() {
             </div>
           )}
 
-          {/* ── Email introuvable ── */}
-          {status === "not_found" && (
+          {/* ── Email introuvable ou erreur ── */}
+          {(status === "not_found" || status === "error") && (
             <div className="rlc-alert rlc-alert--warning">
               <i className="fa-solid fa-triangle-exclamation" />
               <span>
-                Aucun compte orienteur trouvé avec cette adresse email.
+                Aucun compte orienteur·rice trouvé avec cette adresse email.
                 Vérifiez l'adresse ou contactez votre administrateur·ice.
-              </span>
-            </div>
-          )}
-
-          {/* ── Erreur technique ── */}
-          {status === "error" && (
-            <div className="rlc-alert rlc-alert--error">
-              <i className="fa-solid fa-circle-xmark" />
-              <span>
-                Une erreur est survenue. Veuillez réessayer ou contacter votre administrateur·ice.
               </span>
             </div>
           )}
