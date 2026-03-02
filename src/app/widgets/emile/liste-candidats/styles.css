@@ -287,30 +287,108 @@
 }
 .lc-chip i { font-size: 0.65rem; opacity: 0.7; }
 
-/* Tooltip discret sur les chips */
+/* Tooltip discret sur les chips (ex: date de naissance, date de création) */
 .lc-chip[data-tooltip]         { cursor: default; }
 .lc-chip[data-tooltip]::after  {
   content: attr(data-tooltip);
   position: absolute;
-  bottom: calc(100% + 6px);
+  bottom: calc(100% + 8px);
   left: 50%;
-  transform: translateX(-50%) scale(0.9);
+  transform: translateX(-50%) scale(0.92);
   transform-origin: bottom center;
-  background: rgba(30, 30, 50, 0.88);
+  background: #1e1e32;
   color: #fff;
-  font-size: 0.68rem;
+  font-size: 0.7rem;
   font-weight: 500;
-  padding: 3px 9px;
-  border-radius: 6px;
+  padding: 5px 10px;
+  border-radius: 8px;
   white-space: nowrap;
+  letter-spacing: 0.01em;
   pointer-events: none;
   opacity: 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.22);
   transition: opacity 0.15s ease, transform 0.15s ease;
   z-index: 20;
 }
 .lc-chip[data-tooltip]:hover::after {
   opacity: 1;
   transform: translateX(-50%) scale(1);
+}
+
+/* ── Popover "Non éligible" ──────────────────────────────────── */
+.lc-popover-anchor {
+  position: relative;
+  display: inline-flex;
+}
+.lc-chip--has-popover { cursor: default; }
+.lc-chip--has-popover i {
+  font-size: 0.6rem;
+  opacity: 0.75;
+}
+.lc-popover {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 200;
+}
+.lc-popover--error {
+  background: #fff;
+  border: 1px solid #fca5a5;
+  border-top: 3px solid #ce0500;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.13), 0 2px 6px rgba(0, 0, 0, 0.07);
+  min-width: 200px;
+  white-space: nowrap;
+}
+.lc-popover__title {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #ce0500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0 0 0.5rem 0;
+}
+.lc-popover__title i { font-size: 0.75rem; }
+.lc-popover__list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.lc-popover__item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.76rem;
+  color: #2d2d2d;
+  font-weight: 500;
+  font-family: "Marianne", "Helvetica Neue", Arial, sans-serif;
+}
+.lc-popover__item i {
+  color: #ce0500;
+  font-size: 0.58rem;
+  flex-shrink: 0;
+  width: 0.7rem;
+  text-align: center;
+}
+/* Flèche pointant vers le bas */
+.lc-popover__arrow {
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%) rotate(45deg);
+  width: 10px;
+  height: 10px;
+  background: #fff;
+  border-right: 1px solid #fca5a5;
+  border-bottom: 1px solid #fca5a5;
 }
 .lc-chip--ref {
   background: #e3e3fd;

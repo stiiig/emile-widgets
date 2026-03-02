@@ -47,6 +47,14 @@ interface Candidat {
   statut?: string | null;
   /** "✅ OK" | "❌ KO" — colonne formula Eligibilite_overall */
   eligibilite?: string | null;
+  /** Critères individuels — "✅ OK" | "❌ KO" (pour le popover) */
+  eligAccompagnant?: string | null;
+  eligTerritoire?:   string | null;
+  eligMajorite?:     string | null;
+  eligLangue?:       string | null;
+  eligSituation?:    string | null;
+  eligMobilite?:     string | null;
+  eligPrecarite?:    string | null;
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -83,6 +91,57 @@ function statutChipClass(statut: string): string {
   if (statut.startsWith("Suspension")) return "lc-chip--statut-suspension";
   if (statut.startsWith("Sortie"))     return "lc-chip--statut-sortie";
   return "lc-chip--statut-traiter";
+}
+
+// ── Popover "Non éligible" ────────────────────────────────────────────────────
+
+/**
+ * Affiche le chip "Non éligible" avec, au survol, une card listant
+ * chaque critère KO. Si les données individuelles ne sont pas disponibles
+ * (n8n non encore mis à jour), affiche le chip sans info icon.
+ */
+function EligibilitePopover({ c }: { c: Candidat }) {
+  const [open, setOpen] = useState(false);
+
+  const koLabels = [
+    { val: c.eligAccompagnant, label: "Accompagnant·e engagé·e" },
+    { val: c.eligTerritoire,   label: "Territoire de départ" },
+    { val: c.eligMajorite,     label: "Candidat·e majeur·e" },
+    { val: c.eligLangue,       label: "Niveau de langue" },
+    { val: c.eligSituation,    label: "Situation régulière" },
+    { val: c.eligMobilite,     label: "Volontariat mobilité" },
+    { val: c.eligPrecarite,    label: "Précarité de logement" },
+  ].filter((x) => x.val === "❌ KO").map((x) => x.label);
+
+  return (
+    <span
+      className="lc-popover-anchor"
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={() => setOpen(false)}
+    >
+      <span className={`lc-chip lc-chip--non-eligible${koLabels.length > 0 ? " lc-chip--has-popover" : ""}`}>
+        Non éligible
+        {koLabels.length > 0 && <i className="fa-solid fa-circle-info" />}
+      </span>
+      {open && koLabels.length > 0 && (
+        <div className="lc-popover lc-popover--error" role="tooltip">
+          <p className="lc-popover__title">
+            <i className="fa-solid fa-circle-xmark" />
+            Critères non satisfaits
+          </p>
+          <ul className="lc-popover__list">
+            {koLabels.map((label) => (
+              <li key={label} className="lc-popover__item">
+                <i className="fa-solid fa-xmark" />
+                {label}
+              </li>
+            ))}
+          </ul>
+          <span className="lc-popover__arrow" />
+        </div>
+      )}
+    </span>
+  );
 }
 
 export default function ListeCandidatsPage() {
@@ -168,9 +227,7 @@ export default function ListeCandidatsPage() {
             {c.eligibilite === "✅ OK" && (
               <span className="lc-chip lc-chip--eligible">Éligible</span>
             )}
-            {c.eligibilite === "❌ KO" && (
-              <span className="lc-chip lc-chip--non-eligible">Non éligible</span>
-            )}
+            {c.eligibilite === "❌ KO" && <EligibilitePopover c={c} />}
             {c.statut && (
               <span className={`lc-chip ${statutChipClass(c.statut)}`}>{c.statut}</span>
             )}
