@@ -317,7 +317,8 @@ function DeptSpecialField({ value, onChange, disabled, docApi, col }: {
         const id = ids[i];
         const label = String(table["Nom_departement"]?.[i] ?? "").trim();
         if (!label) continue;
-        if (table["Territoire_depart"]?.[i] !== "Oui") continue;
+        // Pas de filtre Territoire_depart ici : on affiche tous les départements
+        // pour que la valeur stockée soit toujours lisible, quelle que soit l'éligibilité.
         const numero = String(table["Numero"]?.[i] ?? "").trim() || undefined;
         const region = String(table["Nom_region"]?.[i] ?? "").trim() || undefined;
         opts.push({ id, label, q: `${numero ?? ""} ${label}`.toLowerCase(), tagLeft: numero, tag: region });
