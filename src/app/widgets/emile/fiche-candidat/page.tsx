@@ -858,8 +858,11 @@ export default function Page() {
   const [showFaq, setShowFaq] = useState(false);
 
   // ── Auth status — pour les écrans "Connexion requise" / "Lien invalide" ──
-  type AuthStatus = "pending" | "ok" | "no_token" | "invalid";
-  const [authStatus, setAuthStatus] = useState<AuthStatus>("pending");
+  // Initialisé à "no_token" (cas pessimiste) : le useEffect de parsing URL corrige
+  // si un token est trouvé (URL ou localStorage). Cela évite un rendu intermédiaire
+  // avec authStatus="pending" qui produirait un corps vide.
+  type AuthStatus = "no_token" | "ok" | "invalid";
+  const [authStatus, setAuthStatus] = useState<AuthStatus>("no_token");
 
   const [activeTab, setActiveTab] = useState<L1TabKey>(EMILE_TABS[0].key);
   const activeTabObj = useMemo(() => EMILE_TABS.find((t) => t.key === activeTab) ?? EMILE_TABS[0], [activeTab]);
@@ -1242,7 +1245,6 @@ export default function Page() {
                 </p>
               </div>
             </div>
-          // ── Autre cas (pending sans résultat) : spinner déjà géré au-dessus ──
           ) : null
         ) : !isTabMapped ? (
           <div className="fr-alert fr-alert--info">
