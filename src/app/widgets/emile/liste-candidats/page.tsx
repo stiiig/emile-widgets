@@ -47,14 +47,18 @@ interface Candidat {
   statut?: string | null;
   /** "✅ OK" | "❌ KO" — colonne formula Eligibilite_overall */
   eligibilite?: string | null;
-  /** Critères individuels — "✅ OK" | "❌ KO" (pour le popover) */
-  eligAccompagnant?: string | null;
-  eligTerritoire?:   string | null;
-  eligMajorite?:     string | null;
-  eligLangue?:       string | null;
-  eligSituation?:    string | null;
-  eligMobilite?:     string | null;
-  eligPrecarite?:    string | null;
+  /**
+   * Champs source pour le popover "Non éligible".
+   * Les KO sont dérivés de ces valeurs brutes côté frontend,
+   * sans passer par les colonnes calculées Eligibilite_*.
+   */
+  aie?:                 string | null;                     // "Oui" | "Non"
+  territoireDepart?:    boolean | string | number | null;  // $Departement_domicile_inscription_Territoire_depart
+  niveauLangueElig?:    boolean | string | number | null;  // $Niveau_de_langue_Eligibilite
+  regulariteSituation?: string | null;                     // "Oui" | "Non"
+  precariteLogement?:   string | null;                     // valeur du Choice
+  volontariteMobilite?: string | null;                     // "Oui" | "Non"
+  // Note : majorité dérivée du champ `age` déjà présent
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -103,15 +107,50 @@ function statutChipClass(statut: string): string {
 function EligibilitePopover({ c }: { c: Candidat }) {
   const [open, setOpen] = useState(false);
 
-  const koLabels = [
-    { val: c.eligAccompagnant, label: "Accompagnant·e engagé·e" },
-    { val: c.eligTerritoire,   label: "Territoire de départ" },
-    { val: c.eligMajorite,     label: "Candidat·e majeur·e" },
-    { val: c.eligLangue,       label: "Niveau de langue" },
-    { val: c.eligSituation,    label: "Situation régulière" },
-    { val: c.eligMobilite,     label: "Volontariat mobilité" },
-    { val: c.eligPrecarite,    label: "Précarité de logement" },
-  ].filter((x) => x.val === "❌ KO").map((x) => x.label);
+  /** Critères KO dérivés des champs source (pas des colonnes calculées Grist). */
+  const koItems: { label: string; detail: string }[] = [];
+
+  // 1. Accompagnant·e engagé·e — $AIE doit valoir "Oui"
+  if (c.aie != null && c.aie !== "Oui")
+    koItems.push({ label: "Accompagnant·e engagé·e", detail: c.aie || "Non" });
+
+  // 2. Territoire de départ — $Departement_domicile_inscription_Territoire_depart booléen/chaîne truthy
+  const terrOk =
+    c.territoireDepart === true   ||
+    c.territoireDepart === 1      ||
+    c.territoireDepart === "Oui"  ||
+    c.territoireDepart === "true" ||
+    c.territoireDepart === "1";
+  if (c.territoireDepart != null && !terrOk)
+    koItems.push({ label: "Territoire de départ", detail: "Hors territoire éligible" });
+
+  // 3. Majorité — dérivée du champ `age` déjà présent dans la card
+  if (c.age != null && c.age < 18)
+    koItems.push({ label: "Majorité", detail: `${c.age} ans — mineur·e` });
+
+  // 4. Niveau de langue — $Niveau_de_langue_Eligibilite booléen/chaîne truthy
+  const langOk =
+    c.niveauLangueElig === true   ||
+    c.niveauLangueElig === 1      ||
+    c.niveauLangueElig === "Oui"  ||
+    c.niveauLangueElig === "true" ||
+    c.niveauLangueElig === "1";
+  if (c.niveauLangueElig != null && !langOk)
+    koItems.push({ label: "Niveau de langue", detail: "Niveau insuffisant" });
+
+  // 5. Situation régulière — $Regularite_situation doit valoir "Oui"
+  if (c.regulariteSituation != null && c.regulariteSituation !== "Oui")
+    koItems.push({ label: "Situation régulière", detail: c.regulariteSituation || "Non" });
+
+  // 6. Précarité de logement — KO si la personne n'est dans aucune situation éligible
+  if (c.precariteLogement != null && c.precariteLogement.startsWith("Aucun"))
+    koItems.push({ label: "Précarité de logement", detail: "Aucune situation éligible" });
+
+  // 7. Volontariat pour le programme EMILE — $Volontariat_mobilite doit valoir "Oui"
+  if (c.volontariteMobilite != null && c.volontariteMobilite !== "Oui")
+    koItems.push({ label: "Volontariat pour le programme EMILE", detail: c.volontariteMobilite || "Non" });
+
+  const hasDetails = koItems.length > 0;
 
   return (
     <span
@@ -119,21 +158,22 @@ function EligibilitePopover({ c }: { c: Candidat }) {
       onMouseEnter={() => setOpen(true)}
       onMouseLeave={() => setOpen(false)}
     >
-      <span className={`lc-chip lc-chip--non-eligible${koLabels.length > 0 ? " lc-chip--has-popover" : ""}`}>
+      <span className={`lc-chip lc-chip--non-eligible${hasDetails ? " lc-chip--has-popover" : ""}`}>
         Non éligible
-        {koLabels.length > 0 && <i className="fa-solid fa-circle-info" />}
+        {hasDetails && <i className="fa-solid fa-circle-info" />}
       </span>
-      {open && koLabels.length > 0 && (
+      {open && hasDetails && (
         <div className="lc-popover lc-popover--error" role="tooltip">
           <p className="lc-popover__title">
             <i className="fa-solid fa-circle-xmark" />
             Critères non satisfaits
           </p>
           <ul className="lc-popover__list">
-            {koLabels.map((label) => (
+            {koItems.map(({ label, detail }) => (
               <li key={label} className="lc-popover__item">
                 <i className="fa-solid fa-xmark" />
-                {label}
+                <span className="lc-popover__item-label">{label}</span>
+                <span className="lc-popover__item-detail">{detail}</span>
               </li>
             ))}
           </ul>
