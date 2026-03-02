@@ -35,7 +35,7 @@ function fullName(r: Row) {
 }
 
 function candidateHint(r: Row) {
-  return (r["ID2"] ?? "").toString().trim();
+  return (r["Reference"] ?? "").toString().trim();
 }
 
 function computeAge(dateIso: string): number | null {
@@ -1005,7 +1005,7 @@ export default function Page() {
           const prenom = (t["Prenom"]?.[i] ?? "").toString().trim();
           const nom = (t["Nom_de_famille"]?.[i] ?? "").toString().trim();
           const label = `${prenom} ${nom}`.trim() || `#${rowId}`;
-          const hint = (t["ID2"]?.[i] ?? "").toString().trim();
+          const hint = (t["Reference"]?.[i] ?? "").toString().trim();
           const q = `${label} ${hint}`.toLowerCase();
           const candidateId = i + 1;
           idByRow.set(rowId, candidateId);

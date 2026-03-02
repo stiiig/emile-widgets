@@ -1719,12 +1719,12 @@ export default function InscriptionPage() {
       const result = await docApi.applyUserActions([["AddRecord", TABLE_ID, null, fields]]);
       const newRowId = result?.retValues?.[0] as number | undefined;
       if (newRowId) {
-        // Récupération ID2 (non bloquant)
+        // Récupération Reference (non bloquant)
         try {
           const table = await docApi.fetchTable(TABLE_ID);
           const ids = table.id as number[];
           const idx = ids.indexOf(newRowId);
-          if (idx >= 0) setSubmittedId2(String(table["ID2"]?.[idx] ?? "").trim() || null);
+          if (idx >= 0) setSubmittedId2(String(table["Reference"]?.[idx] ?? "").trim() || null);
         } catch { /* non bloquant */ }
 
         // Lien "Voir mes candidats" pour l'orienteur (via token OCC)
