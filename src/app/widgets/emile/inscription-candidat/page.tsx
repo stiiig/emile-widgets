@@ -39,7 +39,7 @@ type FormData = {
   Departement_domicile_inscription: number | null;  // Ref:DPTS_REGIONS → rowId
   Adresse: string;
   Precarite_de_logement: string;
-  Consentement_volontaire: boolean | null;
+  Volontariat_mobilite: "Oui" | "Non" | null;
   Niveau_de_langue: number | null;   // Ref:NIVEAU_LANGUE → rowId
   Foyer: string;
   Regularite_situation: string;
@@ -47,7 +47,7 @@ type FormData = {
   Bpi: boolean | null;
   Pret_a_se_former: string[];
   // Étape 3 — Engagement
-  Engagement_orienteur: boolean | null;
+  AIE: "Oui" | "Non" | null;
 };
 
 const INITIAL: FormData = {
@@ -63,14 +63,14 @@ const INITIAL: FormData = {
   Departement_domicile_inscription: null,
   Adresse: "",
   Precarite_de_logement: "",
-  Consentement_volontaire: null,
+  Volontariat_mobilite: null,
   Niveau_de_langue: null,
   Foyer: "",
   Regularite_situation: "",
   Primo_arrivant: null,
   Bpi: null,
   Pret_a_se_former: [],
-  Engagement_orienteur: null,
+  AIE: null,
 };
 
 /* ─── Pays ───────────────────────────────────────────────────── */
@@ -792,7 +792,7 @@ function buildEligibilityCriteria(
     {
       id: "engagement",
       label: "Orienteur·se co-accompagnant·e engagé·e",
-      ok: form.Engagement_orienteur === null ? null : form.Engagement_orienteur,
+      ok: form.AIE === null ? null : form.AIE === "Oui",
       detail: orienteurInfo ? `${orienteurInfo.nom} — ${orienteurInfo.email}` : undefined,
     },
     {
@@ -837,7 +837,7 @@ function buildEligibilityCriteria(
     {
       id: "volontariat",
       label: "Volontariat pour le programme EMILE",
-      ok: form.Consentement_volontaire === null ? null : form.Consentement_volontaire,
+      ok: form.Volontariat_mobilite === null ? null : form.Volontariat_mobilite === "Oui",
     },
   ];
 
@@ -1346,9 +1346,7 @@ function SummaryScreen({
               />
               <SRow label="Adresse" value={form.Adresse} />
               <SRow label="Précarité du logement" value={form.Precarite_de_logement} />
-              <SRow label="Consentement EMILE" value={
-                form.Consentement_volontaire === null ? null : form.Consentement_volontaire ? "Oui" : "Non"
-              } />
+              <SRow label="Consentement EMILE" value={form.Volontariat_mobilite} />
               <SRow label="Niveau de langue" value={niveauLabel} />
               <SRow label="Composition du foyer" value={form.Foyer} />
               <SRow label="En situation régulière" value={form.Regularite_situation} />
@@ -1363,10 +1361,7 @@ function SummaryScreen({
               )}
             </SSection>
             <SSection title="Engagement orienteur">
-              <SRow label="Co-accompagnement" value={
-                form.Engagement_orienteur === null ? "Non renseigné"
-                : form.Engagement_orienteur ? "Oui" : "Non"
-              } />
+              <SRow label="Co-accompagnement" value={form.AIE ?? "Non renseigné"} />
             </SSection>
           </div>
         )}
@@ -1632,7 +1627,7 @@ export default function InscriptionPage() {
       if (form.Departement_domicile_inscription === null) return "Le département est requis.";
       if (!form.Adresse.trim())                   return "L'adresse est requise.";
       if (!form.Precarite_de_logement)            return "La situation de précarité est requise.";
-      if (form.Consentement_volontaire === null)   return "Le consentement au programme EMILE est requis.";
+      if (form.Volontariat_mobilite === null)       return "Le consentement au programme EMILE est requis.";
       if (form.Niveau_de_langue === null)          return "Le niveau de langue est requis.";
       if (!form.Foyer)                            return "La composition du foyer est requise.";
       if (!form.Regularite_situation)             return "La situation régulière est requise.";
@@ -1707,11 +1702,11 @@ export default function InscriptionPage() {
         if (unix) fields.Date_de_naissance = unix;
       }
 
-      // Toggles (booléens)
-      if (form.Consentement_volontaire !== null) fields.Consentement_volontaire = form.Consentement_volontaire;
-      if (form.Engagement_orienteur   !== null) fields.Engagement_orienteur   = form.Engagement_orienteur;
-      if (form.Primo_arrivant         !== null) fields.Primo_arrivant         = form.Primo_arrivant;
-      if (form.Bpi                    !== null) fields.Bpi                    = form.Bpi;
+      // Toggles
+      if (form.Volontariat_mobilite !== null) fields.Volontariat_mobilite = form.Volontariat_mobilite;
+      if (form.AIE                  !== null) fields.AIE                  = form.AIE;
+      if (form.Primo_arrivant       !== null) fields.Primo_arrivant       = form.Primo_arrivant;
+      if (form.Bpi                  !== null) fields.Bpi                  = form.Bpi;
 
       // ChoiceLists
       if (form.Pret_a_se_former.length > 0) {
@@ -2118,8 +2113,8 @@ export default function InscriptionPage() {
                 <SectionTitle title="Programme EMILE" />
                 <ToggleOuiNon
                   label="Candidat·e volontaire pour une insertion professionnelle et une mobilité géographique via le programme EMILE, et d'accord pour que ses données personnelles soient partagées aux équipes du programme EMILE"
-                  value={form.Consentement_volontaire}
-                  onChange={(v) => set("Consentement_volontaire", v)}
+                  value={form.Volontariat_mobilite === null ? null : form.Volontariat_mobilite === "Oui"}
+                  onChange={(v) => set("Volontariat_mobilite", v ? "Oui" : "Non")}
                   required
                 />
 
@@ -2189,8 +2184,8 @@ export default function InscriptionPage() {
 
                 <ToggleOuiNon
                   label="Je suis engagé·e et disponible pour co-accompagner le / la candidat·e"
-                  value={form.Engagement_orienteur}
-                  onChange={(v) => set("Engagement_orienteur", v)}
+                  value={form.AIE === null ? null : form.AIE === "Oui"}
+                  onChange={(v) => set("AIE", v ? "Oui" : "Non")}
                   required
                 />
               </>
@@ -2219,7 +2214,7 @@ export default function InscriptionPage() {
                   <button
                     type="button"
                     className="ins-btn ins-btn--primary"
-                    disabled={form.Engagement_orienteur === null}
+                    disabled={form.AIE === null}
                     onClick={() => {
                       const err = validateStep(4);
                       if (err) { setValidError(err); return; }
