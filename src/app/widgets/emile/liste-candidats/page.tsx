@@ -99,6 +99,17 @@ function formatDate(raw: string | number | null | undefined): string | undefined
   return raw;
 }
 
+/** Formate une date en toutes lettres françaises : "1er janvier 2008". */
+const MOIS_FR = ["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
+function formatDateLong(raw: string | number | null | undefined): string | undefined {
+  if (raw == null) return undefined;
+  const ms = typeof raw === "number" ? raw * 1000 : Date.parse(raw as string);
+  if (isNaN(ms)) return undefined;
+  const d   = new Date(ms);
+  const day = d.getUTCDate();
+  return `${day === 1 ? "1er" : day} ${MOIS_FR[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
+}
+
 /**
  * Retourne la classe CSS de couleur du chip statut selon la valeur.
  * Les valeurs "Sortie (...)" et "Suspension (...)" sont traitées par préfixe
@@ -209,7 +220,7 @@ function RefChip({ reference, createdAt }: {
   createdAt: string | number | null | undefined;
 }) {
   const [open, setOpen] = useState(false);
-  const line = createdAt ? `Créée le ${formatDate(createdAt)}` : null;
+  const line = createdAt ? `Dossier créé le ${formatDate(createdAt)}` : null;
   return (
     <span
       className="lc-popover-anchor"
@@ -223,7 +234,7 @@ function RefChip({ reference, createdAt }: {
         <div className="lc-popover lc-popover--info" role="tooltip">
           <p className="lc-popover__title lc-popover__title--info">
             <i className="fa-solid fa-calendar-check" />
-            Référence
+            Référence {reference}
           </p>
           <p className="lc-popover__info-line">{line}</p>
           <span className="lc-popover__arrow lc-popover__arrow--info" />
@@ -239,7 +250,7 @@ function AgeChip({ displayAge, dateNaissance }: {
   dateNaissance: string | number | null | undefined;
 }) {
   const [open, setOpen] = useState(false);
-  const dateStr = formatDate(dateNaissance);
+  const dateStr = formatDateLong(dateNaissance);
   return (
     <span
       className="lc-popover-anchor"
@@ -377,7 +388,7 @@ export default function ListeCandidatsPage() {
           </span>
           <div className="lc-item__chips-right">
             {c.eligibilite === "✅ OK" && (
-              <span className="lc-chip lc-chip--eligible"><i className="fa-solid fa-check" />Éligible</span>
+              <span className="lc-chip lc-chip--eligible">Éligible<i className="fa-solid fa-check" /></span>
             )}
             {c.eligibilite === "❌ KO" && <EligibilitePopover c={c} />}
             {c.statut && (
