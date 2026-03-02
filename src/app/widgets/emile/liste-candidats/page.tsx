@@ -15,15 +15,23 @@ interface Candidat {
   tel?: string | null;
   genre?: string | null;
   age?: number | null;
-  dateNaissance?: string | null;
+  dateNaissance?: number | string | null;
   reference?: string | null;
   nationalite?: string | null;
   statut?: string | null;
 }
 
-function formatDate(raw: string | null | undefined): string | undefined {
-  if (!raw) return undefined;
-  // Grist renvoie les dates au format YYYY-MM-DD
+function formatDate(raw: string | number | null | undefined): string | undefined {
+  if (raw == null) return undefined;
+  // Grist renvoie les dates comme timestamp Unix en secondes (number)
+  if (typeof raw === "number") {
+    const d = new Date(raw * 1000);
+    const dd  = String(d.getUTCDate()).padStart(2, "0");
+    const mm  = String(d.getUTCMonth() + 1).padStart(2, "0");
+    const yyy = d.getUTCFullYear();
+    return `${dd}/${mm}/${yyy}`;
+  }
+  // Fallback si jamais Grist renvoie une string YYYY-MM-DD
   const m = raw.match(/^(\d{4})-(\d{2})-(\d{2})/);
   if (m) return `${m[3]}/${m[2]}/${m[1]}`;
   return raw;
