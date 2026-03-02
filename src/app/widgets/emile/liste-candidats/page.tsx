@@ -122,17 +122,24 @@ export default function ListeCandidatsPage() {
               <ul className="lc-list">
                 {candidats.map((c) => (
                   <li key={c.id} className="lc-item">
-                    <div className="lc-item__info">
-                      <div className="lc-item__name-row">
-                        <span className="lc-item__name">
-                          {[c.prenom, c.nom].filter(Boolean).join(" ") || "—"}
-                        </span>
+                    {/* Ligne 1 — Nom + référence + statut */}
+                    <div className="lc-item__header">
+                      <span className="lc-item__name">
+                        {[c.prenom, c.nom].filter(Boolean).join(" ") || "—"}
+                      </span>
+                      <div className="lc-item__header-right">
                         {c.reference && (
                           <span className="lc-chip lc-chip--ref">
                             <i className="fa-solid fa-hashtag" />{c.reference}
                           </span>
                         )}
+                        {c.statut && (
+                          <span className="lc-chip lc-chip--statut">{c.statut}</span>
+                        )}
                       </div>
+                    </div>
+                    {/* Ligne 2 — Chips info */}
+                    {(c.age != null || c.genre || c.nationalite || c.tel) && (
                       <div className="lc-item__meta">
                         {c.age != null && (
                           <span className="lc-chip"><i className="fa-solid fa-cake-candles" />{c.age} ans</span>
@@ -146,15 +153,11 @@ export default function ListeCandidatsPage() {
                         {c.tel && (
                           <span className="lc-chip"><i className="fa-solid fa-phone" />{c.tel}</span>
                         )}
-                        {c.statut && (
-                          <span className="lc-chip lc-chip--statut">{c.statut}</span>
-                        )}
                       </div>
-                      {c.email && (
-                        <span className="lc-item__email">{c.email}</span>
-                      )}
-                    </div>
-                    <div className="lc-item__actions">
+                    )}
+                    {/* Ligne 3 — Email + bouton */}
+                    <div className="lc-item__footer">
+                      <span className="lc-item__email">{c.email}</span>
                       <a
                         href={`${ficheBase}?token=${occToken}&id=${c.id}`}
                         className="lc-btn lc-btn--sm"
