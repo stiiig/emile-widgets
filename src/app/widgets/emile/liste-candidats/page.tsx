@@ -11,6 +11,11 @@ interface Candidat {
   prenom: string;
   nom: string;
   email: string;
+  lienAcces?: string | null;
+  tel?: string | null;
+  genre?: string | null;
+  age?: number | null;
+  reference?: string | null;
 }
 
 export default function ListeCandidatsPage() {
@@ -116,9 +121,27 @@ export default function ListeCandidatsPage() {
                 {candidats.map((c) => (
                   <li key={c.id} className="lc-item">
                     <div className="lc-item__info">
-                      <span className="lc-item__name">
-                        {[c.prenom, c.nom].filter(Boolean).join(" ") || "—"}
-                      </span>
+                      <div className="lc-item__name-row">
+                        <span className="lc-item__name">
+                          {[c.prenom, c.nom].filter(Boolean).join(" ") || "—"}
+                        </span>
+                        {c.reference && (
+                          <span className="lc-chip lc-chip--ref">
+                            <i className="fa-solid fa-hashtag" />{c.reference}
+                          </span>
+                        )}
+                      </div>
+                      <div className="lc-item__meta">
+                        {c.age != null && (
+                          <span className="lc-chip"><i className="fa-solid fa-cake-candles" />{c.age} ans</span>
+                        )}
+                        {c.genre && (
+                          <span className="lc-chip"><i className="fa-solid fa-venus-mars" />{c.genre}</span>
+                        )}
+                        {c.tel && (
+                          <span className="lc-chip"><i className="fa-solid fa-phone" />{c.tel}</span>
+                        )}
+                      </div>
                       {c.email && (
                         <span className="lc-item__email">{c.email}</span>
                       )}

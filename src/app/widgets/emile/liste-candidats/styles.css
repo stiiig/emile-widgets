@@ -176,6 +176,38 @@
   color: #aaa;
   font-style: italic;
 }
+.lc-item__name-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.lc-item__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.2rem;
+}
+
+/* ── Chips ───────────────────────────────────────────────────── */
+.lc-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: #444;
+  background: #f0f0f0;
+  border-radius: 20px;
+  padding: 0.15rem 0.55rem;
+  white-space: nowrap;
+}
+.lc-chip i { font-size: 0.65rem; opacity: 0.7; }
+.lc-chip--ref {
+  background: #e3e3fd;
+  color: #000091;
+  font-weight: 700;
+}
 
 /* ── Boutons ─────────────────────────────────────────────────── */
 .lc-btn {
