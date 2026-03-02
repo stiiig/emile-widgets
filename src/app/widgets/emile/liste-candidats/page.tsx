@@ -125,7 +125,8 @@ function EligibilitePopover({ c }: { c: Candidat }) {
     koItems.push({ label: "Territoire de départ", detail: "Hors territoire éligible" });
 
   // 3. Majorité — dérivée du champ `age` déjà présent dans la card
-  if (c.age != null && c.age < 18)
+  // age === 0 signifie "non calculé" (date de naissance absente), on ignore
+  if (c.age != null && c.age > 0 && c.age < 18)
     koItems.push({ label: "Majorité", detail: `${c.age} ans — mineur·e` });
 
   // 4. Niveau de langue — $Niveau_de_langue_Eligibilite booléen/chaîne truthy
@@ -287,9 +288,9 @@ export default function ListeCandidatsPage() {
           </div>
         )}
         {/* Ligne 3 — Chips info */}
-        {(c.age != null || c.genre || c.nationalite) && (
+        {(c.age || c.genre || c.nationalite) && (
           <div className="lc-item__meta">
-            {c.age != null && (
+            {c.age != null && c.age > 0 && (
               <span className="lc-chip" data-tooltip={formatDate(c.dateNaissance)}>
                 <i className="fa-solid fa-cake-candles" />{c.age} ans
               </span>
