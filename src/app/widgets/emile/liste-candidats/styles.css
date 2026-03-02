@@ -33,18 +33,7 @@
   opacity: 0.95;
 }
 .lc-header__spacer { flex: 1; }
-.lc-header__user {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.85);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 180px;
-}
+/* .lc-header__user supprimé — remplacé par .lc-user-btn (dropdown) */
 .lc-faq-btn {
   display: inline-flex;
   align-items: center;
@@ -64,7 +53,8 @@
   transition: background 0.15s;
 }
 .lc-faq-btn:hover { background: rgba(255, 255, 255, 0.25) !important; }
-.lc-logout-btn {
+/* ── Bouton user / dropdown déconnexion ─────────────────────── */
+.lc-user-btn {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
@@ -72,9 +62,9 @@
   height: 2rem;
   border: 1px solid rgba(255, 255, 255, 0.35) !important;
   border-radius: 3px;
-  background: rgba(255, 255, 255, 0.08) !important;
-  color: rgba(255, 255, 255, 0.75) !important;
-  font-size: 0.72rem;
+  background: rgba(255, 255, 255, 0.12) !important;
+  color: rgba(255, 255, 255, 0.9) !important;
+  font-size: 0.78rem;
   font-weight: 600;
   cursor: pointer;
   font-family: Marianne, arial, sans-serif;
@@ -82,7 +72,36 @@
   flex-shrink: 0;
   transition: background 0.15s;
 }
-.lc-logout-btn:hover { background: rgba(255, 255, 255, 0.18) !important; color: #fff !important; }
+.lc-user-btn:hover { background: rgba(255, 255, 255, 0.22) !important; }
+.lc-user-btn__chevron { font-size: 0.55rem !important; opacity: 0.7; }
+.lc-user-dropdown {
+  position: absolute;
+  top: calc(100% + 5px);
+  right: 0;
+  min-width: 160px;
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.13);
+  z-index: 300;
+  overflow: hidden;
+}
+.lc-user-dropdown__item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.6rem 0.9rem;
+  border: none;
+  background: none;
+  color: #ce0500;
+  font-size: 0.8rem;
+  font-weight: 600;
+  font-family: Marianne, arial, sans-serif;
+  cursor: pointer;
+  text-align: left;
+}
+.lc-user-dropdown__item:hover { background: #fff5f5; }
 
 /* ── Body ───────────────────────────────────────────────────── */
 .lc-body {
@@ -287,33 +306,7 @@
 }
 .lc-chip i { font-size: 0.65rem; opacity: 0.7; }
 
-/* Tooltip discret sur les chips (ex: date de naissance, date de création) */
-.lc-chip[data-tooltip]         { cursor: default; }
-.lc-chip[data-tooltip]::after  {
-  content: attr(data-tooltip);
-  position: absolute;
-  bottom: calc(100% + 8px);
-  left: 50%;
-  transform: translateX(-50%) scale(0.92);
-  transform-origin: bottom center;
-  background: #1e1e32;
-  color: #fff;
-  font-size: 0.7rem;
-  font-weight: 500;
-  padding: 5px 10px;
-  border-radius: 8px;
-  white-space: nowrap;
-  letter-spacing: 0.01em;
-  pointer-events: none;
-  opacity: 0;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.22);
-  transition: opacity 0.15s ease, transform 0.15s ease;
-  z-index: 20;
-}
-.lc-chip[data-tooltip]:hover::after {
-  opacity: 1;
-  transform: translateX(-50%) scale(1);
-}
+/* Anciens tooltips CSS supprimés — remplacés par React popovers */
 
 /* ── Popover "Non éligible" ──────────────────────────────────── */
 .lc-popover-anchor {
@@ -394,6 +387,30 @@
   white-space: nowrap;
   flex-shrink: 0;
 }
+/* ── Popover info (bleu — ref / date de naissance) ──────────── */
+.lc-popover--info {
+  background: #fff;
+  border: 1px solid #c8c8e8;
+  border-top: 3px solid #000091;
+  border-radius: 8px;
+  padding: 0.65rem 0.9rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.13), 0 2px 6px rgba(0, 0, 0, 0.07);
+  min-width: 170px;
+  white-space: nowrap;
+}
+.lc-popover__title--info { color: #000091; }
+.lc-popover__info-line {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #1e1e1e;
+  margin: 0;
+  font-family: "Marianne", "Helvetica Neue", Arial, sans-serif;
+}
+.lc-popover__arrow--info {
+  border-right-color: #c8c8e8;
+  border-bottom-color: #c8c8e8;
+}
+
 /* Flèche pointant vers le bas */
 .lc-popover__arrow {
   position: absolute;

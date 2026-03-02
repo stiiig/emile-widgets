@@ -201,6 +201,99 @@ function EligibilitePopover({ c }: { c: Candidat }) {
   );
 }
 
+// ── Popover info (ref / date de naissance) ────────────────────────────────────
+
+/** Chip de référence avec popover "Candidature créée le …" au survol. */
+function RefChip({ reference, createdAt }: {
+  reference: string;
+  createdAt: string | number | null | undefined;
+}) {
+  const [open, setOpen] = useState(false);
+  const line = createdAt ? `Créée le ${formatDate(createdAt)}` : null;
+  return (
+    <span
+      className="lc-popover-anchor"
+      onMouseEnter={() => { if (line) setOpen(true); }}
+      onMouseLeave={() => setOpen(false)}
+    >
+      <span className={`lc-chip lc-chip--ref${line ? " lc-chip--has-popover" : ""}`}>
+        {reference}
+      </span>
+      {open && line && (
+        <div className="lc-popover lc-popover--info" role="tooltip">
+          <p className="lc-popover__title lc-popover__title--info">
+            <i className="fa-solid fa-calendar-check" />
+            Référence
+          </p>
+          <p className="lc-popover__info-line">{line}</p>
+          <span className="lc-popover__arrow lc-popover__arrow--info" />
+        </div>
+      )}
+    </span>
+  );
+}
+
+/** Chip âge avec popover "Né·e le DD/MM/YYYY" au survol. */
+function AgeChip({ displayAge, dateNaissance }: {
+  displayAge: number;
+  dateNaissance: string | number | null | undefined;
+}) {
+  const [open, setOpen] = useState(false);
+  const dateStr = formatDate(dateNaissance);
+  return (
+    <span
+      className="lc-popover-anchor"
+      onMouseEnter={() => { if (dateStr) setOpen(true); }}
+      onMouseLeave={() => setOpen(false)}
+    >
+      <span className={`lc-chip${dateStr ? " lc-chip--has-popover" : ""}`}>
+        <i className="fa-solid fa-cake-candles" />{displayAge} ans
+      </span>
+      {open && dateStr && (
+        <div className="lc-popover lc-popover--info" role="tooltip">
+          <p className="lc-popover__title lc-popover__title--info">
+            <i className="fa-solid fa-cake-candles" />
+            Date de naissance
+          </p>
+          <p className="lc-popover__info-line">{dateStr}</p>
+          <span className="lc-popover__arrow lc-popover__arrow--info" />
+        </div>
+      )}
+    </span>
+  );
+}
+
+// ── Menu orienteur (username + dropdown déconnexion) ──────────────────────────
+
+function OrienteurMenu({ nom, onLogout }: { nom: string; onLogout: () => void }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div
+      style={{ position: "relative", display: "inline-block", flexShrink: 0 }}
+      onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setOpen(false); }}
+    >
+      <button type="button" className="lc-user-btn" onClick={() => setOpen((v) => !v)}>
+        <i className="fa-solid fa-circle-user" />
+        {nom}
+        <i className={`fa-solid fa-chevron-${open ? "up" : "down"} lc-user-btn__chevron`} />
+      </button>
+      {open && (
+        <div className="lc-user-dropdown" role="menu">
+          <button
+            type="button"
+            role="menuitem"
+            className="lc-user-dropdown__item"
+            onClick={onLogout}
+          >
+            <i className="fa-solid fa-right-from-bracket" />
+            Déconnexion
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function ListeCandidatsPage() {
   const [status,        setStatus]        = useState<Status>("loading");
   const [orienteurNom,  setOrienteurNom]  = useState("");
@@ -284,7 +377,7 @@ export default function ListeCandidatsPage() {
           </span>
           <div className="lc-item__chips-right">
             {c.eligibilite === "✅ OK" && (
-              <span className="lc-chip lc-chip--eligible">Éligible</span>
+              <span className="lc-chip lc-chip--eligible"><i className="fa-solid fa-check" />Éligible</span>
             )}
             {c.eligibilite === "❌ KO" && <EligibilitePopover c={c} />}
             {c.statut && (
@@ -295,23 +388,14 @@ export default function ListeCandidatsPage() {
         {/* Ligne 2 — Référence */}
         {c.reference && (
           <div className="lc-item__ref">
-            <span
-              className="lc-chip lc-chip--ref"
-              {...(c.createdAt != null
-                ? { "data-tooltip": `Candidature créée le ${formatDate(c.createdAt)}` }
-                : {})}
-            >
-              {c.reference}
-            </span>
+            <RefChip reference={c.reference} createdAt={c.createdAt} />
           </div>
         )}
         {/* Ligne 3 — Chips info */}
         {(displayAge != null || c.genre || c.nationalite) && (
           <div className="lc-item__meta">
             {displayAge != null && (
-              <span className="lc-chip" data-tooltip={formatDate(c.dateNaissance)}>
-                <i className="fa-solid fa-cake-candles" />{displayAge} ans
-              </span>
+              <AgeChip displayAge={displayAge} dateNaissance={c.dateNaissance} />
             )}
             {c.genre && (
               <span className="lc-chip"><i className="fa-solid fa-venus-mars" />{c.genre}</span>
@@ -353,24 +437,13 @@ export default function ListeCandidatsPage() {
         <span className="lc-header__appname">Mes candidat·e·s</span>
         <div className="lc-header__spacer" />
         {orienteurNom && (
-          <span className="lc-header__user">
-            <i className="fa-solid fa-circle-user" />
-            {orienteurNom}
-          </span>
-        )}
-        {orienteurNom && (
-          <button
-            type="button"
-            className="lc-logout-btn"
-            title="Se déconnecter"
-            onClick={() => {
+          <OrienteurMenu
+            nom={orienteurNom}
+            onLogout={() => {
               localStorage.removeItem("emile_occ_token");
               window.location.replace(window.location.pathname);
             }}
-          >
-            <i className="fa-solid fa-right-from-bracket" />
-            Déconnexion
-          </button>
+          />
         )}
         <button type="button" className="lc-faq-btn" onClick={() => setShowFaq(true)}>
           <i className="fa-solid fa-circle-question" />

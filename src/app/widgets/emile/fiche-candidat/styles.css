@@ -587,23 +587,8 @@ body {
   color: #fff !important;
 }
 
-/* ── Nom orienteur dans le header ──────────────────────── */
-.emile-header__user {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.85);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 180px;
-  flex-shrink: 0;
-}
-
-/* ── Bouton déconnexion ─────────────────────────────────── */
-.emile-logout-btn {
+/* ── Bouton user / dropdown déconnexion ─────────────────── */
+.emile-user-btn {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
@@ -611,9 +596,9 @@ body {
   height: 2rem;
   border: 1px solid rgba(255, 255, 255, 0.35) !important;
   border-radius: 3px;
-  background: rgba(255, 255, 255, 0.08) !important;
-  color: rgba(255, 255, 255, 0.75) !important;
-  font-size: 0.72rem;
+  background: rgba(255, 255, 255, 0.12) !important;
+  color: rgba(255, 255, 255, 0.9) !important;
+  font-size: 0.78rem;
   font-weight: 600;
   cursor: pointer;
   font-family: Marianne, arial, sans-serif;
@@ -621,7 +606,33 @@ body {
   flex-shrink: 0;
   transition: background 0.15s;
 }
-.emile-logout-btn:hover {
-  background: rgba(255, 255, 255, 0.18) !important;
-  color: #fff !important;
+.emile-user-btn:hover { background: rgba(255, 255, 255, 0.22) !important; }
+.emile-user-btn__chevron { font-size: 0.55rem !important; opacity: 0.7; }
+.emile-user-dropdown {
+  position: absolute;
+  top: calc(100% + 5px);
+  right: 0;
+  min-width: 160px;
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.13);
+  z-index: 300;
+  overflow: hidden;
 }
+.emile-user-dropdown__item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.6rem 0.9rem;
+  border: none;
+  background: none;
+  color: #ce0500;
+  font-size: 0.8rem;
+  font-weight: 600;
+  font-family: Marianne, arial, sans-serif;
+  cursor: pointer;
+  text-align: left;
+}
+.emile-user-dropdown__item:hover { background: #fff5f5; }

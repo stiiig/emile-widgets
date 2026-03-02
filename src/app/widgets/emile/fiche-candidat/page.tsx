@@ -784,6 +784,36 @@ function DateNaissanceSpecialField({ value, onChange, disabled, col, genreValue 
   );
 }
 
+/* ── Menu orienteur : username cliquable → dropdown déconnexion ── */
+function OrienteurMenu({ nom, onLogout }: { nom: string; onLogout: () => void }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div
+      style={{ position: "relative", display: "inline-block", flexShrink: 0 }}
+      onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setOpen(false); }}
+    >
+      <button type="button" className="emile-user-btn" onClick={() => setOpen((v) => !v)}>
+        <i className="fa-solid fa-circle-user" />
+        {nom}
+        <i className={`fa-solid fa-chevron-${open ? "up" : "down"} emile-user-btn__chevron`} />
+      </button>
+      {open && (
+        <div className="emile-user-dropdown" role="menu">
+          <button
+            type="button"
+            role="menuitem"
+            className="emile-user-dropdown__item"
+            onClick={onLogout}
+          >
+            <i className="fa-solid fa-right-from-bracket" />
+            Déconnexion
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* =====================================================
    Page principale
    ===================================================== */
@@ -1108,26 +1138,15 @@ export default function Page() {
             </>
           )}
 
-          {/* Nom orienteur + déconnexion : mode orienteur connecté */}
+          {/* Menu orienteur : username + dropdown déconnexion */}
           {isOrienteurMode && authStatus === "ok" && orienteurNom && (
-            <span className="emile-header__user">
-              <i className="fa-solid fa-circle-user" />
-              {orienteurNom}
-            </span>
-          )}
-          {isOrienteurMode && authStatus === "ok" && (
-            <button
-              type="button"
-              className="emile-logout-btn"
-              title="Se déconnecter"
-              onClick={() => {
+            <OrienteurMenu
+              nom={orienteurNom}
+              onLogout={() => {
                 localStorage.removeItem("emile_occ_token");
                 window.location.replace(window.location.pathname);
               }}
-            >
-              <i className="fa-solid fa-right-from-bracket" />
-              Déconnexion
-            </button>
+            />
           )}
 
           {/* FAQ : toujours visible */}
