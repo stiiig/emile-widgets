@@ -578,7 +578,7 @@ function NiveauLangueSpecialField({ value, onChange, disabled, docApi, col }: {
                 {sel.codeLangue && (
                   <span style={{
                     fontSize: "0.62rem", fontWeight: 700, padding: "0.1rem 0.35rem", borderRadius: 3,
-                    flexShrink: 0, background: "#e0f2fe", color: "#0369a1", whiteSpace: "nowrap",
+                    flexShrink: 0, marginRight: "0.35rem", background: "#e0f2fe", color: "#0369a1", whiteSpace: "nowrap",
                   }}>{sel.codeLangue}</span>
                 )}
                 <span style={{ flex: 1 }}>{sel.label}</span>
