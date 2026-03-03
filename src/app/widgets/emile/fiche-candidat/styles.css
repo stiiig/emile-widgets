@@ -391,8 +391,8 @@ body {
   align-items: stretch;
   overflow-x: auto;
   flex-shrink: 0;
-  height: 2.5rem;
-  padding: 0 0.5rem;
+  height: 3.25rem;
+  padding: 0 0.75rem;
   scrollbar-width: none;
 }
 .emile-navbar::-webkit-scrollbar { display: none; }
@@ -400,12 +400,12 @@ body {
 .emile-nav-tab {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  padding: 0 0.75rem;
+  gap: 0.4rem;
+  padding: 0 1rem;
   border: none;
   background: transparent;
   color: #555;
-  font-size: 0.78rem;
+  font-size: 0.82rem;
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
@@ -417,7 +417,7 @@ body {
   -webkit-appearance: none;
   appearance: none;
 }
-.emile-nav-tab i { font-size: 0.78rem; }
+.emile-nav-tab i { font-size: 0.82rem; }
 .emile-nav-tab:hover  { color: #000091; background: transparent; }
 .emile-nav-tab:active,
 .emile-nav-tab:focus,
@@ -438,8 +438,8 @@ body {
   border-bottom: 1px solid #ddd;
   display: flex;
   align-items: center;
-  gap: 0.3rem;
-  padding: 0.35rem 1rem;
+  gap: 0.5rem;
+  padding: 0.6rem 1rem;
   flex-shrink: 0;
   overflow-x: auto;
   scrollbar-width: none;
@@ -449,12 +449,12 @@ body {
 .emile-subnav-tab {
   display: inline-flex;
   align-items: center;
-  padding: 0.2rem 0.65rem;
+  padding: 0.3rem 0.9rem;
   border: 1px solid #c8c8e8;
   border-radius: 999px;
   background: #fff;
   color: #444;
-  font-size: 0.72rem;
+  font-size: 0.78rem;
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
