@@ -82,7 +82,10 @@ function RefChipHero({ reference, createdAt }: {
   function calcPos() {
     if (anchorRef.current) {
       const r = anchorRef.current.getBoundingClientRect();
-      setPos({ top: r.bottom + 8, left: r.left + r.width / 2 });
+      const POPUP_W = 180;
+      const rawLeft = r.left + r.width / 2 - POPUP_W / 2;
+      const left = Math.max(8, Math.min(rawLeft, window.innerWidth - POPUP_W - 8));
+      setPos({ top: r.bottom + 8, left });
     }
   }
 
@@ -122,7 +125,10 @@ function AgeChipHero({ displayAge, dateNaissance }: {
   function calcPos() {
     if (anchorRef.current) {
       const r = anchorRef.current.getBoundingClientRect();
-      setPos({ top: r.bottom + 8, left: r.left + r.width / 2 });
+      const POPUP_W = 180;
+      const rawLeft = r.left + r.width / 2 - POPUP_W / 2;
+      const left = Math.max(8, Math.min(rawLeft, window.innerWidth - POPUP_W - 8));
+      setPos({ top: r.bottom + 8, left });
     }
   }
 

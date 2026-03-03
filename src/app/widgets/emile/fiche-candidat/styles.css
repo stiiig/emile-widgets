@@ -252,10 +252,10 @@ body {
 }
 
 /* Rendu dans document.body via createPortal → jamais coupé par overflow */
+/* La position left est calculée + clampée en JS, pas de transform */
 .fc-popover-fixed {
   position: fixed;
   z-index: 9999;
-  transform: translateX(-50%);
   background: #fff;
   border: 1px solid #c8c8e8;
   border-top: 3px solid #000091;
