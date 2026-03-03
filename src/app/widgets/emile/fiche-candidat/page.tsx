@@ -313,7 +313,9 @@ function InfoPopover({ children }: { children: React.ReactNode }) {
   function calcPos() {
     if (btnRef.current) {
       const r = btnRef.current.getBoundingClientRect();
-      setPos({ top: r.bottom + 4, left: r.left });
+      const POPUP_W = Math.min(352, window.innerWidth - 16);
+      const left = Math.max(8, Math.min(r.left, window.innerWidth - POPUP_W - 8));
+      setPos({ top: r.bottom + 4, left });
     }
   }
 
@@ -1273,9 +1275,9 @@ export default function Page() {
     () => allCandidats.map((c) => ({
       id: c.id,
       label: `${c.prenom ?? ""} ${c.nom ?? ""}`.trim() || "—",
-      hint: c.reference ?? undefined,
+      tag: c.id === candidatRowIdFromUrl ? "affiché" : undefined,
     })),
-    [allCandidats],
+    [allCandidats, candidatRowIdFromUrl],
   );
 
   // mode "none" → message d'aide

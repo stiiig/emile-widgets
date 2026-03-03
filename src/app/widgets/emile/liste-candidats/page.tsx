@@ -18,7 +18,8 @@
  *  - NEXT_PUBLIC_OCC_LIST_URL  — URL du webhook n8n occ-list
  */
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import "./styles.css";
 import logoEmile from "../assets/logo-emile-white.png";
 import { FAQPanel } from "@/components/FAQPanel";
@@ -121,6 +122,8 @@ function statutChipClass(statut: string): string {
  */
 function EligibilitePopover({ c }: { c: Candidat }) {
   const [open, setOpen] = useState(false);
+  const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
+  const anchorRef = useRef<HTMLSpanElement | null>(null);
 
   /** Critères KO dérivés des champs source (pas des colonnes calculées Grist). */
   const koItems: { label: string; detail: string }[] = [];
@@ -168,18 +171,32 @@ function EligibilitePopover({ c }: { c: Candidat }) {
 
   const hasDetails = koItems.length > 0;
 
+  const POPUP_W = 310;
+  function calcPos() {
+    if (anchorRef.current) {
+      const r = anchorRef.current.getBoundingClientRect();
+      const left = Math.max(8, Math.min(r.left, window.innerWidth - POPUP_W - 8));
+      setPos({ top: r.bottom + 6, left });
+    }
+  }
+
   return (
     <span
+      ref={anchorRef}
       className="lc-popover-anchor"
-      onMouseEnter={() => setOpen(true)}
+      onMouseEnter={() => { if (hasDetails) { calcPos(); setOpen(true); } }}
       onMouseLeave={() => setOpen(false)}
     >
       <span className={`lc-chip lc-chip--non-eligible${hasDetails ? " lc-chip--has-popover" : ""}`}>
         Non éligible
         {hasDetails && <i className="fa-solid fa-circle-info" />}
       </span>
-      {open && hasDetails && (
-        <div className="lc-popover lc-popover--error" role="tooltip">
+      {open && hasDetails && pos && createPortal(
+        <div
+          className="lc-popover-fixed lc-popover--error"
+          role="tooltip"
+          style={{ top: pos.top, left: pos.left }}
+        >
           <p className="lc-popover__title">
             <i className="fa-solid fa-circle-xmark" />
             Critères non satisfaits
@@ -193,8 +210,9 @@ function EligibilitePopover({ c }: { c: Candidat }) {
               </li>
             ))}
           </ul>
-          <span className="lc-popover__arrow" />
-        </div>
+          <span className="lc-popover__arrow lc-popover__arrow--top" />
+        </div>,
+        document.body
       )}
     </span>
   );

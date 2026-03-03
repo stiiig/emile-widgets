@@ -420,7 +420,7 @@
   border-bottom-color: #c8c8e8;
 }
 
-/* Flèche pointant vers le bas */
+/* Flèche pointant vers le bas (popup au-dessus de l'ancre) */
 .lc-popover__arrow {
   position: absolute;
   bottom: -6px;
@@ -431,6 +431,23 @@
   background: #fff;
   border-right: 1px solid #fca5a5;
   border-bottom: 1px solid #fca5a5;
+}
+/* Flèche pointant vers le haut (popup en-dessous de l'ancre) */
+.lc-popover__arrow--top {
+  bottom: auto;
+  top: -6px;
+  border-right: none;
+  border-bottom: none;
+  border-left: 1px solid #fca5a5;
+  border-top: 1px solid #fca5a5;
+}
+/* Variante portal — position:fixed, texte wrappé */
+.lc-popover-fixed {
+  position: fixed;
+  z-index: 9000;
+  min-width: 260px;
+  max-width: 310px;
+  white-space: normal;
 }
 .lc-chip--ref {
   background: #e3e3fd;
