@@ -116,20 +116,23 @@ body {
   width: 220px;
 }
 
-/* ===== BARRE NAVIGATION ORIENTEUR ===== */
-.emile-orienteur-bar {
+/* ===== HERO CANDIDAT (mode orienteur) ===== */
+.fc-hero {
   background: #fff;
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 2px solid #e0e0e0;
+  flex-shrink: 0;
+}
+
+/* ── Topbar : retour + switcher ── */
+.fc-hero__nav {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  flex-shrink: 0;
-  flex-wrap: wrap;
-  min-height: 2.5rem;
+  padding: 0.45rem 1rem;
+  border-bottom: 1px solid #f0f0f0;
 }
 
-.emile-orienteur-bar__back {
+.fc-hero__back {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
@@ -140,47 +143,106 @@ body {
   flex-shrink: 0;
   white-space: nowrap;
 }
-.emile-orienteur-bar__back:hover,
-.emile-orienteur-bar__back:visited:hover { text-decoration: underline; color: #000091; }
-.emile-orienteur-bar__back:visited { color: #000091; }
+.fc-hero__back:hover,
+.fc-hero__back:visited:hover { text-decoration: underline; color: #000091; }
+.fc-hero__back:visited { color: #000091; }
 
-.emile-orienteur-bar__sep {
-  color: #bbb;
-  font-size: 0.85rem;
+.fc-hero__nav-spacer { flex: 1; min-width: 0.5rem; }
+
+.fc-hero__switcher {
   flex-shrink: 0;
+  min-width: 200px;
+  max-width: 280px;
 }
 
-.emile-orienteur-bar__name {
-  font-size: 0.85rem;
+/* ── Carte identité ── */
+.fc-hero__card {
+  padding: 0.9rem 1rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+/* Ligne 1 — Nom + chips droite */
+.fc-hero__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.fc-hero__name {
+  font-size: 1.1rem;
   font-weight: 700;
   color: #1e1e1e;
   text-transform: uppercase;
-  letter-spacing: 0.03em;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 260px;
+  letter-spacing: 0.04em;
 }
 
-.emile-orienteur-bar__ref {
+.fc-hero__chips-right {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+/* Ligne 2 — meta */
+.fc-hero__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+/* Ligne 3 — contact */
+.fc-hero__contact {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1.25rem;
+  margin-top: 0.05rem;
+}
+
+.fc-hero__contact-item {
   display: inline-flex;
   align-items: center;
-  padding: 0.1rem 0.45rem;
-  background: #e3e3fd;
-  color: #000091;
-  border-radius: 3px;
-  font-size: 0.68rem;
-  font-weight: 700;
-  white-space: nowrap;
+  gap: 0.3rem;
+  font-size: 0.78rem;
+  color: #555;
+}
+.fc-hero__contact-item i {
+  font-size: 0.7rem;
+  color: #888;
   flex-shrink: 0;
 }
 
-.emile-orienteur-bar__spacer { flex: 1; min-width: 0.5rem; }
+/* Chips */
+.fc-hero__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: #444;
+  background: #f0f0f0;
+  border-radius: 20px;
+  padding: 0.15rem 0.55rem;
+  white-space: nowrap;
+}
+.fc-hero__chip i { font-size: 0.65rem; opacity: 0.7; }
 
-.emile-orienteur-bar__switcher {
-  flex-shrink: 0;
-  min-width: 200px;
-  max-width: 260px;
+.fc-hero__chip--ref {
+  background: #e3e3fd;
+  color: #000091;
+  font-weight: 700;
+  border-radius: 3px;
+  font-size: 0.68rem;
+}
+
+.fc-hero__chip--statut {
+  background: #e8f0fe;
+  color: #0063cb;
+  font-weight: 600;
+  border-radius: 20px;
 }
 
 .emile-save-btn {

@@ -1175,41 +1175,92 @@ export default function Page() {
         </div>
       </header>
 
-      {/* ===== BARRE NAVIGATION ORIENTEUR ===== */}
-      {/* Masquée si lien invalide : pas de retour possible vers la liste */}
-      {isOrienteurMode && orienteurListUrl && authStatus !== "invalid" && (
-        <div className="emile-orienteur-bar">
-          {/* Retour + fil d'Ariane */}
-          <a href={orienteurListUrl} className="emile-orienteur-bar__back">
-            <i className="fa-solid fa-arrow-left" />
-            Mes candidat·e·s
-          </a>
+      {/* ===== HERO CANDIDAT (mode orienteur) ===== */}
+      {isOrienteurMode && authStatus !== "invalid" && (
+        <div className="fc-hero">
+
+          {/* ── Topbar : retour + switcher ── */}
+          <div className="fc-hero__nav">
+            {orienteurListUrl && (
+              <a href={orienteurListUrl} className="fc-hero__back">
+                <i className="fa-solid fa-arrow-left" />
+                Mes candidat·e·s
+              </a>
+            )}
+            <div className="fc-hero__nav-spacer" />
+            {switcherOptions.length > 1 && (
+              <div className="fc-hero__switcher">
+                <SearchDropdown
+                  options={switcherOptions}
+                  valueId={candidatRowIdFromUrl}
+                  onChange={(newId) => {
+                    if (!newId || newId === candidatRowIdFromUrl || !occTokenForOrienteur) return;
+                    const base = window.location.href.split("?")[0];
+                    window.location.href = `${base}?token=${occTokenForOrienteur}&id=${newId}`;
+                  }}
+                  placeholder="Changer de candidat·e…"
+                  searchable={true}
+                />
+              </div>
+            )}
+          </div>
+
+          {/* ── Carte identité candidat ── */}
           {selectedName && (
-            <>
-              <span className="emile-orienteur-bar__sep">›</span>
-              <span className="emile-orienteur-bar__name">{selectedName}</span>
-              {selectedHint && (
-                <span className="emile-orienteur-bar__ref">{selectedHint}</span>
+            <div className="fc-hero__card">
+              {/* Ligne 1 — Nom + ref + statut */}
+              <div className="fc-hero__header">
+                <span className="fc-hero__name">{selectedName}</span>
+                <div className="fc-hero__chips-right">
+                  {selectedHint && (
+                    <span className="fc-hero__chip fc-hero__chip--ref">{selectedHint}</span>
+                  )}
+                  {selected?.["Statut"] && (
+                    <span className="fc-hero__chip fc-hero__chip--statut">{String(selected["Statut"])}</span>
+                  )}
+                </div>
+              </div>
+
+              {/* Ligne 2 — Âge + genre */}
+              {(() => {
+                const dateNaiss = String(selected?.["Date_de_naissance"] ?? "").trim();
+                const age = computeAge(dateNaiss);
+                const genre = String(selected?.["Genre"] ?? "").trim();
+                if (age == null && !genre) return null;
+                return (
+                  <div className="fc-hero__meta">
+                    {age != null && (
+                      <span className="fc-hero__chip">
+                        <i className="fa-solid fa-cake-candles" />{age} ans
+                      </span>
+                    )}
+                    {genre && (
+                      <span className="fc-hero__chip">
+                        <i className="fa-solid fa-venus-mars" />{genre}
+                      </span>
+                    )}
+                  </div>
+                );
+              })()}
+
+              {/* Ligne 3 — Email + téléphone */}
+              {(selected?.["Email"] || selected?.["Tel"]) && (
+                <div className="fc-hero__contact">
+                  {selected?.["Email"] && (
+                    <span className="fc-hero__contact-item">
+                      <i className="fa-solid fa-envelope" />{String(selected["Email"])}
+                    </span>
+                  )}
+                  {selected?.["Tel"] && (
+                    <span className="fc-hero__contact-item">
+                      <i className="fa-solid fa-phone" />{String(selected["Tel"])}
+                    </span>
+                  )}
+                </div>
               )}
-            </>
-          )}
-          <div className="emile-orienteur-bar__spacer" />
-          {/* Switcher candidat·e·s */}
-          {switcherOptions.length > 1 && (
-            <div className="emile-orienteur-bar__switcher">
-              <SearchDropdown
-                options={switcherOptions}
-                valueId={candidatRowIdFromUrl}
-                onChange={(newId) => {
-                  if (!newId || newId === candidatRowIdFromUrl || !occTokenForOrienteur) return;
-                  const base = window.location.href.split("?")[0];
-                  window.location.href = `${base}?token=${occTokenForOrienteur}&id=${newId}`;
-                }}
-                placeholder="Changer de candidat·e…"
-                searchable={true}
-              />
             </div>
           )}
+
         </div>
       )}
 
