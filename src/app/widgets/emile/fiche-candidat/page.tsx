@@ -1277,11 +1277,13 @@ export default function Page() {
   }, [isOrienteurMode, occTokenForOrienteur]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const switcherOptions = useMemo<Option[]>(
-    () => allCandidats.map((c) => ({
-      id: c.id,
-      label: `${c.prenom ?? ""} ${c.nom ?? ""}`.trim() || "—",
-      tag: c.id === candidatRowIdFromUrl ? "affiché" : undefined,
-    })),
+    () => allCandidats.map((c) => {
+      const name = `${c.prenom ?? ""} ${c.nom ?? ""}`.trim() || "—";
+      return {
+        id: c.id,
+        label: c.id === candidatRowIdFromUrl ? `→ ${name}` : name,
+      };
+    }),
     [allCandidats, candidatRowIdFromUrl],
   );
 
