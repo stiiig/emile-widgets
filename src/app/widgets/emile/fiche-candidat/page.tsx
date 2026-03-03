@@ -490,7 +490,18 @@ function NationaliteSpecialField({ value, onChange, disabled, docApi, col }: {
           onClick={() => { if (!disabled && !(loading && options.length === 0)) setOpen((v) => !v); }}
         >
           {selected
-            ? <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{selected.label}</span>
+            ? <>
+                <span style={{ flex: 1 }}>{selected.label}</span>
+                {selected.typeNationalite && (() => {
+                  const tag = TYPE_TAG[selected.typeNationalite];
+                  return (
+                    <span style={{
+                      fontSize: "0.62rem", fontWeight: 700, padding: "0.1rem 0.35rem", borderRadius: 3,
+                      flexShrink: 0, background: tag?.bg ?? "#f3f4f6", color: tag?.color ?? "#555", whiteSpace: "nowrap",
+                    }}>{selected.typeNationalite}</span>
+                  );
+                })()}
+              </>
             : <span style={{ opacity: 0.5 }}>{loading && options.length === 0 ? "Chargement…" : "—"}</span>}
           <span style={{ position: "absolute", right: "0.4rem", top: "50%", transform: "translateY(-50%)", fontSize: "0.65rem", color: "#888", pointerEvents: "none" }}>▾</span>
         </button>
@@ -564,14 +575,13 @@ function NiveauLangueSpecialField({ value, onChange, disabled, docApi, col }: {
         >
           {sel
             ? <>
-                <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{sel.label}</span>
                 {sel.codeLangue && (
                   <span style={{
                     fontSize: "0.62rem", fontWeight: 700, padding: "0.1rem 0.35rem", borderRadius: 3,
-                    marginLeft: "0.4rem", flexShrink: 0,
-                    background: "#e0f2fe", color: "#0369a1", whiteSpace: "nowrap",
+                    flexShrink: 0, background: "#e0f2fe", color: "#0369a1", whiteSpace: "nowrap",
                   }}>{sel.codeLangue}</span>
                 )}
+                <span style={{ flex: 1 }}>{sel.label}</span>
               </>
             : <span style={{ opacity: 0.5 }}>{loading && options.length === 0 ? "Chargement…" : "—"}</span>}
           <span style={{ position: "absolute", right: "0.4rem", top: "50%", transform: "translateY(-50%)", fontSize: "0.65rem", color: "#888", pointerEvents: "none" }}>▾</span>
@@ -588,7 +598,7 @@ function NiveauLangueSpecialField({ value, onChange, disabled, docApi, col }: {
                     onMouseEnter={() => setHoveredId(o.id)}
                     onMouseLeave={() => setHoveredId(null)}
                     style={{
-                      display: "flex", alignItems: "center", justifyContent: "space-between",
+                      display: "flex", alignItems: "center", gap: "0.4rem",
                       width: "100%", textAlign: "left", padding: "0.35rem 0.6rem",
                       border: 0, borderBottom: "1px solid #f5f5f5",
                       background: isSelected ? "#f0f0ff" : hoveredId === o.id ? "#f5f5ff" : "white",
@@ -596,14 +606,13 @@ function NiveauLangueSpecialField({ value, onChange, disabled, docApi, col }: {
                       fontFamily: "Marianne, arial, sans-serif", color: "#1e1e1e", fontWeight: isSelected ? 700 : 400,
                     }}
                   >
-                    <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{o.label}</span>
                     {o.codeLangue && (
                       <span style={{
                         fontSize: "0.62rem", fontWeight: 700, padding: "0.1rem 0.35rem", borderRadius: 3,
-                        marginLeft: "0.5rem", flexShrink: 0,
-                        background: "#e0f2fe", color: "#0369a1", whiteSpace: "nowrap",
+                        flexShrink: 0, background: "#e0f2fe", color: "#0369a1", whiteSpace: "nowrap",
                       }}>{o.codeLangue}</span>
                     )}
+                    <span style={{ whiteSpace: "nowrap" }}>{o.label}</span>
                   </button>
                 );
               })}
