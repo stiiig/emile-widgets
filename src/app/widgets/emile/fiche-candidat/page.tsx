@@ -1437,7 +1437,7 @@ export default function Page() {
                     />
                   )}
                   {(() => {
-                    const eligibilite = String(selected?.["Eligibilite"] ?? "").trim();
+                    const eligibilite = String(selected?.["Eligibilite_overall"] ?? "").trim();
                     const statut = String(selected?.["Statut"] ?? "").trim();
                     return (
                       <>
