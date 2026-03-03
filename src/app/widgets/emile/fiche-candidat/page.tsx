@@ -61,6 +61,14 @@ function formatDateLong(raw: string | number | null | undefined): string | undef
   return `${day === 1 ? "1er" : day} ${MOIS_FR[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
 }
 
+/** Extrait la date ISO depuis une référence type "36_260303_SSF" → "2026-03-03". */
+function isoFromRef(ref: string): string | null {
+  const m = ref.match(/_(\d{6})_/);
+  if (!m) return null;
+  const d = m[1];
+  return `20${d.slice(0, 2)}-${d.slice(2, 4)}-${d.slice(4, 6)}`;
+}
+
 function statutChipClassHero(statut: string): string {
   if (statut === "À traiter")          return "fc-hero__chip--statut-traiter";
   if (statut === "En cours")           return "fc-hero__chip--statut-en-cours";
@@ -1326,7 +1334,7 @@ export default function Page() {
                   {selectedHint && (
                     <RefChipHero
                       reference={selectedHint}
-                      createdAt={selected?.["createdAt"] ?? null}
+                      createdAt={selected?.["createdAt"] ?? isoFromRef(selectedHint)}
                     />
                   )}
                   {(() => {

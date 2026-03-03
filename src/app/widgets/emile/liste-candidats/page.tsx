@@ -90,6 +90,14 @@ function formatDateLong(raw: string | number | null | undefined): string | undef
   return `${day === 1 ? "1er" : day} ${MOIS_FR[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
 }
 
+/** Extrait la date ISO depuis une référence type "36_260303_SSF" → "2026-03-03". */
+function isoFromRef(ref: string): string | null {
+  const m = ref.match(/_(\d{6})_/);
+  if (!m) return null;
+  const d = m[1];
+  return `20${d.slice(0, 2)}-${d.slice(2, 4)}-${d.slice(4, 6)}`;
+}
+
 /**
  * Retourne la classe CSS de couleur du chip statut selon la valeur.
  * Les valeurs "Sortie (...)" et "Suspension (...)" sont traitées par préfixe
@@ -380,7 +388,7 @@ export default function ListeCandidatsPage() {
         {/* Ligne 2 — Référence */}
         {c.reference && (
           <div className="lc-item__ref">
-            <RefChip reference={c.reference} createdAt={c.createdAt} />
+            <RefChip reference={c.reference} createdAt={c.createdAt ?? isoFromRef(c.reference)} />
           </div>
         )}
         {/* Ligne 3 — Chips info */}
