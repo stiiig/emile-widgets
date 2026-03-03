@@ -564,7 +564,16 @@ function NiveauLangueSpecialField({ value, onChange, disabled, docApi, col }: {
           onClick={() => { if (!disabled && !(loading && options.length === 0)) setOpen((v) => !v); }}
         >
           {sel
-            ? <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{sel.label}</span>
+            ? <>
+                <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{sel.label}</span>
+                {sel.codeLangue && (
+                  <span style={{
+                    fontSize: "0.62rem", fontWeight: 700, padding: "0.1rem 0.35rem", borderRadius: 3,
+                    marginLeft: "0.4rem", flexShrink: 0,
+                    background: "#e0f2fe", color: "#0369a1", whiteSpace: "nowrap",
+                  }}>{sel.codeLangue}</span>
+                )}
+              </>
             : <span style={{ opacity: 0.5 }}>{loading && options.length === 0 ? "Chargement…" : "—"}</span>}
           <span style={{ position: "absolute", right: "0.4rem", top: "50%", transform: "translateY(-50%)", fontSize: "0.65rem", color: "#888", pointerEvents: "none" }}>▾</span>
         </button>
