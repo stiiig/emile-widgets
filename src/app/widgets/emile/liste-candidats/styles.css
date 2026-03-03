@@ -247,7 +247,7 @@
   letter-spacing: 0.03em;
 }
 .lc-item__name i {
-  font-size: 0.75rem;
+  font-size: 1rem;
   color: #000091;
   opacity: 0.7;
   flex-shrink: 0;
