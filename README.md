@@ -22,7 +22,7 @@ Les pages fonctionnent en deux modes :
 | Récupérer lien de validation | `/widgets/emile/recuperer-lien-validation/` | Public (orienteur) |
 | Ajout d'établissement | `/widgets/emile/ajout-etablissement/` | Grist iframe |
 
-> **Page de test dev** : [`/emile/dev/links`](https://stiiig.github.io/grist-widgets/emile/dev/links) — liste tous les liens avec variantes de paramètres.
+> **Page de test dev** : [`/emile/dev/links`](https://stiiig.github.io/emile-widgets/emile/dev/links) — liste tous les liens avec variantes de paramètres.
 
 ---
 

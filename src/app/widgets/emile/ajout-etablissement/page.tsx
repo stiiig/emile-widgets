@@ -216,7 +216,7 @@ export default function EtablissementPage() {
             </div>
             <div className="ae-done__actions">
               <a
-                href="https://stiiig.github.io/grist-widgets/widgets/emile/creation-compte-orienteur/"
+                href="https://stiiig.github.io/emile-widgets/widgets/emile/creation-compte-orienteur/"
                 className="ae-btn ae-btn--primary"
                 style={{ textDecoration: "none" }}
               >

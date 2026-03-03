@@ -552,7 +552,7 @@ return [{ json: { rowId, rowIdStr: rowId.toString() } }];
 const rowId = $json.rowId;
 const sig   = $json.data;
 const token = `${rowId}.${sig}`;
-const url   = `https://stiiig.github.io/grist-widgets/widgets/emile/fiche-candidat?token=${token}`;
+const url   = `https://stiiig.github.io/emile-widgets/widgets/emile/fiche-candidat?token=${token}`;
 return [{ json: { rowId, token, url } }];
 ```
 
@@ -646,7 +646,7 @@ return [{ json: { rowId, rowIdStr: rowId.toString() } }];
 const rowId = $json.rowId;
 const sig   = $json.data;
 const token = `${rowId}.${sig}`;
-const url   = `https://stiiig.github.io/grist-widgets/widgets/emile/validation-compte?token=${token}`;
+const url   = `https://stiiig.github.io/emile-widgets/widgets/emile/validation-compte?token=${token}`;
 return [{ json: { rowId, token, url } }];
 ```
 
@@ -966,7 +966,7 @@ Réponse :
 {
   "rowId": 6,
   "token": "6.d4f8a2...",
-  "url": "https://stiiig.github.io/grist-widgets/widgets/emile/validation-compte?token=6.d4f8a2..."
+  "url": "https://stiiig.github.io/emile-widgets/widgets/emile/validation-compte?token=6.d4f8a2..."
 }
 ```
 

@@ -1,7 +1,7 @@
 // Page de test — liste tous les widgets EMILE
-// Accessible sur /dev/links (local) ou https://stiiig.github.io/grist-widgets/dev/links
+// Accessible sur /dev/links (local) ou https://stiiig.github.io/emile-widgets/dev/links
 
-const BASE = "https://stiiig.github.io/grist-widgets/widgets/emile";
+const BASE = "https://stiiig.github.io/emile-widgets/widgets/emile";
 
 const WIDGETS = [
   {

@@ -1736,7 +1736,7 @@ export default function InscriptionPage() {
             if (occRes.ok) {
               const occData = await occRes.json();
               if (occData?.token) {
-                const base = "https://stiiig.github.io/grist-widgets/widgets/emile/liste-candidats";
+                const base = "https://stiiig.github.io/emile-widgets/widgets/emile/liste-candidats";
                 setSubmittedOrienteurListUrl(`${base}?token=${occData.token}`);
               }
             }
