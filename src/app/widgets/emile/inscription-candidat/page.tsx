@@ -345,6 +345,35 @@ function ChoiceField({
   );
 }
 
+/* Choice → groupe de boutons (≤ 5 choix) */
+function ButtonGroupChoiceField({
+  label, choices, value, onChange, required = false,
+}: {
+  label: string; choices: string[]; value: string;
+  onChange: (v: string) => void; required?: boolean;
+}) {
+  return (
+    <div className="ins-field">
+      <label className="ins-label">
+        {label}{required && <span className="ins-required"> *</span>}
+      </label>
+      <div className="ins-ouinon" style={{ flexWrap: "wrap" }}>
+        {choices.map((c) => (
+          <button
+            key={c}
+            type="button"
+            className={`ins-ouinon-btn${value === c ? " ins-ouinon-btn--active" : ""}`}
+            style={value === c ? OUINON_ACTIVE : undefined}
+            onClick={() => onChange(c)}
+          >
+            {c}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 /* Ref → SearchDropdown (valeur rowId number) */
 function RefField({
   label, options, valueId, onChange, required = false, loading = false,
@@ -2143,7 +2172,7 @@ export default function InscriptionPage() {
                     searchable={false}
                   />
                 </FieldWrap>
-                <ChoiceField label="Composition du foyer" choices={ch("Foyer")} value={form.Foyer} onChange={(v) => set("Foyer", v)} required />
+                <ButtonGroupChoiceField label="Composition du foyer" choices={ch("Foyer")} value={form.Foyer} onChange={(v) => set("Foyer", v)} required />
 
                 <OuiNonField
                   label="En situation régulière"
