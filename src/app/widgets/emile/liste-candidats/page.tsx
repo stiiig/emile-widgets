@@ -272,7 +272,7 @@ function OrienteurMenu({ nom, onLogout }: { nom: string; onLogout: () => void })
       onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setOpen(false); }}
     >
       <button type="button" className="lc-user-btn" onClick={() => setOpen((v) => !v)}>
-        <i className="fa-solid fa-circle-user" />
+        <i className="fa-solid fa-compass" />
         {nom}
         <i className={`fa-solid fa-chevron-${open ? "up" : "down"} lc-user-btn__chevron`} />
       </button>
