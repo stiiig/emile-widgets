@@ -1015,10 +1015,10 @@ Tables utilisées par les widgets EMILE :
 
 | Table ID (API) | Champs clés | Utilisée par |
 |----------------|-------------|-------------|
-| `CANDIDATS` | `Lien_acces` (texte — magic link fiche-candidat) | `fiche-candidat`, `inscription-candidat` |
+| `CANDIDATS` | `Reference` (identifiant dossier), `Responsable_candidat` (Ref → ACCOMPAGNANTS), `Date_de_naissance` (source âge — ne pas utiliser `$Age`) | `fiche-candidat`, `inscription-candidat`, `liste-candidats` |
 | `ETABLISSEMENTS` | — | `ajout-etablissement`, `creation-compte-orienteur` |
 | `ACCOMPAGNANTS` | `Compte_valide` (`"En attente"` / `"Oui"`), `Lien_validation` (texte — magic link OCC) | `creation-compte-orienteur`, `inscription-candidat` |
-| `DPTS_REGIONS` | — | `ajout-etablissement` |
+| `DPTS_REGIONS` | `Nom_departement`, `Numero`, `Nom_region`, `Territoire_depart` | `ajout-etablissement`, `fiche-candidat` |
 | `_grist_Tables` | — | `loadColumnsMetaFor` (méta interne) |
 | `_grist_Tables_column` | — | `loadColumnsMetaFor` (méta interne) |
 

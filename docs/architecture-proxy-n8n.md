@@ -194,7 +194,10 @@ IF sig === HMAC calculé
                 ▼
                Code (formate la réponse)
                 │  Pour chaque candidat : id, prenom, nom, email, tel,
-                │  genre, age, dateNaissance, reference, nationalite, statut
+                │  genre, dateNaissance, reference, createdAt, nationalite, statut,
+                │  eligibilite, aie, territoireDepart, niveauLangueElig,
+                │  regulariteSituation, precariteLogement, volontariteMobilite
+                │  (⚠️ ne jamais exposer $Age — âge calculé côté frontend depuis dateNaissance)
                 ▼
                Respond {
                  "status": "ok",
