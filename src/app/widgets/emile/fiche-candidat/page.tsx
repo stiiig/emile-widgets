@@ -363,9 +363,13 @@ function FieldLabel({ col, disabled }: { col: ColMeta; disabled: boolean }) {
 }
 
 /* ─── Styles partagés dropdowns custom ───────────────── */
+const FC_FORM_H: React.CSSProperties = {
+  minHeight: "2.25rem",
+  padding: "0.45rem 1.75rem 0.45rem 0.5rem",
+};
 const SD_TRIGGER: React.CSSProperties = {
-  width: "100%", textAlign: "left", minHeight: "1.875rem",
-  padding: "0.25rem 1.75rem 0.25rem 0.5rem", borderRadius: 4,
+  width: "100%", textAlign: "left", ...FC_FORM_H,
+  borderRadius: 4,
   border: "1px solid #d0d0d0", background: "#f9f9f9",
   cursor: "pointer", fontSize: "0.82rem",
   fontFamily: "Marianne, arial, sans-serif", color: "#1e1e1e",
@@ -667,6 +671,7 @@ function DeptSpecialField({ value, onChange, disabled, docApi, col }: {
         placeholder={loading && options.length === 0 ? "Chargement…" : "—"}
         disabled={disabled || (loading && options.length === 0)}
         searchable
+        triggerStyle={FC_FORM_H}
       />
     </div>
   );
@@ -1023,17 +1028,17 @@ function GenericDateField({ value, onChange, disabled, col }: {
         <div style={{ flex: "1 1 0%" }}>
           <SearchDropdown options={dayOptions} valueId={dayId}
             onChange={(id) => { if (!id) return; const d = String(id).padStart(2, "0"); setSelD(d); commit(selY, selM, d); }}
-            placeholder="Jour" searchable={true} disabled={disabled} />
+            placeholder="Jour" searchable={true} disabled={disabled} triggerStyle={FC_FORM_H} />
         </div>
         <div style={{ flex: "1 1 0%" }}>
           <SearchDropdown options={monthOptions} valueId={monthId}
             onChange={(id) => { if (!id) return; const m = String(id).padStart(2, "0"); setSelM(m); commit(selY, m, selD); }}
-            placeholder="Mois" searchable={true} disabled={disabled} />
+            placeholder="Mois" searchable={true} disabled={disabled} triggerStyle={FC_FORM_H} />
         </div>
         <div style={{ flex: "1 1 0%" }}>
           <SearchDropdown options={yearOptions} valueId={yearId}
             onChange={(id) => { if (!id) return; const y = String(id); setSelY(y); commit(y, selM, selD); }}
-            placeholder="Année" searchable={true} disabled={disabled} />
+            placeholder="Année" searchable={true} disabled={disabled} triggerStyle={FC_FORM_H} />
         </div>
       </div>
     </div>
@@ -1085,17 +1090,17 @@ function DateNaissanceSpecialField({ value, onChange, disabled, col, genreValue 
         <div style={{ flex: "1 1 0%" }}>
           <SearchDropdown options={dayOptions} valueId={dayId}
             onChange={(id) => { if (!id) return; const d = String(id).padStart(2, "0"); setSelD(d); commit(selY, selM, d); }}
-            placeholder="Jour" searchable={true} disabled={disabled} />
+            placeholder="Jour" searchable={true} disabled={disabled} triggerStyle={FC_FORM_H} />
         </div>
         <div style={{ flex: "1 1 0%" }}>
           <SearchDropdown options={monthOptions} valueId={monthId}
             onChange={(id) => { if (!id) return; const m = String(id).padStart(2, "0"); setSelM(m); commit(selY, m, selD); }}
-            placeholder="Mois" searchable={true} disabled={disabled} />
+            placeholder="Mois" searchable={true} disabled={disabled} triggerStyle={FC_FORM_H} />
         </div>
         <div style={{ flex: "1 1 0%" }}>
           <SearchDropdown options={yearOptions} valueId={yearId}
             onChange={(id) => { if (!id) return; const y = String(id); setSelY(y); commit(y, selM, selD); }}
-            placeholder="Année" searchable={true} disabled={disabled} />
+            placeholder="Année" searchable={true} disabled={disabled} triggerStyle={FC_FORM_H} />
         </div>
       </div>
       {age !== null && (
@@ -1957,6 +1962,7 @@ function Field(props: {
           placeholder="—"
           disabled={disabled || choiceOptions.length === 0}
           searchable={choiceOptions.length > 6}
+          triggerStyle={FC_FORM_H}
         />
       </div>
     );
@@ -1981,6 +1987,7 @@ function Field(props: {
           placeholder="—"
           disabled={disabled || choiceOptions.length === 0}
           searchable={choiceOptions.length > 6}
+          triggerStyle={FC_FORM_H}
         />
       </div>
     );
@@ -2015,6 +2022,7 @@ function Field(props: {
             onChange={(id) => onChange(id)}
             placeholder={loading ? "…" : "—"}
             disabled={disabled || loading}
+            triggerStyle={FC_FORM_H}
           />
         </div>
       );
@@ -2030,6 +2038,7 @@ function Field(props: {
           onChange={(nextIds) => onChange(encodeListCell(nextIds))}
           placeholder={loading ? "…" : "—"}
           disabled={disabled || loading}
+          triggerStyle={FC_FORM_H}
         />
       </div>
     );

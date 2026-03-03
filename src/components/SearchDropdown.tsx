@@ -93,8 +93,9 @@ export function SearchDropdown(props: {
   disabled?: boolean;
   searchable?: boolean;        // défaut true — mettre false si peu d'options
   variant?: "default" | "header"; // header = style pour fond sombre
+  triggerStyle?: React.CSSProperties; // surcharge de style pour le bouton trigger
 }) {
-  const { options, valueId, onChange, placeholder, disabled, searchable = true, variant = "default" } = props;
+  const { options, valueId, onChange, placeholder, disabled, searchable = true, variant = "default", triggerStyle } = props;
 
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
@@ -139,7 +140,7 @@ export function SearchDropdown(props: {
         type="button"
         disabled={disabled}
         onClick={() => { if (!disabled) setOpen((v) => !v); }}
-        style={trigger}
+        style={triggerStyle ? { ...trigger, ...triggerStyle } : trigger}
       >
         {selected ? (
           <>
@@ -229,8 +230,9 @@ export function SearchMultiDropdown(props: {
   placeholder?: string;
   disabled?: boolean;
   searchable?: boolean;
+  triggerStyle?: React.CSSProperties; // surcharge de style pour le bouton trigger
 }) {
-  const { options, valueIds, onChange, placeholder, disabled, searchable = true } = props;
+  const { options, valueIds, onChange, placeholder, disabled, searchable = true, triggerStyle } = props;
 
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
@@ -275,7 +277,7 @@ export function SearchMultiDropdown(props: {
         type="button"
         disabled={disabled}
         onClick={() => { if (!disabled) setOpen((v) => !v); }}
-        style={disabled ? triggerDisabled : triggerBase}
+        style={triggerStyle ? { ...(disabled ? triggerDisabled : triggerBase), ...triggerStyle } : (disabled ? triggerDisabled : triggerBase)}
       >
         {label ? (
           <span>{label}</span>

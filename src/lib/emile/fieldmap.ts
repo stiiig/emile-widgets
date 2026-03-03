@@ -59,6 +59,7 @@ export const FIELD_MAP: Record<L1TabKey, Record<SubtabKey, string[]>> = {
       "Secteur_emploi_actuel",
       "Experiences_recentes",
       "Accompagnement_Cap_Emploi",
+      "Pret_a_se_former",
     ],
     projet: [
       "Metier_du_projet_de_coeur",
