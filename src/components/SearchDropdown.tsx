@@ -142,7 +142,23 @@ export function SearchDropdown(props: {
         style={trigger}
       >
         {selected ? (
-          <span>{selected.label}</span>
+          <>
+            {selected.tagLeft && (
+              <span style={{
+                fontSize: "0.62rem", fontWeight: 700, padding: "0.1rem 0.35rem", borderRadius: 3,
+                flexShrink: 0, marginRight: "0.25rem",
+                background: "#e8eef8", color: "#000091", whiteSpace: "nowrap",
+              }}>{selected.tagLeft}</span>
+            )}
+            <span style={{ flex: 1 }}>{selected.label}</span>
+            {selected.tag && (
+              <span style={{
+                fontSize: "0.62rem", fontWeight: 600, padding: "0.1rem 0.35rem", borderRadius: 3,
+                flexShrink: 0, marginLeft: "0.25rem",
+                background: "#f0f0f8", color: "#555", whiteSpace: "nowrap",
+              }}>{selected.tag}</span>
+            )}
+          </>
         ) : (
           <span style={{ opacity: variant === "header" ? 0.7 : 0.5 }}>
             {placeholder ?? "Sélectionner…"}
