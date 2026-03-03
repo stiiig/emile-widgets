@@ -778,9 +778,11 @@ function buildEligibilityCriteria(
     ? dptsOptions.find((o) => o.id === form.Departement_domicile_inscription) ?? null
     : null;
   const deptLabel = deptOpt?.label ?? null;
-  const niveauLabel = form.Niveau_de_langue != null
-    ? niveauOptions.find((o) => o.id === form.Niveau_de_langue)?.label ?? null
+  const niveauOpt   = form.Niveau_de_langue != null
+    ? niveauOptions.find((o) => o.id === form.Niveau_de_langue) ?? null
     : null;
+  const niveauLabel = niveauOpt?.label ?? null;
+  const niveauCode  = niveauOpt?.tagLeft ?? null;
   const nationaliteLabel = form.Nationalite != null
     ? paysOptions.find((o) => o.id === form.Nationalite)?.label ?? null
     : null;
@@ -817,7 +819,9 @@ function buildEligibilityCriteria(
       ok: form.Niveau_de_langue == null
         ? null
         : (niveauEligibilite.get(form.Niveau_de_langue) ?? "").toLowerCase() === "oui",
-      detail: niveauLabel || undefined,
+      detail: niveauLabel
+        ? [niveauCode, niveauLabel].filter(Boolean).join(" — ")
+        : undefined,
     },
     {
       id: "logement",
