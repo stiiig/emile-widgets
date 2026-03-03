@@ -1327,7 +1327,7 @@ export default function Page() {
               {/* Ligne 1 — Nom + ref + statut */}
               <div className="fc-hero__header">
                 <span className="fc-hero__name">
-                  <i className="fa-solid fa-user" aria-hidden="true" />
+                  <i className="fa-solid fa-circle-user" aria-hidden="true" />
                   {selectedName}
                 </span>
                 <div className="fc-hero__chips-right">

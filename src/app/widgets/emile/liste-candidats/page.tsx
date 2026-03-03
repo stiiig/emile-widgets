@@ -372,7 +372,7 @@ export default function ListeCandidatsPage() {
         {/* Ligne 1 — Nom + chips droite */}
         <div className="lc-item__header">
           <span className="lc-item__name">
-            <i className="fa-solid fa-user" aria-hidden="true" />
+            <i className="fa-solid fa-circle-user" aria-hidden="true" />
             {[c.prenom, c.nom].filter(Boolean).join(" ") || "—"}
           </span>
           <div className="lc-item__chips-right">
