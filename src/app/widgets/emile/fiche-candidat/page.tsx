@@ -164,6 +164,105 @@ function AgeChipHero({ displayAge, dateNaissance }: {
   );
 }
 
+function EligibilitePopoverHero({ selected }: { selected: Record<string, any> | null }) {
+  const [open, setOpen] = useState(false);
+  const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
+  const anchorRef = useRef<HTMLSpanElement | null>(null);
+
+  const aie               = String(selected?.["AIE"] ?? "").trim() || null;
+  const territoireDepart  = selected?.["Departement_domicile_inscription_Territoire_depart"];
+  const niveauLangueElig  = selected?.["Niveau_de_langue_Eligibilite"];
+  const regularite        = String(selected?.["Regularite_situation"] ?? "").trim() || null;
+  const precarite         = String(selected?.["Precarite_de_logement"] ?? "").trim() || null;
+  const volontarite       = String(selected?.["Volontariat_mobilite"] ?? "").trim() || null;
+  const dateNaiss         = selected?.["Date_de_naissance"] ?? null;
+
+  const koItems: { label: string; detail: string }[] = [];
+
+  // 1. Accompagnant·e engagé·e
+  if (aie != null && aie !== "Oui")
+    koItems.push({ label: "Accompagnant·e engagé·e", detail: aie || "Non" });
+
+  // 2. Territoire de départ
+  const terrOk =
+    territoireDepart === true   || territoireDepart === 1 ||
+    territoireDepart === "Oui"  || territoireDepart === "true" || territoireDepart === "1";
+  if (territoireDepart != null && !terrOk)
+    koItems.push({ label: "Territoire de départ", detail: "Hors territoire éligible" });
+
+  // 3. Majorité
+  const ageCalc = computeAge(dateNaiss);
+  if (ageCalc != null && ageCalc < 18)
+    koItems.push({ label: "Majorité", detail: `${ageCalc} ans — mineur·e` });
+
+  // 4. Niveau de langue
+  const langOk =
+    niveauLangueElig === true   || niveauLangueElig === 1 ||
+    niveauLangueElig === "Oui"  || niveauLangueElig === "true" || niveauLangueElig === "1";
+  if (niveauLangueElig != null && !langOk)
+    koItems.push({ label: "Niveau de langue", detail: "Niveau insuffisant" });
+
+  // 5. Situation régulière
+  if (regularite != null && regularite !== "Oui")
+    koItems.push({ label: "Situation régulière", detail: regularite || "Non" });
+
+  // 6. Précarité de logement
+  if (precarite != null && precarite.startsWith("Aucun"))
+    koItems.push({ label: "Précarité de logement", detail: "Aucune situation éligible" });
+
+  // 7. Volontariat pour le programme EMILE
+  if (volontarite != null && volontarite !== "Oui")
+    koItems.push({ label: "Volontariat pour le programme EMILE", detail: volontarite || "Non" });
+
+  const hasDetails = koItems.length > 0;
+
+  function calcPos() {
+    if (anchorRef.current) {
+      const r = anchorRef.current.getBoundingClientRect();
+      const POPUP_W = 240;
+      const rawLeft = r.left + r.width / 2 - POPUP_W / 2;
+      const left = Math.max(8, Math.min(rawLeft, window.innerWidth - POPUP_W - 8));
+      setPos({ top: r.bottom + 8, left });
+    }
+  }
+
+  return (
+    <span
+      ref={anchorRef}
+      className="fc-popover-anchor"
+      onMouseEnter={() => { if (hasDetails) { calcPos(); setOpen(true); } }}
+      onMouseLeave={() => setOpen(false)}
+    >
+      <span className={`fc-hero__chip fc-hero__chip--non-eligible${hasDetails ? " fc-hero__chip--has-popover" : ""}`}>
+        Non éligible
+        {hasDetails && <i className="fa-solid fa-circle-info" />}
+      </span>
+      {open && pos && hasDetails && typeof document !== "undefined" && createPortal(
+        <div
+          className="fc-popover-fixed fc-popover-fixed--error"
+          style={{ top: pos.top, left: pos.left }}
+          role="tooltip"
+        >
+          <p className="fc-popover__title fc-popover__title--error">
+            <i className="fa-solid fa-circle-xmark" />
+            Critères non satisfaits
+          </p>
+          <ul className="fc-popover__list">
+            {koItems.map(({ label, detail }) => (
+              <li key={label} className="fc-popover__item">
+                <i className="fa-solid fa-xmark" />
+                <span className="fc-popover__item-label">{label}</span>
+                <span className="fc-popover__item-detail">{detail}</span>
+              </li>
+            ))}
+          </ul>
+        </div>,
+        document.body
+      )}
+    </span>
+  );
+}
+
 /* 2A → 20.1, 2B → 20.2  (Corse entre 19 et 21) */
 function deptSortKey(numero: string | undefined): number {
   if (!numero) return 9999;
@@ -1338,10 +1437,22 @@ export default function Page() {
                     />
                   )}
                   {(() => {
+                    const eligibilite = String(selected?.["Eligibilite"] ?? "").trim();
                     const statut = String(selected?.["Statut"] ?? "").trim();
-                    if (!statut) return null;
                     return (
-                      <span className={`fc-hero__chip ${statutChipClassHero(statut)}`}>{statut}</span>
+                      <>
+                        {eligibilite === "✅ OK" && !statut && (
+                          <span className="fc-hero__chip fc-hero__chip--eligible">
+                            Éligible<i className="fa-solid fa-check" />
+                          </span>
+                        )}
+                        {eligibilite === "❌ KO" && (
+                          <EligibilitePopoverHero selected={selected} />
+                        )}
+                        {statut && (
+                          <span className={`fc-hero__chip ${statutChipClassHero(statut)}`}>{statut}</span>
+                        )}
+                      </>
                     );
                   })()}
                 </div>

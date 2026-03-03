@@ -297,6 +297,64 @@ body {
   font-family: "Marianne", "Helvetica Neue", Arial, sans-serif;
 }
 
+/* Chips éligibilité */
+.fc-hero__chip--eligible {
+  background: #b8fec9;
+  color: #18753c;
+  font-weight: 700;
+}
+.fc-hero__chip--non-eligible {
+  background: #ffe9e9;
+  color: #ce0500;
+  font-weight: 700;
+}
+
+/* Popover erreur (Non éligible) — variante rouge du fc-popover-fixed */
+.fc-popover-fixed--error {
+  border-color: #fca5a5;
+  border-top-color: #ce0500;
+  min-width: 220px;
+}
+.fc-popover__title--error { color: #ce0500; }
+
+.fc-popover__list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.fc-popover__item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.76rem;
+  color: #2d2d2d;
+  font-weight: 500;
+}
+.fc-popover__item i {
+  color: #ce0500;
+  font-size: 0.58rem;
+  flex-shrink: 0;
+  width: 0.7rem;
+  text-align: center;
+}
+.fc-popover__item-label {
+  flex: 1;
+  color: #2d2d2d;
+}
+.fc-popover__item-detail {
+  background: #fee2e2;
+  color: #991b1b;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 0.1rem 0.45rem;
+  border-radius: 10px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
 .emile-save-btn {
   background: rgba(255,255,255,.15) !important;
   border: 1px solid rgba(255,255,255,.35) !important;
