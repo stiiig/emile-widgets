@@ -1318,7 +1318,10 @@ export default function Page() {
             <div className="fc-hero__card">
               {/* Ligne 1 — Nom + ref + statut */}
               <div className="fc-hero__header">
-                <span className="fc-hero__name">{selectedName}</span>
+                <span className="fc-hero__name">
+                  <i className="fa-solid fa-user" aria-hidden="true" />
+                  {selectedName}
+                </span>
                 <div className="fc-hero__chips-right">
                   {selectedHint && (
                     <RefChipHero

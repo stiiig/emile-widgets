@@ -173,11 +173,20 @@ body {
 }
 
 .fc-hero__name {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
   font-size: 1.1rem;
   font-weight: 700;
   color: #1e1e1e;
   text-transform: uppercase;
   letter-spacing: 0.04em;
+}
+.fc-hero__name i {
+  font-size: 0.9rem;
+  color: #000091;
+  opacity: 0.7;
+  flex-shrink: 0;
 }
 
 .fc-hero__chips-right {
