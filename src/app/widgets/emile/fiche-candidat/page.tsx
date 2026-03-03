@@ -1323,7 +1323,7 @@ export default function Page() {
                   {selectedHint && (
                     <RefChipHero
                       reference={selectedHint}
-                      createdAt={selected?.["Date_inscription"] ?? null}
+                      createdAt={selected?.["createdAt"] ?? null}
                     />
                   )}
                   {(() => {
