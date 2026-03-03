@@ -420,6 +420,59 @@ function MultiChoiceField({
   );
 }
 
+/* ChoiceList → chips toggleables tout visibles (multi-select) */
+function MultiButtonGroupChoiceField({
+  label, choices, value, onChange, required = false, info,
+}: {
+  label: string; choices: string[]; value: string[];
+  onChange: (v: string[]) => void; required?: boolean; info?: React.ReactNode;
+}) {
+  const valueSet = useMemo(() => new Set(value), [value]);
+
+  function toggle(choice: string) {
+    if (valueSet.has(choice)) {
+      onChange(value.filter((v) => v !== choice));
+    } else {
+      onChange([...value, choice]);
+    }
+  }
+
+  return (
+    <div className="ins-field">
+      <label className="ins-label">
+        {label}{required && <span className="ins-required"> *</span>}
+        {info && <InfoPopover>{info}</InfoPopover>}
+      </label>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", marginTop: "0.25rem" }}>
+        {choices.map((c) => {
+          const active = valueSet.has(c);
+          return (
+            <button
+              key={c}
+              type="button"
+              onClick={() => toggle(c)}
+              style={{
+                display: "inline-flex", alignItems: "center", gap: "0.35rem",
+                padding: "0.3rem 0.75rem", borderRadius: 999,
+                border: active ? "1.5px solid #000091" : "1.5px solid #d0d0d0",
+                background: active ? "#e8eef8" : "#fff",
+                color: active ? "#000091" : "#555",
+                fontWeight: active ? 700 : 500,
+                fontSize: "0.8rem", cursor: "pointer",
+                fontFamily: "Marianne, arial, sans-serif",
+                transition: "all 0.12s",
+              }}
+            >
+              {active && <i className="fa-solid fa-check" style={{ fontSize: "0.65rem" }} />}
+              {c}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 
 function TelField({
   value, onValueChange, code, onCodeChange, required = false, placeholder = "",
@@ -2194,7 +2247,7 @@ export default function InscriptionPage() {
                   onChange={(v) => set("Bpi", v)}
                 />
 
-                <MultiChoiceField
+                <MultiButtonGroupChoiceField
                   label="Candidat·e prêt·e à se former à l'un ou plusieurs de ces secteurs d'activité ?"
                   choices={ch("Pret_a_se_former")}
                   value={form.Pret_a_se_former}
