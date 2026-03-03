@@ -1519,13 +1519,13 @@ export default function Page() {
               <div className="fc-hero__switcher">
                 <SearchDropdown
                   options={switcherOptions}
-                  valueId={candidatRowIdFromUrl}
+                  valueId={null}
                   onChange={(newId) => {
                     if (!newId || newId === candidatRowIdFromUrl || !occTokenForOrienteur) return;
                     const base = window.location.href.split("?")[0];
                     window.location.href = `${base}?token=${occTokenForOrienteur}&id=${newId}`;
                   }}
-                  placeholder="Changer de candidat·e…"
+                  placeholder="Afficher un·e autre candidat·e"
                   searchable={true}
                 />
               </div>
