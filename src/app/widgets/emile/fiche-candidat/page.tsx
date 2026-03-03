@@ -515,6 +515,101 @@ function NationaliteSpecialField({ value, onChange, disabled, docApi, col }: {
   );
 }
 
+/* ─── Niveau de langue ────────────────────────────────── */
+type NiveauOption = Option & { codeLangue: string };
+
+function NiveauLangueSpecialField({ value, onChange, disabled, docApi, col }: {
+  value: number | null; onChange: (id: number | null) => void;
+  disabled: boolean; docApi: GristDocAPI; col: ColMeta;
+}) {
+  const [options, setOptions] = useState<NiveauOption[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [hoveredId, setHoveredId] = useState<number | null>(null);
+  const rootRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    setLoading(true);
+    docApi.fetchTable("NIVEAU_LANGUE").then((table: any) => {
+      const ids = table.id as number[];
+      const opts: NiveauOption[] = [];
+      for (let i = 0; i < ids.length; i++) {
+        const id = ids[i];
+        const label = String(table["Niveau_de_langue"]?.[i] ?? "").trim();
+        if (!label) continue;
+        const code = String(table["Code_langue"]?.[i] ?? "").trim();
+        opts.push({ id, label, q: label.toLowerCase(), codeLangue: code });
+      }
+      setOptions(opts);
+    }).catch(() => {}).finally(() => setLoading(false));
+  }, [docApi]);
+
+  useEffect(() => {
+    function onDocClick(e: MouseEvent) {
+      if (!rootRef.current?.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", onDocClick);
+    return () => document.removeEventListener("mousedown", onDocClick);
+  }, []);
+
+  const sel = value != null ? options.find((o) => o.id === value) ?? null : null;
+
+  return (
+    <div className="emile-field">
+      <FieldLabel col={col} disabled={disabled} />
+      <div ref={rootRef} style={{ position: "relative" }}>
+        <button
+          type="button"
+          style={disabled || (loading && options.length === 0) ? SD_TRIGGER_DISABLED : SD_TRIGGER}
+          onClick={() => { if (!disabled && !(loading && options.length === 0)) setOpen((v) => !v); }}
+        >
+          {sel
+            ? <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{sel.label}</span>
+            : <span style={{ opacity: 0.5 }}>{loading && options.length === 0 ? "Chargement…" : "—"}</span>}
+          <span style={{ position: "absolute", right: "0.4rem", top: "50%", transform: "translateY(-50%)", fontSize: "0.65rem", color: "#888", pointerEvents: "none" }}>▾</span>
+        </button>
+        {open && !disabled && (
+          <div style={SD_PANEL}>
+            <div style={{ maxHeight: 280, overflowY: "auto" }}>
+              {options.map((o) => {
+                const isSelected = value === o.id;
+                return (
+                  <button
+                    key={o.id} type="button"
+                    onClick={() => { if (!disabled) { onChange(o.id); setOpen(false); } }}
+                    onMouseEnter={() => setHoveredId(o.id)}
+                    onMouseLeave={() => setHoveredId(null)}
+                    style={{
+                      display: "flex", alignItems: "center", justifyContent: "space-between",
+                      width: "100%", textAlign: "left", padding: "0.35rem 0.6rem",
+                      border: 0, borderBottom: "1px solid #f5f5f5",
+                      background: isSelected ? "#f0f0ff" : hoveredId === o.id ? "#f5f5ff" : "white",
+                      cursor: disabled ? "default" : "pointer", fontSize: "0.82rem",
+                      fontFamily: "Marianne, arial, sans-serif", color: "#1e1e1e", fontWeight: isSelected ? 700 : 400,
+                    }}
+                  >
+                    <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{o.label}</span>
+                    {o.codeLangue && (
+                      <span style={{
+                        fontSize: "0.62rem", fontWeight: 700, padding: "0.1rem 0.35rem", borderRadius: 3,
+                        marginLeft: "0.5rem", flexShrink: 0,
+                        background: "#e0f2fe", color: "#0369a1", whiteSpace: "nowrap",
+                      }}>{o.codeLangue}</span>
+                    )}
+                  </button>
+                );
+              })}
+              {options.length === 0 && !loading && (
+                <div style={{ padding: "0.5rem 0.6rem", fontSize: "0.8rem", color: "#999" }}>Aucun résultat.</div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 /* ─── Département domicile ────────────────────────────── */
 function DeptSpecialField({ value, onChange, disabled, docApi, col }: {
   value: number | null; onChange: (id: number | null) => void;
@@ -1713,6 +1808,18 @@ function Field(props: {
   if (col.colId === "Nationalite" && isRef) {
     return (
       <NationaliteSpecialField
+        value={typeof value === "number" ? value : null}
+        onChange={onChange}
+        disabled={disabled}
+        docApi={docApi}
+        col={col}
+      />
+    );
+  }
+
+  if (col.colId === "Niveau_de_langue" && isRef) {
+    return (
+      <NiveauLangueSpecialField
         value={typeof value === "number" ? value : null}
         onChange={onChange}
         disabled={disabled}
