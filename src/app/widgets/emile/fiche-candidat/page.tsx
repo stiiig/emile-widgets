@@ -38,14 +38,94 @@ function candidateHint(r: Row) {
   return (r["Reference"] ?? "").toString().trim();
 }
 
-function computeAge(dateIso: string): number | null {
-  if (!dateIso) return null;
-  const birth = new Date(dateIso);
+/** Gère unix (secondes) et ISO string. */
+function computeAge(raw: string | number | null | undefined): number | null {
+  if (raw == null || raw === 0 || raw === "") return null;
+  const ms = typeof raw === "number" ? raw * 1000 : Date.parse(raw as string);
+  if (isNaN(ms)) return null;
+  const birth = new Date(ms);
   const today = new Date();
-  let age = today.getFullYear() - birth.getFullYear();
-  const m = today.getMonth() - birth.getMonth();
-  if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
-  return age >= 0 ? age : null;
+  let a = today.getUTCFullYear() - birth.getUTCFullYear();
+  const dm = today.getUTCMonth() - birth.getUTCMonth();
+  if (dm < 0 || (dm === 0 && today.getUTCDate() < birth.getUTCDate())) a--;
+  return a > 0 ? a : null;
+}
+
+const MOIS_FR = ["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
+function formatDateLong(raw: string | number | null | undefined): string | undefined {
+  if (raw == null) return undefined;
+  const ms = typeof raw === "number" ? raw * 1000 : Date.parse(raw as string);
+  if (isNaN(ms)) return undefined;
+  const d = new Date(ms);
+  const day = d.getUTCDate();
+  return `${day === 1 ? "1er" : day} ${MOIS_FR[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
+}
+
+function statutChipClassHero(statut: string): string {
+  if (statut === "À traiter")          return "fc-hero__chip--statut-traiter";
+  if (statut === "En cours")           return "fc-hero__chip--statut-en-cours";
+  if (statut === "Étape terminée")     return "fc-hero__chip--statut-termine";
+  if (statut.startsWith("Suspension")) return "fc-hero__chip--statut-suspension";
+  if (statut.startsWith("Sortie"))     return "fc-hero__chip--statut-sortie";
+  return "fc-hero__chip--statut-traiter";
+}
+
+function RefChipHero({ reference, createdAt }: {
+  reference: string;
+  createdAt?: string | number | null;
+}) {
+  const [open, setOpen] = useState(false);
+  const line = createdAt ? `Dossier créé le ${formatDateLong(createdAt)}` : null;
+  return (
+    <span
+      className="fc-popover-anchor"
+      onMouseEnter={() => { if (line) setOpen(true); }}
+      onMouseLeave={() => setOpen(false)}
+    >
+      <span className={`fc-hero__chip fc-hero__chip--ref${line ? " fc-hero__chip--has-popover" : ""}`}>
+        {reference}
+      </span>
+      {open && line && (
+        <div className="fc-popover fc-popover--info" role="tooltip">
+          <p className="fc-popover__title fc-popover__title--info">
+            <i className="fa-solid fa-calendar-check" />
+            Référence {reference}
+          </p>
+          <p className="fc-popover__info-line">{line}</p>
+          <span className="fc-popover__arrow fc-popover__arrow--info" />
+        </div>
+      )}
+    </span>
+  );
+}
+
+function AgeChipHero({ displayAge, dateNaissance }: {
+  displayAge: number;
+  dateNaissance: string | number | null | undefined;
+}) {
+  const [open, setOpen] = useState(false);
+  const dateStr = formatDateLong(dateNaissance);
+  return (
+    <span
+      className="fc-popover-anchor"
+      onMouseEnter={() => { if (dateStr) setOpen(true); }}
+      onMouseLeave={() => setOpen(false)}
+    >
+      <span className={`fc-hero__chip${dateStr ? " fc-hero__chip--has-popover" : ""}`}>
+        <i className="fa-solid fa-cake-candles" />{displayAge} ans
+      </span>
+      {open && dateStr && (
+        <div className="fc-popover fc-popover--info" role="tooltip">
+          <p className="fc-popover__title fc-popover__title--info">
+            <i className="fa-solid fa-cake-candles" />
+            Date de naissance
+          </p>
+          <p className="fc-popover__info-line">{dateStr}</p>
+          <span className="fc-popover__arrow fc-popover__arrow--info" />
+        </div>
+      )}
+    </span>
+  );
 }
 
 /* 2A → 20.1, 2B → 20.2  (Corse entre 19 et 21) */
@@ -1213,30 +1293,42 @@ export default function Page() {
                 <span className="fc-hero__name">{selectedName}</span>
                 <div className="fc-hero__chips-right">
                   {selectedHint && (
-                    <span className="fc-hero__chip fc-hero__chip--ref">{selectedHint}</span>
+                    <RefChipHero
+                      reference={selectedHint}
+                      createdAt={selected?.["Date_inscription"] ?? null}
+                    />
                   )}
-                  {selected?.["Statut"] && (
-                    <span className="fc-hero__chip fc-hero__chip--statut">{String(selected["Statut"])}</span>
-                  )}
+                  {(() => {
+                    const statut = String(selected?.["Statut"] ?? "").trim();
+                    if (!statut) return null;
+                    return (
+                      <span className={`fc-hero__chip ${statutChipClassHero(statut)}`}>{statut}</span>
+                    );
+                  })()}
                 </div>
               </div>
 
-              {/* Ligne 2 — Âge + genre */}
+              {/* Ligne 2 — Âge + genre + nationalité */}
               {(() => {
-                const dateNaiss = String(selected?.["Date_de_naissance"] ?? "").trim();
+                const dateNaiss = selected?.["Date_de_naissance"] ?? null;
                 const age = computeAge(dateNaiss);
                 const genre = String(selected?.["Genre"] ?? "").trim();
-                if (age == null && !genre) return null;
+                const nat = String(selected?.["Nationalite_Nom_du_pays"] ?? "").trim();
+                const natOk = nat && isNaN(Number(nat));
+                if (age == null && !genre && !natOk) return null;
                 return (
                   <div className="fc-hero__meta">
                     {age != null && (
-                      <span className="fc-hero__chip">
-                        <i className="fa-solid fa-cake-candles" />{age} ans
-                      </span>
+                      <AgeChipHero displayAge={age} dateNaissance={dateNaiss} />
                     )}
                     {genre && (
                       <span className="fc-hero__chip">
                         <i className="fa-solid fa-venus-mars" />{genre}
+                      </span>
+                    )}
+                    {natOk && (
+                      <span className="fc-hero__chip">
+                        <i className="fa-solid fa-passport" />{nat}
                       </span>
                     )}
                   </div>
