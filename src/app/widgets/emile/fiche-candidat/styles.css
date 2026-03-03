@@ -313,7 +313,8 @@ body {
 .fc-popover-fixed--error {
   border-color: #fca5a5;
   border-top-color: #ce0500;
-  min-width: 220px;
+  min-width: 290px;
+  max-width: 310px;
 }
 .fc-popover__title--error { color: #ce0500; }
 

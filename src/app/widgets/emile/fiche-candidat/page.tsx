@@ -219,7 +219,7 @@ function EligibilitePopoverHero({ selected }: { selected: Record<string, any> | 
   function calcPos() {
     if (anchorRef.current) {
       const r = anchorRef.current.getBoundingClientRect();
-      const POPUP_W = 240;
+      const POPUP_W = 310;
       const rawLeft = r.left + r.width / 2 - POPUP_W / 2;
       const left = Math.max(8, Math.min(rawLeft, window.innerWidth - POPUP_W - 8));
       setPos({ top: r.bottom + 8, left });
