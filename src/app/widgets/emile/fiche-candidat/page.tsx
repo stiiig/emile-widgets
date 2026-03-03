@@ -362,14 +362,13 @@ function FieldLabel({ col, disabled }: { col: ColMeta; disabled: boolean }) {
 
 /* ─── Styles partagés dropdowns custom ───────────────── */
 const SD_TRIGGER: React.CSSProperties = {
-  width: "100%", textAlign: "left", height: "1.875rem",
-  padding: "0 1.75rem 0 0.5rem", borderRadius: 4,
+  width: "100%", textAlign: "left", minHeight: "1.875rem",
+  padding: "0.25rem 1.75rem 0.25rem 0.5rem", borderRadius: 4,
   border: "1px solid #d0d0d0", background: "#f9f9f9",
   cursor: "pointer", fontSize: "0.82rem",
   fontFamily: "Marianne, arial, sans-serif", color: "#1e1e1e",
   position: "relative", display: "flex", alignItems: "center",
-  boxSizing: "border-box", whiteSpace: "nowrap",
-  overflow: "hidden", textOverflow: "ellipsis",
+  flexWrap: "wrap", gap: "0.25rem", boxSizing: "border-box",
 };
 const SD_TRIGGER_DISABLED: React.CSSProperties = {
   ...SD_TRIGGER, background: "#f3f3f3", color: "#999",

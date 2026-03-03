@@ -9,8 +9,8 @@ export type Option = { id: number; label: string; q?: string; tagLeft?: string; 
 const triggerBase: React.CSSProperties = {
   width: "100%",
   textAlign: "left",
-  height: "1.875rem",
-  padding: "0 1.75rem 0 0.5rem",
+  minHeight: "1.875rem",
+  padding: "0.25rem 1.75rem 0.25rem 0.5rem",
   borderRadius: 4,
   border: "1px solid #d0d0d0",
   background: "#f9f9f9",
@@ -21,10 +21,9 @@ const triggerBase: React.CSSProperties = {
   position: "relative",
   display: "flex",
   alignItems: "center",
+  flexWrap: "wrap",
+  gap: "0.25rem",
   boxSizing: "border-box" as const,
-  whiteSpace: "nowrap",
-  overflow: "hidden",
-  textOverflow: "ellipsis",
   transition: "border-color 0.12s, background 0.12s",
 };
 
@@ -143,9 +142,9 @@ export function SearchDropdown(props: {
         style={trigger}
       >
         {selected ? (
-          <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{selected.label}</span>
+          <span>{selected.label}</span>
         ) : (
-          <span style={{ opacity: variant === "header" ? 0.7 : 0.5, overflow: "hidden", textOverflow: "ellipsis" }}>
+          <span style={{ opacity: variant === "header" ? 0.7 : 0.5 }}>
             {placeholder ?? "Sélectionner…"}
           </span>
         )}
@@ -263,7 +262,7 @@ export function SearchMultiDropdown(props: {
         style={disabled ? triggerDisabled : triggerBase}
       >
         {label ? (
-          <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{label}</span>
+          <span>{label}</span>
         ) : (
           <span style={{ opacity: 0.5 }}>{placeholder ?? "Sélectionner…"}</span>
         )}
