@@ -78,14 +78,13 @@ type PaysOption = Option & { typeNationalite: string };
 
 /* Styles partagés avec SearchDropdown */
 const SD_TRIGGER: React.CSSProperties = {
-  width: "100%", textAlign: "left", height: "1.875rem",
-  padding: "0 1.75rem 0 0.5rem", borderRadius: 4,
+  width: "100%", textAlign: "left", minHeight: "1.875rem",
+  padding: "0.25rem 1.75rem 0.25rem 0.5rem", borderRadius: 4,
   border: "1px solid #d0d0d0", background: "#f9f9f9",
   cursor: "pointer", fontSize: "0.82rem",
   fontFamily: "Marianne, arial, sans-serif", color: "#1e1e1e",
   position: "relative", display: "flex", alignItems: "center",
-  boxSizing: "border-box", whiteSpace: "nowrap",
-  overflow: "hidden", textOverflow: "ellipsis",
+  flexWrap: "wrap", gap: "0.25rem", boxSizing: "border-box",
 };
 const SD_PANEL: React.CSSProperties = {
   position: "absolute", zIndex: 500, top: "calc(100% + 3px)", left: 0,
@@ -192,7 +191,18 @@ function NationaliteDropdown({
           onClick={() => { if (!(loading && options.length === 0)) setOpen((v) => !v); }}
         >
           {selected
-            ? <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{selected.label}</span>
+            ? <>
+                <span style={{ flex: 1 }}>{selected.label}</span>
+                {selected.typeNationalite && (() => {
+                  const tag = TYPE_TAG[selected.typeNationalite];
+                  return (
+                    <span style={{
+                      fontSize: "0.62rem", fontWeight: 700, padding: "0.1rem 0.35rem", borderRadius: 3,
+                      flexShrink: 0, background: tag?.bg ?? "#f3f4f6", color: tag?.color ?? "#555", whiteSpace: "nowrap",
+                    }}>{selected.typeNationalite}</span>
+                  );
+                })()}
+              </>
             : <span style={{ opacity: 0.5 }}>{loading && options.length === 0 ? "Chargement…" : "Sélectionner"}</span>
           }
           <span style={{ position: "absolute", right: "0.4rem", top: "50%", transform: "translateY(-50%)", fontSize: "0.65rem", color: "#888", pointerEvents: "none" }}>▾</span>
