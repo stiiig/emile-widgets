@@ -362,7 +362,16 @@ function FieldLabel({ col, disabled }: { col: ColMeta; disabled: boolean }) {
   );
 }
 
-/* ─── Styles partagés dropdowns custom ───────────────── */
+/* ─── Hauteur commune dropdowns formulaire (fiche candidat) ──────────────────
+   FC_FORM_H aligne tous les dropdowns du formulaire sur la même hauteur que
+   les <input class="emile-input"> (2.25 rem), pour une grille de saisie cohérente.
+
+   Appliqué via :
+     - SD_TRIGGER / SD_TRIGGER_DISABLED  → dropdowns custom (Département, Dates…)
+     - prop triggerStyle                 → <SearchDropdown> et <SearchMultiDropdown>
+
+   ⚠️  Ne toucher qu'ici : SD_TRIGGER et SD_TRIGGER_DISABLED spread FC_FORM_H.
+   ─────────────────────────────────────────────────────────────────────────── */
 const FC_FORM_H: React.CSSProperties = {
   minHeight: "2.25rem",
   padding: "0.45rem 1.75rem 0.45rem 0.5rem",
@@ -1276,6 +1285,8 @@ export default function Page() {
       });
   }, [isOrienteurMode, occTokenForOrienteur]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Options du dropdown de navigation inter-candidats.
+  // Le candidat actuellement affiché est préfixé "→ " pour le repérer d'un coup d'œil.
   const switcherOptions = useMemo<Option[]>(
     () => allCandidats.map((c) => {
       const name = `${c.prenom ?? ""} ${c.nom ?? ""}`.trim() || "—";
@@ -1394,6 +1405,13 @@ export default function Page() {
     setCandidateValueId(v);
   }, [selected?.id, candidateIdByRowId]);
 
+  /**
+   * Mode Grist (iframe) : met à jour le dossier via l'API Grist (docApi.applyUserActions).
+   * Seuls les champs éditables sont envoyés ; les pièces jointes non modifiées sont exclues
+   * pour éviter un effacement côté Grist (bug connu : envoyer ["L", …] sur un champ
+   * Attachments inchangé via UpdateRecord efface les pièces jointes).
+   * @see saveRest pour le mode orienteur (n8n)
+   */
   async function save() {
     if (!docApi || !selected?.id) return;
     setSaving(true);
@@ -1413,6 +1431,54 @@ export default function Page() {
       }
       await docApi.applyUserActions([["UpdateRecord", TABLE_ID, selected.id, updates]]);
       setStatus("Enregistré ✅");
+    } catch (e: any) {
+      setStatus("Erreur: " + (e?.message ?? e));
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  /**
+   * Mode orienteur (REST) : enregistre les modifications via le webhook n8n occ-save-candidat.
+   * Calcule le diff `draft` ↔ `selected` et ne transmet que les champs modifiés.
+   *
+   * Payload  : POST { token, id, updates: Record<colId, value> }
+   * Réponse  : { status: "ok" }  (le webhook met à jour la ligne Grist correspondante)
+   *
+   * Après succès, `selected` est mis à jour localement pour refléter les nouvelles
+   * valeurs sans déclencher un rechargement complet de la page.
+   * @see save pour le mode Grist (iframe)
+   */
+  async function saveRest() {
+    const saveUrl = process.env.NEXT_PUBLIC_OCC_SAVE_CANDIDAT_URL;
+    if (!saveUrl || !occTokenForOrienteur || !candidatRowIdFromUrl || !selected) return;
+    setSaving(true);
+    try {
+      // Diff : on n'inclut que les champs dont la valeur a réellement changé
+      const updates: Record<string, any> = {};
+      for (const key of Object.keys(draft)) {
+        if (JSON.stringify(draft[key]) !== JSON.stringify(selected?.[key])) {
+          updates[key] = draft[key];
+        }
+      }
+      if (Object.keys(updates).length === 0) {
+        setStatus("Aucune modification à enregistrer.");
+        return;
+      }
+      const res = await fetch(saveUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: occTokenForOrienteur, id: candidatRowIdFromUrl, updates }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      if (data?.status === "ok") {
+        setStatus("Enregistré ✅");
+        // Mise à jour optimiste : reflète les nouvelles valeurs sans rechargement
+        setSelected((prev) => prev ? { ...prev, ...updates } : prev);
+      } else {
+        throw new Error(data?.message ?? "Erreur inconnue");
+      }
     } catch (e: any) {
       setStatus("Erreur: " + (e?.message ?? e));
     } finally {
@@ -1515,7 +1581,7 @@ export default function Page() {
       {isOrienteurMode && authStatus !== "invalid" && (
         <div className="fc-hero">
 
-          {/* ── Topbar : retour + switcher ── */}
+          {/* ── Topbar : retour · enregistrer · switcher ── */}
           <div className="fc-hero__nav">
             {orienteurListUrl && (
               <a href={orienteurListUrl} className="fc-hero__back">
@@ -1524,6 +1590,18 @@ export default function Page() {
               </a>
             )}
             <div className="fc-hero__nav-spacer" />
+            {/* Bouton Enregistrer — visible dès que l'auth est validée */}
+            {authStatus === "ok" && (
+              <button
+                type="button"
+                className="fc-hero__save-btn"
+                onClick={saveRest}
+                disabled={!selected?.id || saving}
+              >
+                <i className="fa-solid fa-floppy-disk" aria-hidden="true" />
+                {saving ? "…" : "Enregistrer"}
+              </button>
+            )}
             {switcherOptions.length > 1 && (
               <div className="fc-hero__switcher">
                 <SearchDropdown
