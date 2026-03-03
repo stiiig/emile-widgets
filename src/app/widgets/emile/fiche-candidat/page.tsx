@@ -75,25 +75,36 @@ function RefChipHero({ reference, createdAt }: {
   createdAt?: string | number | null;
 }) {
   const [open, setOpen] = useState(false);
+  const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
+  const anchorRef = useRef<HTMLSpanElement | null>(null);
   const line = createdAt ? `Dossier créé le ${formatDateLong(createdAt)}` : null;
+
+  function calcPos() {
+    if (anchorRef.current) {
+      const r = anchorRef.current.getBoundingClientRect();
+      setPos({ top: r.bottom + 8, left: r.left + r.width / 2 });
+    }
+  }
+
   return (
     <span
+      ref={anchorRef}
       className="fc-popover-anchor"
-      onMouseEnter={() => { if (line) setOpen(true); }}
+      onMouseEnter={() => { calcPos(); setOpen(true); }}
       onMouseLeave={() => setOpen(false)}
     >
-      <span className={`fc-hero__chip fc-hero__chip--ref${line ? " fc-hero__chip--has-popover" : ""}`}>
+      <span className="fc-hero__chip fc-hero__chip--ref fc-hero__chip--has-popover">
         {reference}
       </span>
-      {open && line && (
-        <div className="fc-popover fc-popover--info" role="tooltip">
+      {open && pos && typeof document !== "undefined" && createPortal(
+        <div className="fc-popover-fixed" style={{ top: pos.top, left: pos.left }} role="tooltip">
           <p className="fc-popover__title fc-popover__title--info">
             <i className="fa-solid fa-calendar-check" />
             Référence {reference}
           </p>
-          <p className="fc-popover__info-line">{line}</p>
-          <span className="fc-popover__arrow fc-popover__arrow--info" />
-        </div>
+          {line && <p className="fc-popover__info-line">{line}</p>}
+        </div>,
+        document.body
       )}
     </span>
   );
@@ -104,25 +115,36 @@ function AgeChipHero({ displayAge, dateNaissance }: {
   dateNaissance: string | number | null | undefined;
 }) {
   const [open, setOpen] = useState(false);
+  const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
+  const anchorRef = useRef<HTMLSpanElement | null>(null);
   const dateStr = formatDateLong(dateNaissance);
+
+  function calcPos() {
+    if (anchorRef.current) {
+      const r = anchorRef.current.getBoundingClientRect();
+      setPos({ top: r.bottom + 8, left: r.left + r.width / 2 });
+    }
+  }
+
   return (
     <span
+      ref={anchorRef}
       className="fc-popover-anchor"
-      onMouseEnter={() => { if (dateStr) setOpen(true); }}
+      onMouseEnter={() => { if (dateStr) { calcPos(); setOpen(true); } }}
       onMouseLeave={() => setOpen(false)}
     >
       <span className={`fc-hero__chip${dateStr ? " fc-hero__chip--has-popover" : ""}`}>
         <i className="fa-solid fa-cake-candles" />{displayAge} ans
       </span>
-      {open && dateStr && (
-        <div className="fc-popover fc-popover--info" role="tooltip">
+      {open && pos && dateStr && typeof document !== "undefined" && createPortal(
+        <div className="fc-popover-fixed" style={{ top: pos.top, left: pos.left }} role="tooltip">
           <p className="fc-popover__title fc-popover__title--info">
             <i className="fa-solid fa-cake-candles" />
             Date de naissance
           </p>
           <p className="fc-popover__info-line">{dateStr}</p>
-          <span className="fc-popover__arrow fc-popover__arrow--info" />
-        </div>
+        </div>,
+        document.body
       )}
     </span>
   );
