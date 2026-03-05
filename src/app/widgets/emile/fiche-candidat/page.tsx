@@ -290,6 +290,21 @@ function StatusAlert({ status }: { status: string }) {
   );
 }
 
+type ToastType = "success" | "error" | "info";
+interface ToastState { message: string; type: ToastType }
+
+function Toast({ toast }: { toast: ToastState | null }) {
+  if (!toast) return null;
+  return (
+    <div className={`fc-toast fc-toast--${toast.type}`} role="status" aria-live="polite">
+      <span className="fc-toast__icon" aria-hidden="true">
+        {toast.type === "success" ? "✓" : toast.type === "error" ? "✕" : "ℹ"}
+      </span>
+      {toast.message}
+    </div>
+  );
+}
+
 /* ─── Style inline bouton actif (override DSFR) ─────── */
 const OUINON_ACTIVE: React.CSSProperties = {
   background: "#000091", borderColor: "#000091", color: "#fff",
@@ -1220,6 +1235,8 @@ export default function Page() {
   const [draft, setDraft] = useState<Record<string, any>>({});
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState("");
+  const [toast, setToast] = useState<ToastState | null>(null);
+  const toastTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const [loadingRest, setLoadingRest] = useState(false);
   const [showFaq, setShowFaq] = useState(false);
 
@@ -1297,6 +1314,12 @@ export default function Page() {
     }),
     [allCandidats, candidatRowIdFromUrl],
   );
+
+  function showToast(message: string, type: ToastType = "success") {
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    setToast({ message, type });
+    toastTimer.current = setTimeout(() => setToast(null), 3000);
+  }
 
   // mode "none" → message d'aide
   useEffect(() => {
@@ -1430,9 +1453,9 @@ export default function Page() {
         updates[c.colId] = draft[c.colId];
       }
       await docApi.applyUserActions([["UpdateRecord", TABLE_ID, selected.id, updates]]);
-      setStatus("Enregistré ✅");
+      showToast("Modifications enregistrées");
     } catch (e: any) {
-      setStatus("Erreur: " + (e?.message ?? e));
+      showToast("Erreur : " + (e?.message ?? e), "error");
     } finally {
       setSaving(false);
     }
@@ -1451,7 +1474,7 @@ export default function Page() {
    */
   async function saveRest() {
     const saveUrl = process.env.NEXT_PUBLIC_OCC_SAVE_CANDIDAT_URL;
-    if (!saveUrl) { setStatus("Erreur: OCC_SAVE_CANDIDAT_URL non configurée"); return; }
+    if (!saveUrl) { showToast("OCC_SAVE_CANDIDAT_URL non configurée", "error"); return; }
     if (!occTokenForOrienteur || !candidatRowIdFromUrl || !selected) return;
     setSaving(true);
     try {
@@ -1463,7 +1486,7 @@ export default function Page() {
         }
       }
       if (Object.keys(updates).length === 0) {
-        setStatus("Aucune modification à enregistrer.");
+        showToast("Aucune modification à enregistrer.", "info");
         return;
       }
       const res = await fetch(saveUrl, {
@@ -1474,14 +1497,14 @@ export default function Page() {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       if (data?.status === "ok") {
-        setStatus("Enregistré ✅");
+        showToast("Modifications enregistrées");
         // Mise à jour optimiste : reflète les nouvelles valeurs sans rechargement
         setSelected((prev) => prev ? { ...prev, ...updates } : prev);
       } else {
         throw new Error(data?.message ?? "Erreur inconnue");
       }
     } catch (e: any) {
-      setStatus("Erreur: " + (e?.message ?? e));
+      showToast("Erreur : " + (e?.message ?? e), "error");
     } finally {
       setSaving(false);
     }
@@ -1737,6 +1760,7 @@ export default function Page() {
           <StatusAlert status={status} />
         </div>
       )}
+      <Toast toast={toast} />
 
       {/* ===== CORPS ===== */}
       <div className="emile-body">

@@ -832,3 +832,41 @@ body {
   text-align: left;
 }
 .emile-user-dropdown__item:hover { background: #fff5f5; }
+
+/* ── Toast popup (save feedback) ── */
+@keyframes fc-toast-in {
+  from { opacity: 0; transform: translateY(12px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0)    scale(1);    }
+}
+@keyframes fc-toast-out {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+.fc-toast {
+  position: fixed;
+  bottom: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.65rem 1.2rem;
+  border-radius: 8px;
+  font-family: Marianne, arial, sans-serif;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #fff;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.18);
+  z-index: 9999;
+  animation: fc-toast-in 0.22s ease forwards, fc-toast-out 0.35s ease 2.65s forwards;
+  pointer-events: none;
+  white-space: nowrap;
+}
+.fc-toast--success { background: #18753c; }
+.fc-toast--error   { background: #ce0500; }
+.fc-toast--info    { background: #0063cb; }
+.fc-toast__icon {
+  font-style: normal;
+  font-size: 1rem;
+  line-height: 1;
+}
