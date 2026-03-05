@@ -29,7 +29,7 @@ Le navigateur applique la politique *Same-Origin* : un script chargé depuis `st
 
 L'API Grist REST exige un `Authorization: Bearer <clé>` sur chaque requête. Si on appelle Grist depuis le browser, la clé est visible dans le JS du bundle ou dans les DevTools — n'importe qui peut la récupérer et lire ou modifier toute la base de données.
 
-> **Note** : ce problème sera partiellement résolu par une **clé de service** (compte applicatif Grist avec permissions restreintes à lecture/écriture sur les tables EMILE uniquement, sans accès admin). En attente de provisionnement côté infra. Même avec une clé de service, le problème CORS reste entier — le proxy reste nécessaire.
+> **Note** : ce problème est résolu par une **clé de service** (compte applicatif Grist avec droits Éditeur sur le document EMILE uniquement). La clé de service est configurée dans les credentials n8n depuis mars 2026. Le document Grist est en accès restreint (public access = Aucun accès). Même avec une clé de service, le problème CORS reste entier — le proxy reste nécessaire.
 
 ---
 
@@ -327,6 +327,7 @@ Sans modifier Grist, sans plugin, sans compte Grist côté utilisateur :
 | Activer un compte orienteur | GET `occ-validate?token=X.HMAC` | `validation-compte` |
 | Lister les candidats d'un orienteur | GET `occ-list?token=X.HMAC` | `liste-candidats`, `fiche-candidat` |
 | Afficher la fiche d'un candidat (orienteur) | GET `occ-get-candidat?token=X.HMAC&id=ROW_ID` | `fiche-candidat` |
+| Enregistrer les modifications d'un dossier | POST `occ-save-candidat { token, id, updates }` | `fiche-candidat` |
 | Renvoyer le lien de connexion orienteur | POST `occ-request-link { email }` | `recuperer-lien-connexion` |
 | Renvoyer le lien de validation de compte | POST `occ-request-validation-link { email }` | `recuperer-lien-validation` |
 | Charger la FAQ depuis Grist | GET `grist-proxy?table=FAQ` | Tous les widgets (FAQPanel) |
@@ -373,9 +374,9 @@ Le mode "magic link candidat" (`fiche-candidat?token=rowId.HMAC` côté candidat
 
 ## Limitations et chantiers ouverts
 
-### Clé de service Grist
+### ~~Clé de service Grist~~ ✅ Résolu
 
-Actuellement la clé API configurée dans n8n est une clé personnelle. Une **clé de service** (compte applicatif, permissions minimales, rotation sans impact humain) est nécessaire pour la production. En attente de provisionnement côté infra Grist.
+La clé de service est en place depuis mars 2026 : compte applicatif Grist dédié, droits Éditeur sur le document EMILE uniquement, document en accès restreint (public access fermé). En cas de compromission : révoquer la clé dans Grist et en générer une nouvelle dans les credentials n8n — aucun changement de code frontend requis.
 
 ### Expiration des tokens
 

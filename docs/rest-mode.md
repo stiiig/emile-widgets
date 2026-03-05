@@ -1024,11 +1024,15 @@ Tables utilisées par les widgets EMILE :
 
 ---
 
-## Mettre à jour la clé API Grist
+## Mettre à jour la clé de service Grist
 
-1. Aller sur Grist → Profile Settings → API Key → copier la clé
+La clé API utilisée est celle d'un **compte de service dédié** (pas un compte personnel), avec droits Éditeur sur le document EMILE uniquement. Le document est en accès restreint (public access = Aucun accès).
+
+Pour remplacer la clé (ex : rotation de sécurité) :
+
+1. Dans Grist : **Profile Settings → API Key** du compte de service → générer une nouvelle clé
 2. Dans n8n : **Credentials → Bearer Auth Grist** → coller la nouvelle clé
-3. Aucun redéploiement nécessaire
+3. Aucun redéploiement frontend nécessaire
 
 ---
 

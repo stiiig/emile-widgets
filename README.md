@@ -49,6 +49,7 @@ Elles sont définies comme secrets GitHub et injectées via `.github/workflows/d
 | `NEXT_PUBLIC_OCC_VALIDATE_URL` | `validation-compte` | Webhook n8n `occ-validate` |
 | `NEXT_PUBLIC_OCC_LIST_URL` | `liste-candidats`, `fiche-candidat` | Webhook n8n `occ-list` |
 | `NEXT_PUBLIC_OCC_GET_CANDIDAT_URL` | `fiche-candidat` | Webhook n8n `occ-get-candidat` |
+| `NEXT_PUBLIC_OCC_SAVE_CANDIDAT_URL` | `fiche-candidat` | Webhook n8n `occ-save-candidat` |
 | `NEXT_PUBLIC_OCC_REQUEST_LINK_URL` | `recuperer-lien-connexion` | Webhook n8n `occ-request-link` |
 | `NEXT_PUBLIC_OCC_REQUEST_VALIDATION_URL` | `recuperer-lien-validation` | Webhook n8n `occ-request-validation-link` |
 
@@ -81,6 +82,7 @@ NEXT_PUBLIC_OCC_GENERATE_URL=https://n8n.exemple.fr/webhook/occ-generate
 NEXT_PUBLIC_OCC_VALIDATE_URL=https://n8n.exemple.fr/webhook/occ-validate
 NEXT_PUBLIC_OCC_LIST_URL=https://n8n.exemple.fr/webhook/occ-list
 NEXT_PUBLIC_OCC_GET_CANDIDAT_URL=https://n8n.exemple.fr/webhook/occ-get-candidat
+NEXT_PUBLIC_OCC_SAVE_CANDIDAT_URL=https://n8n.exemple.fr/webhook/occ-save-candidat
 NEXT_PUBLIC_OCC_REQUEST_LINK_URL=https://n8n.exemple.fr/webhook/occ-request-link
 NEXT_PUBLIC_OCC_REQUEST_VALIDATION_URL=https://n8n.exemple.fr/webhook/occ-request-validation-link
 ```
