@@ -1451,7 +1451,8 @@ export default function Page() {
    */
   async function saveRest() {
     const saveUrl = process.env.NEXT_PUBLIC_OCC_SAVE_CANDIDAT_URL;
-    if (!saveUrl || !occTokenForOrienteur || !candidatRowIdFromUrl || !selected) return;
+    if (!saveUrl) { setStatus("Erreur: OCC_SAVE_CANDIDAT_URL non configurée"); return; }
+    if (!occTokenForOrienteur || !candidatRowIdFromUrl || !selected) return;
     setSaving(true);
     try {
       // Diff : on n'inclut que les champs dont la valeur a réellement changé
