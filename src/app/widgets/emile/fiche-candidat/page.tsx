@@ -1613,19 +1613,6 @@ export default function Page() {
                 Mes candidat·e·s
               </a>
             )}
-            <div className="fc-hero__nav-spacer" />
-            {/* Bouton Enregistrer — visible dès que l'auth est validée */}
-            {authStatus === "ok" && (
-              <button
-                type="button"
-                className="fc-hero__save-btn"
-                onClick={saveRest}
-                disabled={!selected?.id || saving}
-              >
-                <i className="fa-solid fa-floppy-disk" aria-hidden="true" />
-                {saving ? "…" : "Enregistrer"}
-              </button>
-            )}
             {switcherOptions.length > 1 && (
               <div className="fc-hero__switcher">
                 <SearchDropdown
@@ -1640,6 +1627,19 @@ export default function Page() {
                   searchable={true}
                 />
               </div>
+            )}
+            <div className="fc-hero__nav-spacer" />
+            {/* Bouton Enregistrer — visible dès que l'auth est validée */}
+            {authStatus === "ok" && (
+              <button
+                type="button"
+                className="fc-hero__save-btn"
+                onClick={saveRest}
+                disabled={!selected?.id || saving}
+              >
+                <i className="fa-solid fa-floppy-disk" aria-hidden="true" />
+                {saving ? "…" : "Enregistrer"}
+              </button>
             )}
           </div>
 
