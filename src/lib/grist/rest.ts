@@ -1,6 +1,18 @@
 // src/lib/grist/rest.ts
 // Client REST Grist — implémente la même interface que grist.docApi (Plugin API)
 // Utilisé en mode standalone (hors iframe Grist) via le proxy n8n (NEXT_PUBLIC_GRIST_PROXY_URL).
+//
+// ── Sécurité / authentification ──────────────────────────────────────────────
+// La clé API Grist N'EST PAS stockée ici ni dans aucune variable NEXT_PUBLIC_*.
+// Elle est exclusivement dans n8n (header Authorization: Bearer des nœuds HTTP Request).
+//
+// Le document Grist EMILE est en accès restreint (public access = Aucun accès).
+// Seul le compte de service dédié (droits Éditeur sur ce document uniquement)
+// peut lire/écrire via l'API — les appels passent tous par les webhooks n8n.
+//
+// Si la clé de service est compromise → la révoquer dans Grist et en créer une nouvelle,
+// sans toucher au code frontend ni aux variables d'environnement Next.js.
+// ─────────────────────────────────────────────────────────────────────────────
 
 import type { GristDocAPI } from "./meta";
 
