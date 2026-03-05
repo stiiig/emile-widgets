@@ -1236,7 +1236,7 @@ export default function Page() {
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState("");
   const [toast, setToast] = useState<ToastState | null>(null);
-  const toastTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [loadingRest, setLoadingRest] = useState(false);
   const [showFaq, setShowFaq] = useState(false);
 
