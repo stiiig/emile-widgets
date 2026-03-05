@@ -64,6 +64,7 @@ Contrôlé par la variable d'environnement `NEXT_PUBLIC_GRIST_PROXY_URL` (baked 
 | `NEXT_PUBLIC_OCC_GET_CANDIDAT_URL` | `https://n8n.incubateur.dnum.din.developpement-durable.gouv.fr/webhook/occ-get-candidat` | ✅ — fiche d'un candidat pour un orienteur |
 | `NEXT_PUBLIC_OCC_REQUEST_LINK_URL` | `https://n8n.incubateur.dnum.din.developpement-durable.gouv.fr/webhook/occ-request-link` | ✅ — renvoi lien de connexion orienteur |
 | `NEXT_PUBLIC_OCC_REQUEST_VALIDATION_URL` | `https://n8n.incubateur.dnum.din.developpement-durable.gouv.fr/webhook/occ-request-validation-link` | ✅ — renvoi lien de validation de compte |
+| `NEXT_PUBLIC_OCC_SAVE_CANDIDAT_URL` | `https://n8n.incubateur.dnum.din.developpement-durable.gouv.fr/webhook/occ-save-candidat` | ✅ — enregistrement dossier candidat (orienteur) |
 
 Déclarées dans `.github/workflows/deploy.yml` :
 ```yaml
@@ -75,6 +76,7 @@ env:
   NEXT_PUBLIC_OCC_GET_CANDIDAT_URL:         ${{ secrets.NEXT_PUBLIC_OCC_GET_CANDIDAT_URL }}
   NEXT_PUBLIC_OCC_REQUEST_LINK_URL:         ${{ secrets.NEXT_PUBLIC_OCC_REQUEST_LINK_URL }}
   NEXT_PUBLIC_OCC_REQUEST_VALIDATION_URL:   ${{ secrets.NEXT_PUBLIC_OCC_REQUEST_VALIDATION_URL }}
+  NEXT_PUBLIC_OCC_SAVE_CANDIDAT_URL:        ${{ secrets.NEXT_PUBLIC_OCC_SAVE_CANDIDAT_URL }}
 ```
 
 Quand cette variable est définie, `src/lib/grist/init.ts` bascule automatiquement en mode `rest` et utilise `createRestDocApi()` au lieu du plugin Grist.
@@ -126,6 +128,7 @@ Ces deux tables sont accessibles via le proxy n8n comme n'importe quelle table n
 | `occ-get-candidat` | GET | `/webhook/occ-get-candidat` | Fiche d'un candidat pour un orienteur (token OCC) |
 | `occ-request-link` | POST | `/webhook/occ-request-link` | Renvoi du lien de connexion orienteur par email |
 | `occ-request-validation-link` | POST | `/webhook/occ-request-validation-link` | Renvoi du lien de validation de compte par email |
+| `occ-save-candidat` | POST | `/webhook/occ-save-candidat` | Enregistrement des modifications du dossier candidat par l'orienteur |
 
 **Archivé** : `grist-generate` (magic link candidat — remplacé par token OCC orienteur).
 
@@ -867,6 +870,161 @@ IF data === sig
 | `Lien_validation` | Texte | URL complète | Magic link envoyé par email à l'orienteur. Sauvegardé par OCC-GENERATE (background PATCH). |
 
 > ⚠️ Ces deux colonnes doivent exister dans la table `ACCOMPAGNANTS` de Grist. Les créer manuellement si elles n'existent pas (type Texte).
+
+---
+
+## Workflow OCC-SAVE-CANDIDAT — enregistrement du dossier candidat (POST)
+
+**URL (production) :**
+```
+https://n8n.incubateur.dnum.din.developpement-durable.gouv.fr/webhook/occ-save-candidat
+```
+
+Ce workflow est appelé par le bouton **Enregistrer** dans `fiche-candidat` (mode orienteur). Il :
+1. Vérifie la signature HMAC du token orienteur
+2. Applique uniquement le diff (`updates`) via PATCH sur la table `CANDIDATS`
+3. Retourne `{ status: "ok" }` au frontend
+
+> ℹ️ Contrairement aux autres workflows POST (grist-proxy), ce webhook reçoit du `application/json` — n8n parse le body automatiquement. Cela déclenche un preflight CORS OPTIONS, géré automatiquement par n8n pour tous les webhooks.
+
+### Payload entrant
+
+```json
+{
+  "token": "42.a3f9b2...",
+  "id": 7,
+  "updates": { "Situation": "En formation", "Commentaire": "..." }
+}
+```
+
+| Champ | Type | Description |
+|-------|------|-------------|
+| `token` | string | Token OCC de l'orienteur : `rowIdOrienteur.HMAC-SHA256(rowIdOrienteur, SECRET)` |
+| `id` | number | rowId du candidat dans `CANDIDATS` |
+| `updates` | object | Diff des champs modifiés uniquement (calculé côté frontend) |
+
+### Nœud 1 — Webhook (POST)
+
+| Paramètre | Valeur |
+|-----------|--------|
+| HTTP Method | **POST** |
+| Path | `occ-save-candidat` |
+| Response Mode | Using Respond to Webhook Node |
+
+> ℹ️ n8n parse automatiquement le body `application/json` — pas besoin de nœud Code pour le parser.
+
+### Nœud 2 — Code (extraire rowId orienteur + sig + candidatId + updates)
+
+```javascript
+const body        = $json.body;
+const token       = body.token;
+const candidatId  = body.id;
+const updates     = body.updates;
+
+if (!token || !candidatId || !updates) throw new Error("Payload incomplet");
+
+const parts  = token.split(".");
+const rowId  = parseInt(parts[0]);
+const sig    = parts[1];
+
+if (!rowId || isNaN(rowId) || !sig) throw new Error("Token malformé");
+
+return [{ json: { rowId, sig, rowIdStr: rowId.toString(), candidatId, updates } }];
+```
+
+### Nœud 3 — Crypto (HMAC-SHA256)
+
+| Paramètre | Valeur |
+|-----------|--------|
+| Action | **HMAC** |
+| Type | **SHA256** |
+| Value | `{{ $json.rowIdStr }}` |
+| Credential | **EMILE HMAC Secret** |
+| Encoding | **HEX** |
+| Property Name | `data` |
+
+### Nœud 4 — IF signature valide
+
+| Paramètre | Valeur |
+|-----------|--------|
+| Value 1 | `{{ $json.data }}` (HMAC calculé) |
+| Operation | **equals** |
+| Value 2 | `{{ $json.sig }}` (sig extrait du token) |
+| True → | Code (construire body PATCH) |
+| False → | Respond 200 `{ "status": "invalid" }` |
+
+> ℹ️ On retourne 200 même sur token invalide — le frontend distingue via `status`, pas via le code HTTP.
+
+### Nœud 5 (True) — Code (construire le body PATCH Grist)
+
+```javascript
+const candidatId = $json.candidatId;
+const updates    = $json.updates;
+const body       = JSON.stringify({ records: [{ id: candidatId, fields: updates }] });
+return [{ json: { ...$json, gristBody: body } }];
+```
+
+### Nœud 6 — HTTP Request (PATCH Grist — mise à jour CANDIDATS)
+
+| Paramètre | Valeur |
+|-----------|--------|
+| Method | **PATCH** |
+| URL | `https://grist.incubateur.dnum.din.developpement-durable.gouv.fr/api/docs/75GHATRaKvHSmx3FRqCi4f/tables/CANDIDATS/records` |
+| Authentication | Generic Credential Type → Bearer Auth → **Bearer Auth Grist** |
+| Body Content Type | **Raw** |
+| Content Type | `application/json` |
+| Body | `{{ $json.gristBody }}` |
+
+### Nœud 7 — Respond to Webhook (succès)
+
+| Paramètre | Valeur |
+|-----------|--------|
+| Respond With | **JSON** |
+| Response Body | `{ "status": "ok" }` |
+| Response Code | 200 |
+| Header | `Access-Control-Allow-Origin: *` |
+
+### Schéma complet — Workflow OCC-SAVE-CANDIDAT
+
+```
+Webhook POST (path: occ-save-candidat)
+    │  Body (JSON): { token, id, updates }
+    ▼
+Code (extrait rowId orienteur, sig, candidatId, updates)
+    │
+    ▼
+Crypto HMAC-SHA256 (credential EMILE HMAC Secret)
+    │
+    ▼
+IF data === sig
+    │
+    ├─ False ──► Respond 200 { "status": "invalid" }
+    │
+    └─ True  ──► Code (build PATCH body → { records: [{ id: candidatId, fields: updates }] })
+                  │
+                  ▼
+                 HTTP PATCH /tables/CANDIDATS/records (Bearer Auth Grist)
+                  │
+                  ▼
+                 Respond 200 { "status": "ok" } + CORS header
+```
+
+### Réponses JSON possibles
+
+| `status` | Signification | Action côté frontend |
+|----------|---------------|---------------------|
+| `"ok"` | Modifications enregistrées | Affiche "Enregistré ✅", met à jour `selected` localement |
+| `"invalid"` | Token invalide | Affiche "Erreur: ..." |
+
+### Exemple d'appel curl
+
+```bash
+curl -X POST \
+  "https://n8n.incubateur.dnum.din.developpement-durable.gouv.fr/webhook/occ-save-candidat" \
+  -H "Content-Type: application/json" \
+  -d '{"token":"42.a3f9b2...","id":7,"updates":{"Situation":"En formation"}}'
+# → { "status": "ok" }
+```
 
 ---
 
