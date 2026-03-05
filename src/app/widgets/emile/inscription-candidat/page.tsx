@@ -31,7 +31,6 @@ type FormData = {
   Date_de_naissance: string;
   Genre: string;
   Nationalite: number | null;        // Ref:pays → rowId
-  Majeur: string;
   Email: string;
   TelCode: string;   // indicatif pays, ex: "+33"
   Tel: string;
@@ -56,7 +55,6 @@ const INITIAL: FormData = {
   Date_de_naissance: "",
   Genre: "",
   Nationalite: null,
-  Majeur: "",
   Email: "",
   TelCode: "France",   // nom du pays (clé unique)
   Tel: "",
@@ -1607,13 +1605,6 @@ export default function InscriptionPage() {
       .finally(() => setNiveauLoading(false));
   }, [docApi]);
 
-  /* ── Auto-sélection Majeur selon date de naissance ── */
-  useEffect(() => {
-    if (!form.Date_de_naissance) return;
-    const age = computeAge(form.Date_de_naissance);
-    if (age === null) return;
-    setForm((f) => ({ ...f, Majeur: age >= 18 ? "Oui" : "Non" }));
-  }, [form.Date_de_naissance]);
 
   /* ── Chargement colonnes ── */
   useEffect(() => {
@@ -1774,7 +1765,7 @@ export default function InscriptionPage() {
 
       // Champs texte / choice (string)
       const strFields = [
-        "Prenom", "Nom_de_famille", "Genre", "Majeur",
+        "Prenom", "Nom_de_famille", "Genre",
         "Email", "Adresse",
         "Precarite_de_logement", "Foyer",
         "Regularite_situation",
