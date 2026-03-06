@@ -1,0 +1,170 @@
+/* ── airtable-to-grist/styles.css ── */
+
+.atg-page {
+  min-height: 100vh;
+  background: #f5f7fb;
+  font-family: Marianne, arial, sans-serif;
+  color: #1e1e2e;
+}
+
+/* ── Header ── */
+.atg-header {
+  background: #000091;
+  color: #fff;
+  padding: 2rem 2rem 1.6rem;
+}
+.atg-header__title {
+  margin: 0 0 0.35rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #fff !important;
+}
+.atg-header__sub {
+  margin: 0;
+  opacity: 0.78;
+  font-size: 0.9rem;
+}
+
+/* ── Onglets ── */
+.atg-tabs {
+  display: flex;
+  background: #fff;
+  border-bottom: 2px solid #dde3f5;
+  padding: 0 2rem;
+}
+.atg-tab {
+  padding: 0.8rem 1.6rem;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #666;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+  font-family: Marianne, arial, sans-serif;
+  transition: color 0.15s;
+}
+.atg-tab--active {
+  color: #000091;
+  border-bottom-color: #000091;
+}
+
+/* ── Corps ── */
+.atg-main {
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 0 1.5rem 4rem;
+}
+
+/* ── Zone dépôt ── */
+.atg-drop {
+  border: 2px dashed #b0badf;
+  border-radius: 12px;
+  background: #fff;
+  padding: 2.8rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.9rem;
+  text-align: center;
+  cursor: pointer;
+  color: #555;
+  font-size: 0.95rem;
+  transition: border-color 0.15s, background 0.15s;
+}
+.atg-drop:hover,
+.atg-drop--done {
+  border-color: #000091;
+  background: #f0f0ff;
+}
+.atg-drop__icon { font-size: 2rem; }
+.atg-drop__hint { color: #999; font-size: 0.82rem; margin-left: 0.4rem; }
+
+/* ── Erreur ── */
+.atg-error {
+  margin: 1rem 0 0;
+  padding: 0.7rem 1rem;
+  background: #fff5f5;
+  border: 1px solid #fca5a5;
+  border-left: 4px solid #ce0500;
+  border-radius: 6px;
+  color: #ce0500;
+  font-size: 0.88rem;
+}
+
+/* ── Aperçu ── */
+.atg-preview {
+  margin-top: 2rem;
+}
+.atg-preview__title {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 0 0 0.8rem;
+  color: #333;
+}
+.atg-preview__count {
+  font-size: 0.78rem;
+  font-weight: 600;
+  background: #eef1fb;
+  color: #000091;
+  border-radius: 20px;
+  padding: 0.15rem 0.65rem;
+}
+
+.atg-table-wrap {
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: 280px;
+  border: 1px solid #dde3f5;
+  border-radius: 8px;
+  background: #fff;
+}
+.atg-table {
+  border-collapse: collapse;
+  min-width: 100%;
+  font-size: 0.78rem;
+}
+.atg-table th {
+  position: sticky;
+  top: 0;
+  background: #eef1fb;
+  padding: 0.45rem 0.75rem;
+  border-bottom: 2px solid #dde3f5;
+  text-align: left;
+  white-space: nowrap;
+  font-weight: 700;
+  color: #000091;
+}
+.atg-table td {
+  padding: 0.35rem 0.75rem;
+  border-bottom: 1px solid #f0f2fb;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #333;
+}
+.atg-table tr:last-child td { border-bottom: none; }
+.atg-table tr:hover td { background: #f8f9ff; }
+
+/* ── Bouton téléchargement ── */
+.atg-btn-download {
+  display: block;
+  margin: 2rem auto 0;
+  padding: 0.85rem 3rem;
+  background: #18753c;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: Marianne, arial, sans-serif;
+  transition: background 0.15s;
+  letter-spacing: 0.01em;
+}
+.atg-btn-download:hover { background: #145e30; }
