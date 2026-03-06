@@ -27,6 +27,15 @@
  * Tableau virtualisé (VirtualTable) : seules les lignes visibles + BUFFER
  * sont rendues dans le DOM, évitant les ralentissements sur plusieurs milliers
  * de lignes. Le scroll déclenche un setState qui recalcule la fenêtre.
+ *
+ * ── Résolution Ref ──────────────────────────────────────────────────────────
+ * Les colonnes Ref Grist stockent un entier (row ID). Pour les afficher en
+ * valeur lisible, `refLookups` décrit quelle table charger et quelle colonne
+ * utiliser comme libellé. La résolution est entièrement client-side :
+ *   1. La table principale charge (ex. ACCOMPAGNANTS)
+ *   2. Les tables référencées (ex. ETABLISSEMENTS) sont chargées en arrière-plan
+ *   3. Une Map<rowId, displayValue> est construite
+ *   4. resolveRefs() remplace les entiers par les valeurs lisibles avant affichage
  */
 
 import { useState, useEffect, useRef, useMemo, type ReactNode } from "react";
@@ -65,15 +74,19 @@ interface TabDef {
   label: string;
   tableId: string;
   filters: FilterDef[];
-  /** Colonnes à masquer dans le tableau (Ref IDs bruts, colonnes techniques) */
+  /** Colonnes à masquer dans le tableau (colonnes techniques, doublons, etc.) */
   hiddenColumns?: string[];
   /**
-   * Substitutions de colonnes : { "ColonneRef": "ColonneFormule" }
-   * Dans le tableau, remplace la valeur de ColonneRef par celle de ColonneFormule.
-   * ColonneFormule est également masquée pour éviter de l'afficher en double.
-   * Utile pour les colonnes Ref (row ID entier) → formule lookup (valeur lisible).
+   * Résolution client-side de colonnes Ref Grist (stockent un entier = row ID) :
+   *   { "ColRef": { tableId: "TABLE_CIBLE", displayCol: "colonne_lisible" } }
+   *
+   * Quand la table cible est chargée via dashFetchTable(), une Map<rowId, string>
+   * est construite. resolveRefs() l'utilise pour remplacer les entiers par les
+   * valeurs lisibles dans les lignes, avant filtrage et affichage.
+   *
+   * Exemple : Etablissement (Ref → ETABLISSEMENTS) → affiche Nom_etablissement
    */
-  columnSubs?: Record<string, string>;
+  refLookups?: Record<string, { tableId: string; displayCol: string }>;
 }
 
 // ─── Token ────────────────────────────────────────────────────────────────────
@@ -91,8 +104,8 @@ class TokenExpiredError extends Error {
 
 /**
  * Configuration des onglets du dashboard.
- * Chaque onglet définit : la table Grist source, et les filtres disponibles
- * (text = recherche libre, dropdown = filtre sur une colonne ChoiceList/Ref).
+ * Chaque onglet définit : la table Grist source, les filtres disponibles
+ * et les éventuelles résolutions de colonnes Ref (refLookups).
  */
 const TABS: TabDef[] = [
   {
@@ -107,16 +120,19 @@ const TABS: TabDef[] = [
     id: "acc",
     label: "Accompagnants",
     tableId: "ACCOMPAGNANTS",
-    // Colonnes Ref brutes → substitution par les formules lookup Grist
-    columnSubs: {
-      "Etablissement":            "Nom_etablissement",   // $Etablissement.Nom_etablissement
-      "Etablissement_Departement":"Numero_et_nom",        // $Etablissement.Departement.Numero_et_nom
+    // Colonnes Ref → valeur lisible chargée depuis la table référencée
+    refLookups: {
+      // Etablissement stocke un row ID de ETABLISSEMENTS → on affiche Nom_etablissement
+      "Etablissement":             { tableId: "ETABLISSEMENTS", displayCol: "Nom_etablissement" },
+      // Etablissement_Departement : si c'est un Ref vers DPTS_REGIONS → on affiche Numero_et_nom
+      // (si c'est déjà une string, resolveRefs() ne touche pas à la valeur)
+      "Etablissement_Departement": { tableId: "DPTS_REGIONS",   displayCol: "Numero_et_nom"     },
     },
     filters: [
-      { type: "text",     key: "q",               placeholder: "Prénom, nom, email…", fields: ["Prenom", "Nom", "Email"] },
-      // On filtre sur la colonne formule (Nom_etablissement) pour avoir des noms lisibles dans le dropdown
-      { type: "dropdown", key: "Nom_etablissement", label: "Établissement", column: "Nom_etablissement" },
-      { type: "dropdown", key: "Fonction",          label: "Fonction",      column: "Fonction" },
+      { type: "text",     key: "q",             placeholder: "Prénom, nom, email…", fields: ["Prenom", "Nom", "Email"] },
+      // Le dropdown filtre sur la colonne Etablissement une fois résolue (noms lisibles)
+      { type: "dropdown", key: "Etablissement", label: "Établissement", column: "Etablissement" },
+      { type: "dropdown", key: "Fonction",      label: "Fonction",      column: "Fonction" },
     ],
   },
   {
@@ -195,10 +211,6 @@ function fmt(v: GristVal): string {
  *   • ChoiceList / RefList ["L", v1, v2, …] → badges chips côte à côte
  *   • Timestamp Unix (Date / DateTime Grist)  → JJ/MM/AAAA via toLocaleDateString
  *   • Autres valeurs                          → String(v) comme fmt()
- *
- * Note : les colonnes Choice (string simple) et Ref (entier row ID) sont
- * indiscernables des strings/nombres normaux sans le schéma Grist — elles
- * restent en texte plat jusqu'à implémentation du endpoint /columns.
  */
 function renderCell(v: GristVal): ReactNode {
   if (v === null || v === undefined || v === "") return null;
@@ -236,6 +248,38 @@ function rowMatchesText(row: GristRow, fields: string[], allCols: string[], q: s
 
 function rowMatchesDropdown(row: GristRow, column: string, value: string): boolean {
   return extractChoices(row[column]).includes(value);
+}
+
+/**
+ * Résout les colonnes Ref d'une table : remplace les entiers (row IDs Grist)
+ * par la valeur lisible issue de la table référencée.
+ *
+ * Si la valeur n'est pas un entier (déjà une string, null, etc.) ou si la
+ * table cible n'est pas encore chargée, la valeur d'origine est conservée.
+ */
+function resolveRefs(
+  rows: GristRow[],
+  tab: TabDef,
+  refMaps: Record<string, Map<number, string>>,
+): GristRow[] {
+  if (!tab.refLookups) return rows;
+  const entries = Object.entries(tab.refLookups);
+  if (!entries.length) return rows;
+
+  return rows.map(row => {
+    let resolved: GristRow | null = null; // clone paresseux — évite l'allocation si rien ne change
+    for (const [col, { tableId, displayCol }] of entries) {
+      const val = row[col];
+      if (typeof val !== "number") continue;  // pas un Ref ID, on laisse tel quel
+      const map = refMaps[`${tableId}::${displayCol}`];
+      if (!map) continue;                      // table pas encore chargée
+      const display = map.get(val);
+      if (display === undefined) continue;     // ID inconnu dans la table cible
+      if (!resolved) resolved = { ...row };
+      resolved[col] = display;
+    }
+    return resolved ?? row;
+  });
 }
 
 // ─── API dashboard ────────────────────────────────────────────────────────────
@@ -276,14 +320,13 @@ const ROW_H  = 36;   // px — hauteur fixe de chaque ligne (doit être constant
 const BUFFER = 6;    // lignes rendues en avance au-delà du viewport (évite le flash lors du scroll rapide)
 
 function VirtualTable({
-  columns, rows, sortState, onSort, hiddenColumns, columnSubs,
+  columns, rows, sortState, onSort, hiddenColumns,
 }: {
   columns: string[];
   rows: GristRow[];
   sortState: { col: string; dir: "asc" | "desc" } | null;
   onSort: (col: string) => void;
   hiddenColumns?: string[];
-  columnSubs?: Record<string, string>;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [scrollTop, setScrollTop] = useState(0);
@@ -307,13 +350,7 @@ function VirtualTable({
     setScrollTop(0);
   }, [rows]);
 
-  // Colonnes à afficher :
-  //   1. On retire les colonnes explicitement masquées
-  //   2. On retire les colonnes "cibles" de substitution (elles s'affichent à la place de leur source)
-  const subTargets = new Set(Object.values(columnSubs ?? {}));
-  const displayCols = columns.filter(c =>
-    !(hiddenColumns ?? []).includes(c) && !subTargets.has(c)
-  );
+  const displayCols = columns.filter(c => !(hiddenColumns ?? []).includes(c));
 
   const totalW   = NUM_W + displayCols.length * COL_W;
   const totalH   = rows.length * ROW_H;
@@ -356,9 +393,7 @@ function VirtualTable({
               >
                 <div className="db-cell db-cell--num">{absIdx + 1}</div>
                 {displayCols.map(col => {
-                  // Si colonne substituée, on lit la valeur de la colonne formule
-                  const effectiveCol = columnSubs?.[col] ?? col;
-                  const val = row[effectiveCol];
+                  const val = row[col];
                   return (
                     <div
                       key={col}
@@ -428,7 +463,7 @@ function FilterBar({
   tab, tableRows, filters, onChange,
 }: {
   tab: TabDef;
-  tableRows: GristRow[];
+  tableRows: GristRow[];    // lignes déjà résolues (Refs → valeurs lisibles)
   filters: Record<string, string>;
   onChange: (key: string, val: string) => void;
 }) {
@@ -521,13 +556,24 @@ export default function AccederDashboard() {
   );
   /** Incrémenté par handleRefresh() pour forcer un nouveau fetch de l'onglet actif. */
   const [fetchKey, setFetchKey] = useState(0);
+
   /**
-   * Ensemble des onglets dont le fetch est déjà en cours ou terminé.
-   * Empêche le double-fetch causé par React StrictMode (double-mount en dev)
-   * et les clics rapides sur les onglets.
+   * Maps de résolution Ref : clé = "TABLEID::displayCol", valeur = Map<rowId → displayValue>.
+   * Peuplées en arrière-plan quand un onglet avec refLookups est chargé.
+   */
+  const [refMaps, setRefMaps] = useState<Record<string, Map<number, string>>>({});
+
+  /**
+   * Ensemble des onglets dont le fetch principal est déjà en cours ou terminé.
+   * Empêche le double-fetch causé par React StrictMode (double-mount en dev).
    * On supprime l'onglet de loadedRef en cas d'erreur pour permettre un retry.
    */
-  const loadedRef = useRef<Set<string>>(new Set());
+  const loadedRef        = useRef<Set<string>>(new Set());
+  /**
+   * Ensemble des tables Ref déjà chargées ou en cours de chargement.
+   * Clé : "TABLEID::displayCol" — même format que refMaps.
+   */
+  const loadedRefTablesRef = useRef<Set<string>>(new Set());
 
   // ── Résolution du token (exécuté une seule fois côté client) ─────────────
   useEffect(() => {
@@ -577,9 +623,45 @@ export default function AccederDashboard() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, token, tokenStatus, fetchKey]);
 
+  // ── Chargement des tables Ref (refLookups) ────────────────────────────────
+  // Se déclenche dès que la table principale de l'onglet actif est chargée.
+  // Chaque table Ref est chargée une seule fois (loadedRefTablesRef).
+  const activeRows = tableData[activeTab]?.rows;
+  useEffect(() => {
+    if (tokenStatus !== "ok" || !token) return;
+    const tab = TABS.find(t => t.id === activeTab)!;
+    if (!tab.refLookups) return;
+    if (!activeRows?.length) return; // attend que la table principale soit disponible
+
+    for (const [, { tableId, displayCol }] of Object.entries(tab.refLookups)) {
+      const key = `${tableId}::${displayCol}`;
+      if (loadedRefTablesRef.current.has(key)) continue;
+      loadedRefTablesRef.current.add(key);
+
+      dashFetchTable(token, tableId)
+        .then(({ rows: refRows }) => {
+          const map = new Map<number, string>();
+          for (const r of refRows) map.set(r.id, String(r[displayCol] ?? ""));
+          setRefMaps(prev => ({ ...prev, [key]: map }));
+        })
+        .catch(() => {
+          // En cas d'erreur, on retire la clé pour permettre un retry au prochain rendu
+          loadedRefTablesRef.current.delete(key);
+        });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, token, tokenStatus, activeRows]);
+
   function handleRefresh() {
     if (!token) return;
+    const tab = TABS.find(t => t.id === activeTab)!;
     loadedRef.current.delete(activeTab);
+    // Réinitialise aussi les refMaps de cet onglet pour forcer un rechargement
+    if (tab.refLookups) {
+      for (const [, { tableId, displayCol }] of Object.entries(tab.refLookups)) {
+        loadedRefTablesRef.current.delete(`${tableId}::${displayCol}`);
+      }
+    }
     setTableData(prev => ({ ...prev, [activeTab]: { ...EMPTY_TABLE } }));
     setFetchKey(k => k + 1);
   }
@@ -606,8 +688,18 @@ export default function AccederDashboard() {
   const filters  = filterStates[activeTab] ?? {};
   const sort     = sortStates[activeTab] ?? null;
 
+  /**
+   * Lignes avec les colonnes Ref résolues (entiers → valeurs lisibles).
+   * Recalculé quand les rows changent OU quand de nouvelles refMaps arrivent.
+   */
+  const resolvedRows = useMemo(
+    () => resolveRefs(tabState.rows, tabDef, refMaps),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [tabState.rows, tabDef, refMaps],
+  );
+
   const filteredRows = useMemo(() => {
-    let rows = tabState.rows;
+    let rows = resolvedRows;
     const allCols = tabState.columns;
     for (const f of tabDef.filters) {
       const val = filters[f.key];
@@ -620,15 +712,13 @@ export default function AccederDashboard() {
     }
     if (sort) {
       const { col, dir } = sort;
-      // Trier sur la colonne effective (formule si substitution, sinon la colonne elle-même)
-      const effectiveCol = tabDef.columnSubs?.[col] ?? col;
       rows = [...rows].sort((a, b) => {
-        const cmp = fmt(a[effectiveCol]).localeCompare(fmt(b[effectiveCol]), "fr", { numeric: true, sensitivity: "base" });
+        const cmp = fmt(a[col]).localeCompare(fmt(b[col]), "fr", { numeric: true, sensitivity: "base" });
         return dir === "asc" ? cmp : -cmp;
       });
     }
     return rows;
-  }, [tabState, tabDef, filters, sort]);
+  }, [resolvedRows, tabState.columns, tabDef, filters, sort]);
 
   // ── Écrans d'erreur token ────────────────────────────────────────────────
   if (tokenStatus === "resolving") {
@@ -692,7 +782,7 @@ export default function AccederDashboard() {
           <>
             <FilterBar
               tab={tabDef}
-              tableRows={tabState.rows}
+              tableRows={resolvedRows}
               filters={filters}
               onChange={(key, val) => setFilter(activeTab, key, val)}
             />
@@ -716,7 +806,6 @@ export default function AccederDashboard() {
               sortState={sort}
               onSort={col => handleSort(activeTab, col)}
               hiddenColumns={tabDef.hiddenColumns}
-              columnSubs={tabDef.columnSubs}
             />
           </>
         )}
