@@ -293,9 +293,10 @@ export function convertCandidats(
       const o: Record<string, string> = {};
 
       for (const [from, to] of CAND_DIRECT) {
-        // Département → RefList Grist : format ["L","Nom_departement"]
+        // Département → RefList Grist : texte brut matchant la colonne visible $Nom_departement
+        // (NE PAS utiliser le format ["L",...] — valable uniquement pour ChoiceList)
         if (to === "Departement_domicile_inscription") {
-          o[to] = toGristList([normalizeDept(r[from] ?? "")]);
+          o[to] = normalizeDept(r[from] ?? "");
         } else {
           o[to] = r[from] ?? "";
         }
@@ -359,9 +360,9 @@ export function convertEtablissements(
     rows: rows.map(r => {
       const o: Record<string, string> = {};
       for (const [from, to] of ETAB_DIRECT) o[to] = r[from] ?? "";
-      // Département → RefList Grist : format ["L","Nom_departement"]
-      // La colonne visible de DPTS_REGIONS doit être $Nom_departement (données stockées)
-      o["Departement"] = toGristList([normalizeDept(r["Département"] ?? "")]);
+      // Département → RefList Grist : texte brut matchant la colonne visible $Nom_departement
+      // (NE PAS utiliser le format ["L",...] — valable uniquement pour ChoiceList)
+      o["Departement"] = normalizeDept(r["Département"] ?? "");
       // Rôle — multiselect Airtable (virgule) → ChoiceList Grist : format ["L","val1",...]
       const roleRaw = r["Rôle"]?.trim() ?? "";
       o["Role"] = toGristList(roleRaw ? roleRaw.split(",").map(v => v.trim()) : []);
