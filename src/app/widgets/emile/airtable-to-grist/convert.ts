@@ -5,38 +5,57 @@
 
 // ─── CSV parser/serializer ────────────────────────────────────────────────────
 
-function parseCSVLine(line: string): string[] {
-  const result: string[] = [];
-  let current = "";
+/**
+ * Parseur CSV RFC 4180 complet.
+ * Lit le fichier caractère par caractère pour gérer correctement les champs
+ * entre guillemets contenant des sauts de ligne (ex. champs texte libre Airtable).
+ * Un split("\n") naïf cassait ces champs multi-lignes.
+ */
+export function parseCSV(text: string): Record<string, string>[] {
+  // Normalise les fins de ligne ; retire le BOM UTF-8 éventuel
+  const src = text.replace(/^\uFEFF/, "").replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+
+  const allRows: string[][] = [];
+  let currentRow: string[] = [];
+  let field = "";
   let inQuotes = false;
-  for (let i = 0; i < line.length; i++) {
-    const ch = line[i];
-    if (ch === '"') {
-      if (inQuotes && line[i + 1] === '"') { current += '"'; i++; }
-      else inQuotes = !inQuotes;
-    } else if (ch === "," && !inQuotes) {
-      result.push(current); current = "";
+
+  for (let i = 0; i < src.length; i++) {
+    const ch = src[i];
+    if (inQuotes) {
+      if (ch === '"') {
+        if (src[i + 1] === '"') { field += '"'; i++; }  // "" → guillemet littéral
+        else inQuotes = false;                           // fin du champ quoté
+      } else {
+        field += ch;   // retours à la ligne inclus — c'est voulu
+      }
     } else {
-      current += ch;
+      if      (ch === '"') { inQuotes = true; }
+      else if (ch === ',') { currentRow.push(field); field = ""; }
+      else if (ch === '\n') {
+        currentRow.push(field); field = "";
+        allRows.push(currentRow); currentRow = [];
+      } else {
+        field += ch;
+      }
     }
   }
-  result.push(current);
-  return result;
-}
-
-export function parseCSV(text: string): Record<string, string>[] {
-  const lines = text.replace(/\r\n/g, "\n").replace(/\r/g, "\n").split("\n");
-  if (lines.length < 2) return [];
-  const headers = parseCSVLine(lines[0]);
-  const rows: Record<string, string>[] = [];
-  for (let i = 1; i < lines.length; i++) {
-    if (!lines[i].trim()) continue;
-    const vals = parseCSVLine(lines[i]);
-    const row: Record<string, string> = {};
-    headers.forEach((h, idx) => { row[h] = vals[idx] ?? ""; });
-    rows.push(row);
+  // Dernière ligne sans \n terminal
+  if (field || currentRow.length > 0) {
+    currentRow.push(field);
+    allRows.push(currentRow);
   }
-  return rows;
+
+  if (allRows.length < 2) return [];
+  const headers = allRows[0];
+  return allRows
+    .slice(1)
+    .filter(row => row.some(cell => cell.trim()))   // ignore les lignes entièrement vides
+    .map(vals => {
+      const row: Record<string, string> = {};
+      headers.forEach((h, idx) => { row[h] = vals[idx] ?? ""; });
+      return row;
+    });
 }
 
 export function toCSV(rows: Record<string, string>[], headers: string[]): string {
