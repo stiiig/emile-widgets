@@ -65,6 +65,15 @@ interface TabDef {
   label: string;
   tableId: string;
   filters: FilterDef[];
+  /** Colonnes à masquer dans le tableau (Ref IDs bruts, colonnes techniques) */
+  hiddenColumns?: string[];
+  /**
+   * Substitutions de colonnes : { "ColonneRef": "ColonneFormule" }
+   * Dans le tableau, remplace la valeur de ColonneRef par celle de ColonneFormule.
+   * ColonneFormule est également masquée pour éviter de l'afficher en double.
+   * Utile pour les colonnes Ref (row ID entier) → formule lookup (valeur lisible).
+   */
+  columnSubs?: Record<string, string>;
 }
 
 // ─── Token ────────────────────────────────────────────────────────────────────
@@ -98,10 +107,16 @@ const TABS: TabDef[] = [
     id: "acc",
     label: "Accompagnants",
     tableId: "ACCOMPAGNANTS",
+    // Colonnes Ref brutes → substitution par les formules lookup Grist
+    columnSubs: {
+      "Etablissement":            "Nom_etablissement",   // $Etablissement.Nom_etablissement
+      "Etablissement_Departement":"Numero_et_nom",        // $Etablissement.Departement.Numero_et_nom
+    },
     filters: [
-      { type: "text",     key: "q",            placeholder: "Prénom, nom, email…", fields: ["Prenom", "Nom", "Email"] },
-      { type: "dropdown", key: "Etablissement", label: "Établissement", column: "Etablissement" },
-      { type: "dropdown", key: "Fonction",      label: "Fonction",      column: "Fonction" },
+      { type: "text",     key: "q",               placeholder: "Prénom, nom, email…", fields: ["Prenom", "Nom", "Email"] },
+      // On filtre sur la colonne formule (Nom_etablissement) pour avoir des noms lisibles dans le dropdown
+      { type: "dropdown", key: "Nom_etablissement", label: "Établissement", column: "Nom_etablissement" },
+      { type: "dropdown", key: "Fonction",          label: "Fonction",      column: "Fonction" },
     ],
   },
   {
@@ -144,11 +159,12 @@ const TABS: TabDef[] = [
 /**
  * Détecte un timestamp Unix Grist (stocké en secondes depuis l'epoch).
  * Bornes : 800 000 000 ≈ 1995, 2 500 000 000 ≈ 2049.
+ * Accepte les float (colonnes DateTime — ex. 1772798332.28237) et les entiers (Date).
  * Permet d'exclure les petits entiers (row IDs Grist, booleans 0/1, etc.)
  * tout en couvrant toutes les colonnes Date/DateTime plausibles.
  */
 function isUnixTs(v: GristVal): v is number {
-  return typeof v === "number" && Number.isInteger(v) && v > 800_000_000 && v < 2_500_000_000;
+  return typeof v === "number" && v > 800_000_000 && v < 2_500_000_000;
 }
 
 /** Formate un timestamp Unix (secondes) en JJ/MM/AAAA */
@@ -260,12 +276,14 @@ const ROW_H  = 36;   // px — hauteur fixe de chaque ligne (doit être constant
 const BUFFER = 6;    // lignes rendues en avance au-delà du viewport (évite le flash lors du scroll rapide)
 
 function VirtualTable({
-  columns, rows, sortState, onSort,
+  columns, rows, sortState, onSort, hiddenColumns, columnSubs,
 }: {
   columns: string[];
   rows: GristRow[];
   sortState: { col: string; dir: "asc" | "desc" } | null;
   onSort: (col: string) => void;
+  hiddenColumns?: string[];
+  columnSubs?: Record<string, string>;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [scrollTop, setScrollTop] = useState(0);
@@ -289,7 +307,15 @@ function VirtualTable({
     setScrollTop(0);
   }, [rows]);
 
-  const totalW   = NUM_W + columns.length * COL_W;
+  // Colonnes à afficher :
+  //   1. On retire les colonnes explicitement masquées
+  //   2. On retire les colonnes "cibles" de substitution (elles s'affichent à la place de leur source)
+  const subTargets = new Set(Object.values(columnSubs ?? {}));
+  const displayCols = columns.filter(c =>
+    !(hiddenColumns ?? []).includes(c) && !subTargets.has(c)
+  );
+
+  const totalW   = NUM_W + displayCols.length * COL_W;
   const totalH   = rows.length * ROW_H;
   const startIdx = Math.max(0, Math.floor(scrollTop / ROW_H) - BUFFER);
   const endIdx   = Math.min(rows.length, Math.ceil((scrollTop + viewH) / ROW_H) + BUFFER);
@@ -302,7 +328,7 @@ function VirtualTable({
         {/* Header — sticky vertical, suit le scroll horizontal */}
         <div className="db-header-row" style={{ width: totalW }}>
           <div className="db-cell db-cell--num">#</div>
-          {columns.map(col => (
+          {displayCols.map(col => (
             <div
               key={col}
               className={`db-cell db-cell--head${sortState?.col === col ? " db-cell--sorted" : ""}`}
@@ -329,16 +355,21 @@ function VirtualTable({
                 style={{ position: "absolute", top: absIdx * ROW_H, left: 0, width: totalW }}
               >
                 <div className="db-cell db-cell--num">{absIdx + 1}</div>
-                {columns.map(col => (
-                  <div
-                    key={col}
-                    className="db-cell"
-                    style={{ width: COL_W, minWidth: COL_W }}
-                    title={fmt(row[col])}
-                  >
-                    <span className="db-cell-txt">{renderCell(row[col])}</span>
-                  </div>
-                ))}
+                {displayCols.map(col => {
+                  // Si colonne substituée, on lit la valeur de la colonne formule
+                  const effectiveCol = columnSubs?.[col] ?? col;
+                  const val = row[effectiveCol];
+                  return (
+                    <div
+                      key={col}
+                      className="db-cell"
+                      style={{ width: COL_W, minWidth: COL_W }}
+                      title={fmt(val)}
+                    >
+                      <span className="db-cell-txt">{renderCell(val)}</span>
+                    </div>
+                  );
+                })}
               </div>
             );
           })}
@@ -589,8 +620,10 @@ export default function AccederDashboard() {
     }
     if (sort) {
       const { col, dir } = sort;
+      // Trier sur la colonne effective (formule si substitution, sinon la colonne elle-même)
+      const effectiveCol = tabDef.columnSubs?.[col] ?? col;
       rows = [...rows].sort((a, b) => {
-        const cmp = fmt(a[col]).localeCompare(fmt(b[col]), "fr", { numeric: true, sensitivity: "base" });
+        const cmp = fmt(a[effectiveCol]).localeCompare(fmt(b[effectiveCol]), "fr", { numeric: true, sensitivity: "base" });
         return dir === "asc" ? cmp : -cmp;
       });
     }
@@ -682,6 +715,8 @@ export default function AccederDashboard() {
               rows={filteredRows}
               sortState={sort}
               onSort={col => handleSort(activeTab, col)}
+              hiddenColumns={tabDef.hiddenColumns}
+              columnSubs={tabDef.columnSubs}
             />
           </>
         )}
