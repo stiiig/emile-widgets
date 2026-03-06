@@ -1,0 +1,1207 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Guide utilisateur — EMILE</title>
+  <style>
+    /* ── Variables ─────────────────────────────────────────────────────── */
+    :root {
+      --blue:       #000091;
+      --blue-light: #e3e3fd;
+      --blue-mid:   #6a6af4;
+      --green:      #18753c;
+      --green-bg:   #b8fec9;
+      --red:        #ce0500;
+      --red-bg:     #ffe9e9;
+      --orange-bg:  #fff3cd;
+      --grey-bg:    #f5f7fb;
+      --border:     #dde3f5;
+      --text:       #1e1e2e;
+      --muted:      #666;
+      --font:       'Segoe UI', system-ui, Arial, sans-serif;
+      --sidebar-w:  240px;
+    }
+
+    /* ── Reset & base ──────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--font);
+      font-size: 0.9rem;
+      color: var(--text);
+      background: var(--grey-bg);
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* ── Sidebar ───────────────────────────────────────────────────────── */
+    .sidebar {
+      width: var(--sidebar-w);
+      flex-shrink: 0;
+      background: #fff;
+      border-right: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+      padding: 1.5rem 0 2rem;
+    }
+    .sidebar-logo {
+      display: block;
+      background: var(--blue);
+      color: #fff;
+      font-size: 1.4rem;
+      font-weight: 900;
+      letter-spacing: 1px;
+      padding: 0.6rem 1.2rem;
+      margin: 0 1rem 1.5rem;
+      border-radius: 8px;
+      text-decoration: none;
+      font-style: italic;
+    }
+    .sidebar h3 {
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--muted);
+      padding: 0 1.2rem;
+      margin-bottom: 0.5rem;
+    }
+    .sidebar ol {
+      list-style: none;
+      padding: 0;
+      counter-reset: nav;
+    }
+    .sidebar ol li { counter-increment: nav; }
+    .sidebar ol li a {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.45rem 1.2rem;
+      color: var(--text);
+      text-decoration: none;
+      font-size: 0.82rem;
+      border-left: 3px solid transparent;
+      transition: background 0.12s, border-color 0.12s;
+    }
+    .sidebar ol li a::before {
+      content: counter(nav);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 1.4rem;
+      height: 1.4rem;
+      background: var(--blue-light);
+      color: var(--blue);
+      border-radius: 50%;
+      font-size: 0.65rem;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .sidebar ol li a:hover { background: var(--grey-bg); border-left-color: var(--blue-mid); }
+    .sidebar-note {
+      margin: 1.5rem 1.2rem 0;
+      padding: 0.75rem;
+      background: var(--blue-light);
+      border-radius: 6px;
+      font-size: 0.75rem;
+      color: var(--blue);
+      line-height: 1.5;
+    }
+
+    /* ── Main content ──────────────────────────────────────────────────── */
+    main {
+      flex: 1;
+      max-width: 860px;
+      padding: 2rem 2.5rem 4rem;
+    }
+
+    /* ── Page header ───────────────────────────────────────────────────── */
+    .page-header {
+      background: var(--blue);
+      color: #fff;
+      border-radius: 12px;
+      padding: 2rem 2.5rem;
+      margin-bottom: 2.5rem;
+    }
+    .page-header .brand { font-size: 2rem; font-weight: 900; font-style: italic; }
+    .page-header h1 { font-size: 1.4rem; font-weight: 400; margin-top: 0.3rem; opacity: 0.9; }
+    .page-header .meta { font-size: 0.75rem; opacity: 0.6; margin-top: 0.6rem; }
+
+    /* ── Sections ──────────────────────────────────────────────────────── */
+    section {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 2rem 2rem 2.5rem;
+      margin-bottom: 2rem;
+    }
+    section h2 {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--blue);
+      margin-bottom: 0.4rem;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    .section-num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 2rem;
+      height: 2rem;
+      background: var(--blue);
+      color: #fff;
+      border-radius: 50%;
+      font-size: 0.85rem;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .section-intro {
+      color: var(--muted);
+      font-size: 0.85rem;
+      margin-bottom: 1.5rem;
+      line-height: 1.6;
+      border-left: 3px solid var(--blue-light);
+      padding-left: 0.75rem;
+    }
+    h3 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin: 1.5rem 0 0.5rem;
+      color: var(--text);
+    }
+    h3.step {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--blue);
+      font-size: 0.9rem;
+      margin-top: 2rem;
+    }
+    .step-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 1.6rem;
+      height: 1.6rem;
+      background: var(--blue);
+      color: #fff;
+      border-radius: 50%;
+      font-size: 0.7rem;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    p { margin-bottom: 0.75rem; line-height: 1.6; }
+
+    /* ── Figures / screenshots ─────────────────────────────────────────── */
+    figure {
+      margin: 1.5rem 0;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      background: #fafbff;
+    }
+    figcaption {
+      background: var(--grey-bg);
+      border-top: 1px solid var(--border);
+      padding: 0.6rem 0.9rem;
+      font-size: 0.76rem;
+      color: var(--muted);
+      font-style: italic;
+    }
+
+    /* Annotation container */
+    .screen-wrap {
+      position: relative;
+      display: block;
+      line-height: 0;
+    }
+    .screen-wrap img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+    /* Numbered annotation badge */
+    .ann {
+      position: absolute;
+      width: 1.5rem;
+      height: 1.5rem;
+      background: #e1000f;
+      color: #fff;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.65rem;
+      font-weight: 800;
+      font-family: var(--font);
+      line-height: 1;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.35);
+      border: 2px solid #fff;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+    }
+    /* Highlight box overlay */
+    .ann-box {
+      position: absolute;
+      border: 2.5px solid #e1000f;
+      border-radius: 4px;
+      pointer-events: none;
+      box-shadow: 0 0 0 1px rgba(225,0,15,0.2);
+    }
+    /* Legend below screenshot */
+    .ann-legend {
+      margin: 0;
+      padding: 0.75rem 0.9rem;
+      background: #fff;
+      border-top: 1px solid var(--border);
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+    .ann-legend li {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.5rem;
+      font-size: 0.78rem;
+      line-height: 1.45;
+      color: var(--text);
+    }
+    .ann-legend li .ann-num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 1.2rem;
+      height: 1.2rem;
+      background: #e1000f;
+      color: #fff;
+      border-radius: 50%;
+      font-size: 0.6rem;
+      font-weight: 800;
+      flex-shrink: 0;
+      margin-top: 0.05rem;
+    }
+
+    /* ── Callout boxes ─────────────────────────────────────────────────── */
+    .callout {
+      border-radius: 6px;
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      font-size: 0.83rem;
+      line-height: 1.55;
+      display: flex;
+      gap: 0.6rem;
+      align-items: flex-start;
+    }
+    .callout .icon { font-size: 1rem; flex-shrink: 0; margin-top: 0.05rem; }
+    .callout.info    { background: var(--blue-light); color: var(--blue); }
+    .callout.success { background: var(--green-bg);   color: var(--green); }
+    .callout.warning { background: var(--orange-bg);  color: #856404; }
+    .callout strong  { font-weight: 700; }
+
+    /* ── Steps list ────────────────────────────────────────────────────── */
+    .steps-list {
+      list-style: none;
+      padding: 0;
+      margin: 1rem 0;
+      counter-reset: steps;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .steps-list li {
+      counter-increment: steps;
+      display: flex;
+      gap: 0.75rem;
+      align-items: flex-start;
+      padding: 0.6rem 0.75rem;
+      background: var(--grey-bg);
+      border-radius: 6px;
+      font-size: 0.84rem;
+      line-height: 1.5;
+    }
+    .steps-list li::before {
+      content: counter(steps);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 1.5rem;
+      height: 1.5rem;
+      background: var(--blue);
+      color: #fff;
+      border-radius: 50%;
+      font-size: 0.65rem;
+      font-weight: 700;
+      flex-shrink: 0;
+      margin-top: 0.05rem;
+    }
+
+    /* ── Table récap ───────────────────────────────────────────────────── */
+    .recap-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+      margin: 1rem 0;
+    }
+    .recap-table th {
+      background: var(--blue);
+      color: #fff;
+      text-align: left;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.75rem;
+    }
+    .recap-table td { padding: 0.45rem 0.75rem; border-bottom: 1px solid var(--border); }
+    .recap-table tr:last-child td { border-bottom: none; }
+    .recap-table tr:nth-child(even) td { background: var(--grey-bg); }
+    .badge-access {
+      display: inline-block;
+      padding: 0.1rem 0.45rem;
+      border-radius: 3px;
+      font-size: 0.68rem;
+      font-weight: 600;
+    }
+    .badge-access.public   { background: #e8f5e9; color: var(--green); }
+    .badge-access.token    { background: var(--blue-light); color: var(--blue); }
+    .badge-access.iframe   { background: #fff3e0; color: #e65100; }
+    .badge-access.admin    { background: #fce4ec; color: #c2185b; }
+
+    /* ── Dividers ──────────────────────────────────────────────────────── */
+    hr { border: none; border-top: 1px solid var(--border); margin: 1.5rem 0; }
+
+    /* ── Print ─────────────────────────────────────────────────────────── */
+    @media print {
+      .sidebar { display: none; }
+      body { display: block; }
+      main { max-width: 100%; padding: 1rem; }
+      section { break-inside: avoid; border: 1px solid #ccc; }
+    }
+
+    /* ── Mobile ────────────────────────────────────────────────────────── */
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      main { padding: 1rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Sidebar ─────────────────────────────────────────────────────────────── -->
+<nav class="sidebar">
+  <a class="sidebar-logo" href="#top">emile</a>
+  <h3>Sommaire</h3>
+  <ol>
+    <li><a href="#compte">Créer son compte orienteur·rice</a></li>
+    <li><a href="#connexion">Accéder à son espace</a></li>
+    <li><a href="#validation">Valider son compte</a></li>
+    <li><a href="#faq">La FAQ intégrée</a></li>
+    <li><a href="#inscription">Inscrire un·e candidat·e</a></li>
+    <li><a href="#liste">Mes candidat·e·s</a></li>
+    <li><a href="#fiche">La fiche candidat·e</a></li>
+    <li><a href="#etablissement">Ajouter un établissement</a></li>
+    <li><a href="#dashboard">Dashboard administrateur</a></li>
+  </ol>
+  <div class="sidebar-note">
+    📌 Ce guide couvre toutes les interfaces du programme EMILE accessibles aux orienteur·rice·s et administrateur·rice·s.
+  </div>
+</nav>
+
+<!-- ── Main ────────────────────────────────────────────────────────────────── -->
+<main id="top">
+
+  <!-- Page header -->
+  <div class="page-header">
+    <div class="brand">emile</div>
+    <h1>Guide utilisateur — Toutes les interfaces</h1>
+    <div class="meta">Version du 6 mars 2026 · Destiné aux orienteur·rice·s et administrateur·rice·s</div>
+  </div>
+
+  <!-- ── 0 · Vue d'ensemble ──────────────────────────────────────────────── -->
+  <section id="intro">
+    <h2><span class="section-num">✦</span> Vue d'ensemble</h2>
+    <p class="section-intro">
+      EMILE est un programme d'accompagnement à la mobilité géographique pour des candidat·e·s en insertion professionnelle.
+      Les interfaces web permettent aux <strong>orienteur·rice·s</strong> d'inscrire et suivre leurs candidat·e·s,
+      et aux <strong>administrateur·rice·s</strong> de superviser les données globales.
+    </p>
+
+    <table class="recap-table">
+      <thead>
+        <tr>
+          <th>Interface</th>
+          <th>Utilisateur</th>
+          <th>Accès</th>
+          <th>Description courte</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Créer un compte</strong></td>
+          <td>Orienteur·rice</td>
+          <td><span class="badge-access public">Public</span></td>
+          <td>Inscription en 3 étapes (établissement → profil → confirmation)</td>
+        </tr>
+        <tr>
+          <td><strong>Accéder à mon espace</strong></td>
+          <td>Orienteur·rice</td>
+          <td><span class="badge-access public">Public</span></td>
+          <td>Reçoit un lien de connexion par email</td>
+        </tr>
+        <tr>
+          <td><strong>Valider mon compte</strong></td>
+          <td>Orienteur·rice</td>
+          <td><span class="badge-access public">Public</span></td>
+          <td>Reçoit le lien d'activation par email</td>
+        </tr>
+        <tr>
+          <td><strong>Inscrire un·e candidat·e</strong></td>
+          <td>Orienteur·rice</td>
+          <td><span class="badge-access token">Token OCC</span></td>
+          <td>Formulaire 5 étapes — éligibilité calculée en temps réel</td>
+        </tr>
+        <tr>
+          <td><strong>Mes candidat·e·s</strong></td>
+          <td>Orienteur·rice</td>
+          <td><span class="badge-access token">Token OCC</span></td>
+          <td>Liste de ses candidat·e·s avec statut et critères</td>
+        </tr>
+        <tr>
+          <td><strong>Fiche candidat·e</strong></td>
+          <td>Orienteur·rice</td>
+          <td><span class="badge-access token">Token OCC</span></td>
+          <td>Consultation et modification d'un dossier complet</td>
+        </tr>
+        <tr>
+          <td><strong>Ajouter un établissement</strong></td>
+          <td>Orienteur·rice</td>
+          <td><span class="badge-access iframe">Grist iframe</span></td>
+          <td>Déclare un établissement non encore référencé</td>
+        </tr>
+        <tr>
+          <td><strong>Dashboard</strong></td>
+          <td>Administrateur·rice</td>
+          <td><span class="badge-access admin">Magic link 24 h</span></td>
+          <td>Vue globale : candidats, accompagnants, établissements, FAQ</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="callout info">
+      <span class="icon">ℹ️</span>
+      <div>Toutes les interfaces EMILE sont accessibles depuis n'importe quel navigateur, sur ordinateur ou mobile.
+      Aucune installation n'est requise.</div>
+    </div>
+  </section>
+
+  <!-- ── 1 · Créer son compte ────────────────────────────────────────────── -->
+  <section id="compte">
+    <h2><span class="section-num">1</span> Créer son compte orienteur·rice</h2>
+    <p class="section-intro">
+      La création de compte se fait en <strong>3 étapes</strong> : choisir son établissement, renseigner son profil,
+      puis attendre la validation par email. Votre compte restera en statut <em>En attente</em> jusqu'à validation.
+    </p>
+
+    <h3 class="step"><span class="step-badge">1</span> Étape 1 — Mon établissement</h3>
+    <p>Recherchez votre structure dans la liste. Si elle n'y figure pas, utilisez le lien d'ajout (voir <a href="#etablissement">section 8</a>).</p>
+
+    <figure>
+      <div class="screen-wrap">
+        <img src="images/Screenshot 2026-03-06 at 09.08.27.png" alt="Création de compte — Étape 1 : choix d'établissement">
+        <span class="ann" style="top:13.5%;left:22%">1</span>
+        <span class="ann" style="top:44%;left:50%">2</span>
+        <span class="ann" style="top:52%;left:54%">3</span>
+        <span class="ann" style="top:66%;left:82%">4</span>
+      </div>
+      <ul class="ann-legend">
+        <li><span class="ann-num">1</span> Barre de progression — étape 1 sur 3 en cours (bleu foncé = actif, gris = à venir)</li>
+        <li><span class="ann-num">2</span> Champ de recherche d'établissement — tapez les premières lettres pour filtrer</li>
+        <li><span class="ann-num">3</span> Si votre établissement est absent, cliquez pour l'ajouter (ouvre un formulaire dédié)</li>
+        <li><span class="ann-num">4</span> Bouton « Suivant » — actif dès qu'un établissement est sélectionné</li>
+      </ul>
+      <figcaption>Étape 1/3 — Sélection de l'établissement, avec lien d'ajout si la structure n'est pas référencée</figcaption>
+    </figure>
+
+    <figure>
+      <div class="screen-wrap">
+        <img src="images/Screenshot 2026-03-06 at 09.08.48.png" alt="Dropdown établissements ouvert">
+        <span class="ann" style="top:29%;left:50%">1</span>
+        <span class="ann" style="top:46%;left:50%">2</span>
+      </div>
+      <ul class="ann-legend">
+        <li><span class="ann-num">1</span> Champ de recherche intégré au dropdown — filtrez parmi tous les établissements en temps réel</li>
+        <li><span class="ann-num">2</span> Liste des établissements triés alphabétiquement — cliquez pour sélectionner</li>
+      </ul>
+      <figcaption>Le dropdown d'établissement avec recherche intégrée</figcaption>
+    </figure>
+
+    <h3 class="step"><span class="step-badge">2</span> Étape 2 — Mon profil professionnel</h3>
+    <p>Renseignez votre fonction, prénom, nom et email professionnel. L'email doit être unique — il servira à vous envoyer votre lien de connexion.</p>
+
+    <figure>
+      <div class="screen-wrap">
+        <img src="images/Screenshot 2026-03-06 at 09.09.42.png" alt="Étape 2 profil vide">
+        <span class="ann" style="top:18%;left:50%">1</span>
+        <span class="ann" style="top:31%;left:50%">2</span>
+        <span class="ann" style="top:44%;left:50%">3</span>
+        <span class="ann" style="top:60%;left:50%">4</span>
+      </div>
+      <ul class="ann-legend">
+        <li><span class="ann-num">1</span> L'établissement choisi à l'étape précédente est affiché en récapitulatif</li>
+        <li><span class="ann-num">2</span> Sélectionnez votre fonction dans le dropdown</li>
+        <li><span class="ann-num">3</span> Prénom et nom de famille (champs obligatoires)</li>
+        <li><span class="ann-num">4</span> Email professionnel — doit être unique dans le système EMILE</li>
+      </ul>
+      <figcaption>Étape 2/3 — Contexte professionnel, formulaire vide</figcaption>
+    </figure>
+
+    <figure>
+      <div class="screen-wrap">
+        <img src="images/Screenshot 2026-03-06 at 09.09.06.png" alt="Étape 2 profil erreur email existant">
+        <span class="ann" style="top:69%;left:50%">1</span>
+      </div>
+      <ul class="ann-legend">
+        <li><span class="ann-num">1</span> Message d'erreur si l'email est déjà associé à un compte existant — utilisez « Récupérer mon lien de connexion »</li>
+      </ul>
+      <figcaption>Étape 2/3 — Message si l'email est déjà utilisé</figcaption>
+    </figure>
+
+    <h3 class="step"><span class="step-badge">3</span> Étape 3 — Confirmation</h3>
+
+    <figure>
+      <div class="screen-wrap">
+        <img src="images/Screenshot 2026-03-06 at 09.09.27.png" alt="Compte créé, validation en attente">
+        <span class="ann" style="top:20%;left:50%">1</span>
+        <span class="ann" style="top:36%;left:50%">2</span>
+        <span class="ann" style="top:45%;left:50%">3</span>
+        <span class="ann" style="top:56%;left:50%">4</span>
+        <span class="ann" style="top:71%;left:50%">5</span>
+      </div>
+      <ul class="ann-legend">
+        <li><span class="ann-num">1</span> Confirmation que le compte a bien été créé, en attente de validation</li>
+        <li><span class="ann-num">2</span> L'email de validation a été envoyé à votre adresse</li>
+        <li><span class="ann-num">3</span> Cliquez sur le lien reçu par email pour activer votre compte</li>
+        <li><span class="ann-num">4</span> <strong>Lien de validation (test)</strong> — en mode test uniquement, visible ici pour l'administrateur</li>
+        <li><span class="ann-num">5</span> Raccourci pour inscrire un·e candidat·e dès la création du compte</li>
+      </ul>
+      <figcaption>Étape 3/3 — Compte créé, email de validation envoyé</figcaption>
+    </figure>
+
+    <div class="callout warning">
+      <span class="icon">⚠️</span>
+      <div>Si vous ne recevez pas l'email de validation dans quelques minutes, vérifiez votre dossier <strong>spam</strong>.
+      Si le problème persiste, contactez votre administrateur·rice.</div>
+    </div>
+  </section>
+
+  <!-- ── 2 · Récupérer lien de connexion ────────────────────────────────── -->
+  <section id="connexion">
+    <h2><span class="section-num">2</span> Accéder à mon espace (lien de connexion)</h2>
+    <p class="section-intro">
+      EMILE n'utilise pas de mot de passe : l'accès se fait via un <strong>lien de connexion</strong> envoyé par email.
+      Cette page vous permet de recevoir ce lien à tout moment.
+    </p>
+
+    <figure>
+      <div class="screen-wrap">
+        <img src="images/Screenshot 2026-03-06 at 09.03.05.png" alt="Page Recevoir mon lien de connexion vide">
+        <span class="ann" style="top:4%;left:12%">1</span>
+        <span class="ann" style="top:4%;left:82%">2</span>
+        <span class="ann" style="top:36%;left:50%">3</span>
+        <span class="ann" style="top:52%;left:50%">4</span>
+        <span class="ann" style="top:65%;left:50%">5</span>
+      </div>
+      <ul class="ann-legend">
+        <li><span class="ann-num">1</span> Logo EMILE et intitulé de la page « Accéder à mon espace »</li>
+        <li><span class="ann-num">2</span> Bouton FAQ — accès aux questions fréquentes (voir <a href="#faq">section 4</a>)</li>
+        <li><span class="ann-num">3</span> Titre et description de la démarche</li>
+        <li><span class="ann-num">4</span> Champ email — saisissez l'adresse email de votre compte orienteur·rice</li>
+        <li><span class="ann-num">5</span> Bouton « Recevoir mon lien » — désactivé jusqu'à saisie d'un email</li>
+      </ul>
+      <figcaption>Page de demande du lien de connexion — formulaire vide</figcaption>
+    </figure>
+
+    <figure>
+      <div class="screen-wrap">
+        <img src="images/Screenshot 2026-03-06 at 09.03.16.png" alt="Lien de connexion généré avec succès">
+        <span class="ann" style="top:50%;left:50%">1</span>
+        <span class="ann" style="top:65%;left:50%">2</span>
+        <span class="ann" style="top:82%;left:36%">3</span>
+      </div>
+      <ul class="ann-legend">
+        <li><span class="ann-num">1</span> Encart bleu « Voici votre lien de connexion » — le lien complet est affiché</li>
+        <li><span class="ann-num">2</span> URL complète du lien — elle contient un token sécurisé à usage unique</li>
+        <li><span class="ann-num">3</span> Bouton « Copier le lien » — copie le lien dans le presse-papiers</li>
+      </ul>
+      <figcaption>Lien de connexion généré — à copier et transmettre à l'orienteur·rice si nécessaire</figcaption>
+    </figure>
+
+    <figure>
+      <div class="screen-wrap">
+        <img src="images/Screenshot 2026-03-06 at 09.02.59.png" alt="Email introuvable lien de connexion">
+        <span class="ann" style="top:60%;left:50%">1</span>
+      </div>
+      <ul class="ann-legend">
+        <li><span class="ann-num">1</span> Message d'avertissement si aucun compte n'est trouvé pour cet email — vérifiez l'adresse ou contactez l'administrateur·rice</li>
+      </ul>
+      <figcaption>Message d'erreur si l'email n'est pas reconnu dans le système</figcaption>
+    </figure>
+  </section>
+
+  <!-- ── 3 · Récupérer lien de validation ───────────────────────────────── -->
+  <section id="validation">
+    <h2><span class="section-num">3</span> Valider mon compte</h2>
+    <p class="section-intro">
+      Un email de validation est envoyé automatiquement à la création du compte. Si vous ne l'avez pas reçu,
+      cette page vous permet d'en demander un nouveau.
+    </p>
+
+    <figure>
+      <div class="screen-wrap">
+        <img src="images/Screenshot 2026-03-06 at 09.01.01.png" alt="Page Recevoir mon lien de validation vide">
+        <span class="ann" style="top:4%;left:17%">1</span>
+        <span class="ann" style="top:30%;left:50%">2</span>
+        <span class="ann" style="top:52%;left:50%">3</span>
+      </div>
+      <ul class="ann-legend">
+        <li><span class="ann-num">1</span> En-tête « Valider mon compte » — cette page est distincte de la page de connexion</li>
+        <li><span class="ann-num">2</span> Icône et titre « Recevoir mon lien de validation »</li>
+        <li><span class="ann-num">3</span> Champ email — même adresse que celle utilisée lors de la création du compte</li>
+      </ul>
+      <figcaption>Page de demande du lien de validation — formulaire vide</figcaption>
+    </figure>
+
+    <figure>
+      <div class="screen-wrap">
+        <img src="images/Screenshot 2026-03-06 at 09.02.39.png" alt="Lien de validation généré">
+        <span class="ann" style="top:47%;left:50%">1</span>
+        <span class="ann" style="top:60%;left:50%">2</span>
+        <span class="ann" style="top:82%;left:36%">3</span>
+      </div>
+      <ul class="ann-legend">
+        <li><span class="ann-num">1</span> Encart « Voici votre lien de validation » — confirmation de succès</li>
+        <li><span class="ann-num">2</span> URL du lien de validation — contient un token HMAC sécurisé</li>
+        <li><span class="ann-num">3</span> Bouton « Copier le lien » — pour transmettre le lien si besoin</li>
+      </ul>
+      <figcaption>Lien de validation généré avec succès</figcaption>
+    </figure>
+
+    <figure>
+      <div class="screen-wrap">
+        <img src="images/Screenshot 2026-03-06 at 09.02.22.png" alt="Email introuvable lien de validation">
+        <span class="ann" style="top:58%;left:50%">1</span>
+      </div>
+      <ul class="ann-legend">
+        <li><span class="ann-num">1</span> Message d'avertissement si l'email n'est pas associé à un compte</li>
+      </ul>
+      <figcaption>Email non trouvé — vérifiez l'adresse saisie</figcaption>
+    </figure>
+
+    <div class="callout success">
+      <span class="icon">✅</span>
+      <div>Une fois votre compte validé, vous pouvez utiliser le lien de connexion reçu par email pour accéder directement à votre espace candidat·e·s.</div>
+    </div>
+  </section>
+
+  <!-- ── 4 · FAQ ─────────────────────────────────────────────────────────── -->
+  <section id="faq">
+    <h2><span class="section-num">4</span> La FAQ intégrée</h2>
+    <p class="section-intro">
+      Chaque interface EMILE dispose d'un bouton <strong>FAQ</strong> en haut à droite.
+      Il ouvre un panneau latéral avec toutes les fiches d'aide du programme, organisées par sections et consultables par recherche.
+    </p>
+
+    <figure>
+      <div class="screen-wrap">
+        <img src="images/Screenshot 2026-03-06 at 09.01.18.png" alt="Panneau FAQ ouvert">
+        <span class="ann" style="top:2%;left:44%">1</span>
+        <span class="ann" style="top:2%;left:90%">2</span>
+        <span class="ann" style="top:7%;left:50%">3</span>
+        <span class="ann" style="top:14%;left:50%">4</span>
+        <span class="ann" style="top:37%;left:50%">5</span>
+      </div>
+      <ul class="ann-legend">
+        <li><span class="ann-num">1</span> En-tête du panneau avec le nombre total de fiches disponibles (ici 67)</li>
+        <li><span class="ann-num">2</span> Bouton de fermeture ✕ du panneau</li>
+        <li><span class="ann-num">3</span> Barre de recherche — tapez un mot-clé pour filtrer les fiches</li>
+        <li><span class="ann-num">4</span> Sections de fiches (ex. « INSCRIRE UN-E CANDIDAT-E ») — cliquez pour déplier/replier</li>
+        <li><span class="ann-num">5</span> Fiches individuelles — certaines marquées <strong>● OBLIGATOIRE</strong> en rouge</li>
+      </ul>
+      <figcaption>Le panneau FAQ avec 67 fiches organisées par sections thématiques</figcaption>
+    </figure>
+
+    <div class="callout info">
+      <span class="icon">ℹ️</span>
+      <div>Les fiches FAQ sont gérées directement dans Grist par l'équipe EMILE — elles sont mises à jour en temps réel sans redéploiement des interfaces.</div>
+    </div>
+  </section>
+
+  <!-- ── 5 · Inscription candidat ───────────────────────────────────────── -->
+  <section id="inscription">
+    <h2><span class="section-num">5</span> Inscrire un·e candidat·e</h2>
+    <p class="section-intro">
+      Le formulaire d'inscription se déroule en <strong>4 étapes saisies + 1 étape de confirmation</strong>.
+      L'éligibilité au programme EMILE est calculée automatiquement à l'étape 5 selon les critères du programme.
+    </p>
+
+    <h3 class="step"><span class="step-badge">1</span> Étape 1 — Identité de l'orienteur·se</h3>
+    <p>Avant de commencer, l'orienteur·rice doit vérifier son compte en saisissant son email professionnel.</p>
+
+    <figure>
+      <div class="screen-wrap">
+        <img src="images/Screenshot 2026-03-06 at 09.10.05.png" alt="Inscription étape 1 formulaire vide">
+        <span class="ann" style="top:14%;left:50%">1</span>
+        <span class="ann" style="top:40%;left:50%">2</span>
+        <span class="ann" style="top:49%;left:74%">3</span>
+        <span class="ann" style="top:60%;left:42%">4</span>
+      </div>
+      <ul class="ann-legend">
+        <li><span class="ann-num">1</span> Barre de progression — 5 étapes (Orienteur·se → Identité → Situation → Engagement → Confirmation)</li>
+        <li><span class="ann-num">2</span> Champ email — saisissez l'adresse email de votre compte orienteur·rice</li>
+        <li><span class="ann-num">3</span> Bouton « Vérifier » — vérifie que le compte existe bien dans le système</li>
+        <li><span class="ann-num">4</span> Lien vers la création de compte si vous n'avez pas encore de compte</li>
+      </ul>
+      <figcaption>Étape 1/5 — Vérification de l'identité de l'orienteur·rice</figcaption>
+    </figure>
+
+    <figure>
+      <div class="screen-wrap">
+        <img src="images/Screenshot 2026-03-06 at 09.10.18.png" alt="Email orienteur introuvable">
+        <span class="ann" style="top:57%;left:50%">1</span>
+        <span class="ann" style="top:70%;left:35%">2</span>
+      </div>
+      <ul class="ann-legend">
+        <li><span class="ann-num">1</span> Message d'erreur rouge si l'email n'est pas reconnu</li>
+        <li><span class="ann-num">2</span> Lien de création de compte proposé directement dans le message</li>
+      </ul>
+      <figcaption>Étape 1/5 — Email non trouvé</figcaption>
+    </figure>
+
+    <figure>
+      <div class="screen-wrap">
+        <img src="images/Screenshot 2026-03-06 at 09.10.26.png" alt="Compte orienteur trouvé - Claire Dupont">
+        <span class="ann" style="top:57%;left:50%">1</span>
+        <span class="ann" style="top:75%;left:73%">2</span>
+      </div>
+      <ul class="ann-legend">
+        <li><span class="ann-num">1</span> Encart vert confirmant l'identité de l'orienteur·rice (ici Claire Dupont)</li>
+        <li><span class="ann-num">2</span> Bouton « Continuer » — activé dès que le compte est confirmé</li>
+      </ul>
+      <figcaption>Étape 1/5 — Compte orienteur·rice trouvé et vérifié</figcaption>
+    </figure>
+
+    <h3 class="step"><span class="step-badge">2</span> Étape 2 — Identité du / de la candidat·e</h3>
+    <p>Renseignez les informations administratives et les coordonnées du candidat ou de la candidate.</p>
+
+    <figure>
+      <div class="screen-wrap">
+        <img src="images/Screenshot 2026-03-06 at 09.10.34.png" alt="Étape 2 identité candidat vide">
+        <span class="ann" style="top:17%;left:50%">1</span>
+        <span class="ann" style="top:36%;left:50%">2</span>
+        <span class="ann" style="top:48%;left:50%">3</span>
+        <span class="ann" style="top:60%;left:50%">4</span>
+      </div>
+      <ul class="ann-legend">
+        <li><span class="ann-num">1</span> Section « Informations administratives » — prénom, nom, genre, nationalité, date de naissance</li>
+        <li><span class="ann-num">2</span> Boutons de sélection du genre (Femme / Homme)</li>
+        <li><span class="ann-num">3</span> Section « Coordonnées » — email et téléphone du candidat / de la candidate</li>
+        <li><span class="ann-num">4</span> Navigation : Précédent (retour à l'étape 1) / Suivant</li>
+      </ul>
+      <figcaption>Étape 2/5 — Identité du / de la candidat·e, formulaire vide</figcaption>
+    </figure>
+
+    <figure>
+      <div class="screen-wrap">
+        <img src="images/Screenshot 2026-03-06 at 09.11.40.png" alt="Dropdown nationalité ouvert">
+        <span class="ann" style="top:40%;left:50%">1</span>
+        <span class="ann" style="top:52%;left:50%">2</span>
+        <span class="ann" style="top:70%;left:75%">3</span>
+      </div>
+      <ul class="ann-legend">
+        <li><span class="ann-num">1</span> Champ de recherche de nationalité — tapez le nom du pays pour filtrer</li>
+        <li><span class="ann-num">2</span> Liste des nationalités avec badge de zone géographique (France / Extra-UE…)</li>
+        <li><span class="ann-num">3</span> Badge de zone — utilisé comme critère d'éligibilité dans certains cas</li>
+      </ul>
+      <figcaption>Étape 2/5 — Sélection de la nationalité avec recherche et badges de zone</figcaption>
+    </figure>
+
+    <figure>
+      <div class="screen-wrap">
+        <img src="images/Screenshot 2026-03-06 at 09.11.52.png" alt="Date de naissance avec âge calculé">
+        <span class="ann" style="top:55%;left:50%">1</span>
+        <span class="ann" style="top:74%;left:16%">2</span>
+        <span class="ann" style="top:74%;left:32%">3</span>
+      </div>
+      <ul class="ann-legend">
+        <li><span class="ann-num">1</span> Sélecteurs de date de naissance (jour / mois / année)</li>
+        <li><span class="ann-num">2</span> L'âge est calculé automatiquement (ici 32 ans)</li>
+        <li><span class="ann-num">3</span> Badge « Majeure ✓ » — la majorité est un critère d'éligibilité EMILE</li>
+      </ul>
+      <figcaption>Étape 2/5 — Âge et majorité calculés automatiquement à partir de la date de naissance</figcaption>
+    </figure>
+
+    <h3 class="step"><span class="step-badge">3</span> Étape 3 — Situation du / de la candidat·e</h3>
+    <p>Informations sur la domiciliation, le programme EMILE et d'autres critères d'éligibilité.</p>
+
+    <figure>
+      <div class="screen-wrap">
+        <img src="images/Screenshot 2026-03-06 at 09.12.54.png" alt="Étape 3 situation candidat vue d'ensemble">
+        <span class="ann" style="top:12%;left:50%">1</span>
+        <span class="ann" style="top:28%;left:50%">2</span>
+        <span class="ann" style="top:45%;left:50%">3</span>
+        <span class="ann" style="top:62%;left:50%">4</span>
+      </div>
+      <ul class="ann-legend">
+        <li><span class="ann-num">1</span> Section « Domiciliation » — département et adresse actuels</li>
+        <li><span class="ann-num">2</span> Section « Programme EMILE » — consentement au partage de données</li>
+        <li><span class="ann-num">3</span> Section « Autres informations » — niveau de langue, foyer, situation régulière, BPI…</li>
+        <li><span class="ann-num">4</span> Secteurs d'activité envisagés (multiselect)</li>
+      </ul>
+      <figcaption>Étape 3/5 — Vue d'ensemble de la situation du candidat / de la candidate</figcaption>
+    </figure>
+
+    <figure>
+      <div class="screen-wrap">
+        <img src="images/Screenshot 2026-03-06 at 09.13.16.png" alt="Dropdown département domicile">
+        <span class="ann" style="top:20%;left:50%">1</span>
+        <span class="ann" style="top:45%;left:50%">2</span>
+        <span class="ann" style="top:72%;left:80%">3</span>
+      </div>
+      <ul class="ann-legend">
+        <li><span class="ann-num">1</span> Barre de recherche — filtrez par numéro ou nom de département</li>
+        <li><span class="ann-num">2</span> Liste des départements avec numéro (badge bleu) et région (badge gris)</li>
+        <li><span class="ann-num">3</span> Les DOM-TOM sont inclus (971 Guadeloupe, 972 Martinique…)</li>
+      </ul>
+      <figcaption>Étape 3/5 — Sélection du département de domicile avec numéros et régions</figcaption>
+    </figure>
+
+    <figure>
+      <div class="screen-wrap">
+        <img src="images/Screenshot 2026-03-06 at 09.13.29.png" alt="Dropdown niveau de langue">
+        <span class="ann" style="top:20%;left:50%">1</span>
+        <span class="ann" style="top:40%;left:50%">2</span>
+        <span class="ann" style="top:60%;left:50%">3</span>
+      </div>
+      <ul class="ann-legend">
+        <li><span class="ann-num">1</span> Sélecteur de niveau de langue française (obligatoire)</li>
+        <li><span class="ann-num">2</span> Niveaux A0 à B2 — niveaux élémentaires et intermédiaires</li>
+        <li><span class="ann-num">3</span> Niveaux C1 et C2 — utilisateurs expérimentés (pas de restriction EMILE)</li>
+      </ul>
+      <figcaption>Étape 3/5 — Niveaux de langue selon le référentiel CECRL (A0 à C2)</figcaption>
+    </figure>
+
+    <h3 class="step"><span class="step-badge">4</span> Étape 4 — Engagement de l'orienteur·se</h3>
+
+    <figure>
+      <div class="screen-wrap">
+        <img src="images/Screenshot 2026-03-06 at 09.13.43.png" alt="Étape 4 engagement orienteur">
+        <span class="ann" style="top:39%;left:50%">1</span>
+        <span class="ann" style="top:52%;left:50%">2</span>
+        <span class="ann" style="top:84%;left:78%">3</span>
+      </div>
+      <ul class="ann-legend">
+        <li><span class="ann-num">1</span> Rappel de l'identité de l'orienteur·rice (nom + email) — confirmée à l'étape 1</li>
+        <li><span class="ann-num">2</span> Question d'engagement : l'orienteur·rice confirme être disponible pour co-accompagner</li>
+        <li><span class="ann-num">3</span> Bouton « Vérifier et confirmer » — actif uniquement si Oui/Non est sélectionné</li>
+      </ul>
+      <figcaption>Étape 4/5 — Engagement de co-accompagnement de l'orienteur·rice</figcaption>
+    </figure>
+
+    <h3 class="step"><span class="step-badge">5</span> Étape 5 — Vérification des critères et confirmation</h3>
+    <p>Avant d'enregistrer l'inscription, EMILE calcule automatiquement l'éligibilité selon 7 critères.</p>
+
+    <figure>
+      <div class="screen-wrap">
+        <img src="images/Screenshot 2026-03-06 at 09.14.01.png" alt="Étape 5 candidat non éligible">
+        <span class="ann" style="top:16%;left:50%">1</span>
+        <span class="ann" style="top:28%;left:50%">2</span>
+        <span class="ann" style="top:42%;left:50%">3</span>
+        <span class="ann" style="top:72%;left:50%">4</span>
+        <span class="ann" style="top:89%;left:78%">5</span>
+      </div>
+      <ul class="ann-legend">
+        <li><span class="ann-num">1</span> Résumé visuel du candidat / de la candidate (prénom, âge, genre, nationalité)</li>
+        <li><span class="ann-num">2</span> Bouton pour déplier/replier le récapitulatif complet des informations saisies</li>
+        <li><span class="ann-num">3</span> Critères d'éligibilité évalués individuellement : ✓ vert = rempli, ✗ rouge = non rempli</li>
+        <li><span class="ann-num">4</span> Encart rouge « Candidate non éligible » — l'inscription est quand même enregistrée</li>
+        <li><span class="ann-num">5</span> Le bouton « Confirmer l'inscription » reste toujours actif</li>
+      </ul>
+      <figcaption>Étape 5/5 — Candidat·e non éligible (1 critère non rempli), inscription possible malgré tout</figcaption>
+    </figure>
+
+    <figure>
+      <div class="screen-wrap">
+        <img src="images/Screenshot 2026-03-06 at 09.14.11.png" alt="Données récapitulatives détaillées">
+        <span class="ann" style="top:15%;left:50%">1</span>
+        <span class="ann" style="top:38%;left:50%">2</span>
+        <span class="ann" style="top:72%;left:50%">3</span>
+      </div>
+      <ul class="ann-legend">
+        <li><span class="ann-num">1</span> Section « IDENTITÉ » — toutes les données administratives saisies à l'étape 2</li>
+        <li><span class="ann-num">2</span> Section « SITUATION » — domiciliation, consentement EMILE, composition du foyer…</li>
+        <li><span class="ann-num">3</span> Section « ENGAGEMENT ORIENTEUR » — confirmation du co-accompagnement</li>
+      </ul>
+      <figcaption>Récapitulatif complet des informations saisies (panneau déplié)</figcaption>
+    </figure>
+
+    <figure>
+      <div class="screen-wrap">
+        <img src="images/Screenshot 2026-03-06 at 09.14.30.png" alt="Candidat éligible tous critères verts">
+        <span class="ann" style="top:40%;left:50%">1</span>
+        <span class="ann" style="top:75%;left:50%">2</span>
+      </div>
+      <ul class="ann-legend">
+        <li><span class="ann-num">1</span> Tous les critères sont verts ✓ — la candidate est éligible EMILE</li>
+        <li><span class="ann-num">2</span> Encart vert « Candidate éligible au programme EMILE »</li>
+      </ul>
+      <figcaption>Étape 5/5 — Tous les critères remplis, candidat·e éligible</figcaption>
+    </figure>
+
+    <figure>
+      <div class="screen-wrap">
+        <img src="images/Screenshot 2026-03-06 at 09.14.38.png" alt="Inscription enregistrée avec succès">
+        <span class="ann" style="top:10%;left:50%">1</span>
+        <span class="ann" style="top:28%;left:50%">2</span>
+        <span class="ann" style="top:43%;left:80%">3</span>
+        <span class="ann" style="top:57%;left:50%">4</span>
+        <span class="ann" style="top:88%;left:50%">5</span>
+      </div>
+      <ul class="ann-legend">
+        <li><span class="ann-num">1</span> Bannière verte « Inscription enregistrée avec succès »</li>
+        <li><span class="ann-num">2</span> Récapitulatif identité avec la <strong>référence du dossier</strong> (ex. 40_260306_JGD)</li>
+        <li><span class="ann-num">3</span> Référence unique du dossier — format : NUMÉRO_DATE_INITIALES</li>
+        <li><span class="ann-num">4</span> Récapitulatif des critères d'éligibilité finaux</li>
+        <li><span class="ann-num">5</span> Bouton « Voir mes candidat·e·s » — accès direct à la liste</li>
+      </ul>
+      <figcaption>Inscription confirmée — référence dossier générée, email récapitulatif envoyé à l'orienteur·rice</figcaption>
+    </figure>
+
+    <div class="callout info">
+      <span class="icon">📋</span>
+      <div>
+        <strong>Les 7 critères d'éligibilité EMILE :</strong><br>
+        1. Orienteur se co-accompagnant·e engagé·e &nbsp;
+        2. Territoire de départ éligible &nbsp;
+        3. Candidate majeure &nbsp;
+        4. Niveau de langue suffisant &nbsp;
+        5. Situation de précarité de logement avérée &nbsp;
+        6. En situation régulière &nbsp;
+        7. Volontariat pour le programme EMILE
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 6 · Liste des candidats ─────────────────────────────────────────── -->
+  <section id="liste">
+    <h2><span class="section-num">6</span> Mes candidat·e·s</h2>
+    <p class="section-intro">
+      La page liste présente tous les candidat·e·s de l'orienteur·rice connecté·e, organisés en deux sections :
+      ceux <strong>en accompagnement</strong> (dossier actif) et les <strong>nouvelles inscriptions</strong> (en attente de validation).
+    </p>
+
+    <figure>
+      <div class="screen-wrap">
+        <img src="images/Screenshot 2026-03-06 at 09.15.34.png" alt="Liste des candidats - vue complète">
+        <span class="ann" style="top:2.5%;left:83%">1</span>
+        <span class="ann" style="top:9%;left:50%">2</span>
+        <span class="ann" style="top:10%;left:82%">3</span>
+        <span class="ann" style="top:18%;left:50%">4</span>
+        <span class="ann" style="top:24%;left:50%">5</span>
+        <span class="ann" style="top:97%;left:50%">6</span>
+      </div>
+      <ul class="ann-legend">
+        <li><span class="ann-num">1</span> Nom de l'orienteur·rice connecté·e avec accès aux paramètres de session</li>
+        <li><span class="ann-num">2</span> Section « EN ACCOMPAGNEMENT » — candidat·e·s dont le dossier est actif dans le programme</li>
+        <li><span class="ann-num">3</span> Badge de statut (En cours / Éligible / Non éligible)</li>
+        <li><span class="ann-num">4</span> Section « NOUVELLES INSCRIPTIONS » — dossiers récents en attente de validation dans le programme</li>
+        <li><span class="ann-num">5</span> Carte candidat·e avec référence, âge, genre, nationalité, email et téléphone</li>
+        <li><span class="ann-num">6</span> Bouton « Inscrire un·e autre candidat·e » en bas de page</li>
+      </ul>
+      <figcaption>Liste complète des candidat·e·s avec statuts d'éligibilité</figcaption>
+    </figure>
+
+    <figure>
+      <div class="screen-wrap">
+        <img src="images/Screenshot 2026-03-06 at 09.15.53.png" alt="Tooltip critères non satisfaits">
+        <span class="ann" style="top:25%;left:72%">1</span>
+        <span class="ann" style="top:42%;left:72%">2</span>
+        <span class="ann" style="top:57%;left:72%">3</span>
+      </div>
+      <ul class="ann-legend">
+        <li><span class="ann-num">1</span> Badge « Non éligible » avec icône ⓘ — survolez pour voir les détails</li>
+        <li><span class="ann-num">2</span> Panneau « CRITÈRES NON SATISFAITS » avec les critères manquants</li>
+        <li><span class="ann-num">3</span> Chaque critère non rempli est détaillé avec le motif (ex. « Hors territoire éligible »)</li>
+      </ul>
+      <figcaption>Tooltip d'inéligibilité — survol du badge pour voir les critères non satisfaits</figcaption>
+    </figure>
+  </section>
+
+  <!-- ── 7 · Fiche candidat ──────────────────────────────────────────────── -->
+  <section id="fiche">
+    <h2><span class="section-num">7</span> La fiche candidat·e</h2>
+    <p class="section-intro">
+      La fiche candidat·e est la vue complète d'un dossier. Elle est organisée en <strong>onglets thématiques</strong>
+      (Administratif, DLS, Emploi-Formation, Finances, Foyer, Habitat, Lecture-Écriture-Calcul, Mobilité, Numérique, Santé)
+      et en <strong>sous-onglets</strong> pour chaque catégorie.
+    </p>
+
+    <figure>
+      <div class="screen-wrap">
+        <img src="images/Screenshot 2026-03-06 at 13.03.41.png" alt="Fiche candidat - onglet Administratif">
+        <span class="ann" style="top:4%;left:50%">1</span>
+        <span class="ann" style="top:8%;left:76%">2</span>
+        <span class="ann" style="top:15%;left:50%">3</span>
+        <span class="ann" style="top:20%;left:50%">4</span>
+        <span class="ann" style="top:35%;left:50%">5</span>
+      </div>
+      <ul class="ann-legend">
+        <li><span class="ann-num">1</span> En-tête candidat·e : nom, âge, genre, nationalité + référence dossier et statut</li>
+        <li><span class="ann-num">2</span> Bouton « Enregistrer » — sauvegarde toutes les modifications en cours</li>
+        <li><span class="ann-num">3</span> Onglets thématiques (Administratif, DLS, Emploi-Formation, Finances…)</li>
+        <li><span class="ann-num">4</span> Sous-onglets de l'onglet actif (Informations personnelles, Coordonnées, Situation administrative…)</li>
+        <li><span class="ann-num">5</span> Champs éditables — cliquez directement pour modifier une valeur</li>
+      </ul>
+      <figcaption>Fiche candidat·e — onglet Administratif, sous-onglet Informations personnelles</figcaption>
+    </figure>
+
+    <figure>
+      <div class="screen-wrap">
+        <img src="images/Screenshot 2026-03-06 at 13.04.22.png" alt="Fiche candidat - onglet DLS pièces admin">
+        <span class="ann" style="top:15%;left:14%">1</span>
+        <span class="ann" style="top:20%;left:50%">2</span>
+        <span class="ann" style="top:32%;left:50%">3</span>
+        <span class="ann" style="top:46%;left:5%">4</span>
+      </div>
+      <ul class="ann-legend">
+        <li><span class="ann-num">1</span> Onglet « DLS » (Dossier de Logement Social) — actif, souligné en bleu</li>
+        <li><span class="ann-num">2</span> Sous-onglets DLS : Statut de la demande / Pièces administratives / Justificatifs de revenus…</li>
+        <li><span class="ann-num">3</span> Champ « Document Identité Séjour Candidats » avec une pièce jointe déjà uploadée</li>
+        <li><span class="ann-num">4</span> Bouton + pour ajouter des pièces jointes dans chaque champ document</li>
+      </ul>
+      <figcaption>Onglet DLS — gestion des pièces administratives et justificatifs</figcaption>
+    </figure>
+
+    <figure>
+      <div class="screen-wrap">
+        <img src="images/Screenshot 2026-03-06 at 13.04.25.png" alt="Toast modifications enregistrées">
+        <span class="ann" style="top:50%;left:50%">1</span>
+      </div>
+      <ul class="ann-legend">
+        <li><span class="ann-num">1</span> Toast de confirmation vert « ✓ Modifications enregistrées » — apparaît après chaque sauvegarde</li>
+      </ul>
+      <figcaption>Confirmation de sauvegarde — le toast disparaît automatiquement après quelques secondes</figcaption>
+    </figure>
+
+    <div class="callout info">
+      <span class="icon">💡</span>
+      <div>Pour naviguer entre les candidat·e·s sans revenir à la liste, utilisez le sélecteur <strong>« Afficher un·e candidat·e »</strong>
+      en haut de la fiche (visible dans la barre de navigation de la page).</div>
+    </div>
+  </section>
+
+  <!-- ── 8 · Ajouter un établissement ───────────────────────────────────── -->
+  <section id="etablissement">
+    <h2><span class="section-num">8</span> Ajouter un établissement</h2>
+    <p class="section-intro">
+      Si votre établissement n'apparaît pas dans le dropdown lors de la création de compte,
+      vous pouvez l'ajouter via ce formulaire dédié. Il sera ensuite disponible pour tous les orienteur·rice·s.
+    </p>
+
+    <figure>
+      <div class="screen-wrap">
+        <img src="images/Screenshot 2026-03-06 at 09.03.26.png" alt="Formulaire ajout établissement vide">
+        <span class="ann" style="top:16%;left:50%">1</span>
+        <span class="ann" style="top:31%;left:50%">2</span>
+        <span class="ann" style="top:46%;left:50%">3</span>
+        <span class="ann" style="top:60%;left:50%">4</span>
+        <span class="ann" style="top:80%;left:79%">5</span>
+      </div>
+      <ul class="ann-legend">
+        <li><span class="ann-num">1</span> Nom de l'établissement (obligatoire *)</li>
+        <li><span class="ann-num">2</span> Département — dropdown avec recherche par numéro ou nom (obligatoire *)</li>
+        <li><span class="ann-num">3</span> Dispositif / Type — sélectionner la nature de l'établissement (obligatoire *)</li>
+        <li><span class="ann-num">4</span> Organisme gestionnaire — sélectionner l'organisme de tutelle (obligatoire *)</li>
+        <li><span class="ann-num">5</span> Bouton « Enregistrer » — actif seulement quand tous les champs sont remplis</li>
+      </ul>
+      <figcaption>Formulaire d'ajout d'un établissement — tous les champs sont obligatoires</figcaption>
+    </figure>
+
+    <figure>
+      <div class="screen-wrap">
+        <img src="images/Screenshot 2026-03-06 at 09.03.34.png" alt="Dropdown département ajout établissement">
+        <span class="ann" style="top:30%;left:50%">1</span>
+        <span class="ann" style="top:45%;left:50%">2</span>
+        <span class="ann" style="top:72%;left:80%">3</span>
+      </div>
+      <ul class="ann-legend">
+        <li><span class="ann-num">1</span> Champ de recherche intégré — tapez le numéro (ex. « 75 ») ou le nom du département</li>
+        <li><span class="ann-num">2</span> Numéro de département (badge bleu) + nom + région (badge gris à droite)</li>
+        <li><span class="ann-num">3</span> Région affichée en badge gris pour faciliter l'identification</li>
+      </ul>
+      <figcaption>Dropdown département avec recherche, numéros et régions associées</figcaption>
+    </figure>
+  </section>
+
+  <!-- ── 9 · Dashboard administrateur ───────────────────────────────────── -->
+  <section id="dashboard">
+    <h2><span class="section-num">9</span> Dashboard administrateur</h2>
+    <p class="section-intro">
+      Le dashboard est réservé aux administrateur·rice·s du programme EMILE.
+      Il donne une vue globale sur toutes les données Grist : candidats, accompagnants, établissements,
+      départements et FAQ — avec filtres, tri et recherche en temps réel.
+    </p>
+
+    <h3>Accès par magic link</h3>
+    <p>
+      L'accès au dashboard se fait via un <strong>lien unique à durée limitée (24 h)</strong> généré par l'administrateur·rice
+      depuis N8N. Aucun mot de passe n'est nécessaire.
+    </p>
+    <div class="callout info">
+      <span class="icon">🔗</span>
+      <div>
+        Format du lien : <code>https://…/widgets/emile/acceder-dashboard/?token=TIMESTAMP.HMAC</code><br>
+        Une fois ouvert, le token est mémorisé pour la session en cours — vous pouvez recharger la page sans repasser par le lien.
+      </div>
+    </div>
+
+    <h3>Les onglets disponibles</h3>
+    <ul class="steps-list">
+      <li><strong>Candidats</strong> — Recherche par prénom, nom, email. Toutes les colonnes du tableau CANDIDATS.</li>
+      <li><strong>Accompagnants</strong> — Filtres par établissement et par fonction. Tableau ACCOMPAGNANTS.</li>
+      <li><strong>Établissements</strong> — Filtres par dispositif, département, rôle, organisme gestionnaire.</li>
+      <li><strong>Dép. &amp; Régions</strong> — Référentiel géographique. Filtres par région et territoire.</li>
+      <li><strong>FAQ</strong> — Toutes les fiches FAQ avec filtre par section et obligatoire/non.</li>
+    </ul>
+
+    <h3>Fonctionnalités du tableau</h3>
+    <ul class="steps-list">
+      <li><strong>Recherche textuelle</strong> — saisie libre qui filtre sur les colonnes pertinentes (prénom, nom, email…)</li>
+      <li><strong>Dropdowns de filtre</strong> — sélection d'une valeur parmi toutes celles présentes dans la colonne, avec recherche intégrée</li>
+      <li><strong>Tri par colonne</strong> — cliquez sur l'en-tête de n'importe quelle colonne pour trier (↑↓)</li>
+      <li><strong>Rafraîchir</strong> — recharge les données depuis Grist sans rechargement de page</li>
+    </ul>
+
+    <h3>Affichage des données</h3>
+    <p>
+      Le dashboard affiche intelligemment les différents types de données Grist :
+    </p>
+    <ul class="steps-list">
+      <li><strong>Dates</strong> — Les timestamps Unix (stockage interne Grist) sont convertis en format lisible <code>JJ/MM/AAAA</code></li>
+      <li><strong>Listes de choix (ChoiceList / RefList)</strong> — Chaque valeur est affichée comme un badge bleu séparé</li>
+      <li><strong>Booléens</strong> — Affichés comme ✓ ou ✗</li>
+    </ul>
+
+    <div class="callout warning">
+      <span class="icon">⏱️</span>
+      <div>Le lien d'accès est valide <strong>24 heures</strong>. Passé ce délai, un nouveau lien doit être généré depuis N8N.
+      Un message « Lien expiré » s'affiche automatiquement si le token n'est plus valide.</div>
+    </div>
+  </section>
+
+</main>
+
+</body>
+</html>
