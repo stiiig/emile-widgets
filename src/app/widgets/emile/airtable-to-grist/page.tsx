@@ -29,9 +29,9 @@ import {
 type TableType = "etablissements" | "accompagnants" | "candidats";
 
 const TABS: { key: TableType; label: string }[] = [
-  { key: "etablissements", label: "Établissements" },
-  { key: "accompagnants",  label: "Accompagnants"  },
   { key: "candidats",      label: "Candidats"       },
+  { key: "accompagnants",  label: "Accompagnants"  },
+  { key: "etablissements", label: "Établissements" },
 ];
 
 const SAMPLE_N = 30;
@@ -62,7 +62,7 @@ function sampleRows(rows: Record<string, string>[], n: number): Record<string, s
 }
 
 export default function AirtableToGristPage() {
-  const [tab, setTab] = useState<TableType>("etablissements");
+  const [tab, setTab] = useState<TableType>("candidats");
   const [sampleMode, setSampleMode] = useState(false);
 
   // Résultats de conversion par onglet
