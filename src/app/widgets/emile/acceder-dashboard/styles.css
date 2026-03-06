@@ -288,6 +288,32 @@
 }
 .db-cell--head .db-sort-icon { color: #5560b0; }
 
+/* ─── Chips (ChoiceList / RefList) ───────────────────────────────────────── */
+.db-chips {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 3px;
+  align-items: center;
+  overflow: hidden;
+  max-width: 100%;
+}
+.db-chip {
+  display: inline-flex;
+  align-items: center;
+  background: #e3e3fd;
+  color: #000091;
+  border-radius: 4px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 0.08rem 0.42rem;
+  white-space: nowrap;
+  flex-shrink: 0;
+  max-width: 130px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.4;
+}
+
 /* ─── Config overlay ──────────────────────────────────────────────────────── */
 .db-cfg-overlay {
   position: fixed;

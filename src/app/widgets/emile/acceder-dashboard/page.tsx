@@ -12,7 +12,7 @@
  * la session pour forcer un nouveau lien.
  */
 
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo, type ReactNode } from "react";
 import { SearchDropdown, type Option } from "@/components/SearchDropdown";
 import "./styles.css";
 
@@ -119,7 +119,19 @@ const TABS: TabDef[] = [
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-/** Grist value → affichable string */
+/** Détecte un timestamp Unix Grist (stocké en secondes) */
+function isUnixTs(v: GristVal): v is number {
+  return typeof v === "number" && Number.isInteger(v) && v > 800_000_000 && v < 2_500_000_000;
+}
+
+/** Formate un timestamp Unix (secondes) en JJ/MM/AAAA */
+function fmtDate(ts: number): string {
+  return new Date(ts * 1000).toLocaleDateString("fr-FR", {
+    day: "2-digit", month: "2-digit", year: "numeric",
+  });
+}
+
+/** Grist value → affichable string (pour les tooltips, le tri, la recherche) */
 function fmt(v: GristVal): string {
   if (v === null || v === undefined || v === "") return "";
   if (typeof v === "boolean") return v ? "✓" : "✗";
@@ -128,6 +140,29 @@ function fmt(v: GristVal): string {
     if (v[0] === "L") return (v.slice(1) as GristVal[]).map(x => String(x ?? "")).filter(Boolean).join(", ");
     return JSON.stringify(v);
   }
+  if (isUnixTs(v)) return fmtDate(v);
+  return String(v);
+}
+
+/** Grist value → JSX (dates formatées, chips pour les ChoiceList/RefList) */
+function renderCell(v: GristVal): ReactNode {
+  if (v === null || v === undefined || v === "") return null;
+  if (typeof v === "boolean") return v ? "✓" : "✗";
+
+  // ChoiceList / RefList : ["L", val1, val2, …]
+  if (Array.isArray(v) && v[0] === "L") {
+    const items = (v.slice(1) as GristVal[]).map(x => String(x ?? "")).filter(Boolean);
+    if (!items.length) return null;
+    return (
+      <span className="db-chips">
+        {items.map((item, i) => <span key={i} className="db-chip">{item}</span>)}
+      </span>
+    );
+  }
+
+  // Timestamp Unix (colonnes Date / DateTime Grist)
+  if (isUnixTs(v)) return fmtDate(v);
+
   return String(v);
 }
 
@@ -262,7 +297,7 @@ function VirtualTable({
                     style={{ width: COL_W, minWidth: COL_W }}
                     title={fmt(row[col])}
                   >
-                    <span className="db-cell-txt">{fmt(row[col])}</span>
+                    <span className="db-cell-txt">{renderCell(row[col])}</span>
                   </div>
                 ))}
               </div>
