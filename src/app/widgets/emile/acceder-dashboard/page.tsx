@@ -87,6 +87,11 @@ interface TabDef {
    * Exemple : Etablissement (Ref → ETABLISSEMENTS) → affiche Nom_etablissement
    */
   refLookups?: Record<string, { tableId: string; displayCol: string }>;
+  /**
+   * Colonnes à afficher en chip (badge coloré) : Choice, Ref résolue, etc.
+   * Les colonnes de refLookups sont automatiquement incluses.
+   */
+  chipColumns?: string[];
 }
 
 // ─── Token ────────────────────────────────────────────────────────────────────
@@ -112,6 +117,7 @@ const TABS: TabDef[] = [
     id: "cand",
     label: "Candidats",
     tableId: "CANDIDATS",
+    chipColumns: ["Foyer", "Precarite_de_logement"],
     filters: [
       { type: "text", key: "q", placeholder: "Prénom, nom, email…", fields: ["Prenom", "Nom_de_famille", "Email"] },
     ],
@@ -120,6 +126,7 @@ const TABS: TabDef[] = [
     id: "acc",
     label: "Accompagnants",
     tableId: "ACCOMPAGNANTS",
+    chipColumns: ["Fonction"],   // refLookups (Etablissement, Etablissement_Departement) auto-ajoutés
     // Colonnes Ref → valeur lisible chargée depuis la table référencée
     refLookups: {
       // Etablissement stocke un row ID de ETABLISSEMENTS → on affiche Nom_etablissement
@@ -139,6 +146,7 @@ const TABS: TabDef[] = [
     id: "etab",
     label: "Établissements",
     tableId: "ETABLISSEMENTS",
+    chipColumns: ["Dispositif", "Organisme_gestionnaire", "Role"],
     filters: [
       { type: "text",     key: "q",                      placeholder: "Nom établissement…", fields: ["Nom_etablissement"] },
       { type: "dropdown", key: "Dispositif",             label: "Dispositif",  column: "Dispositif" },
@@ -151,6 +159,7 @@ const TABS: TabDef[] = [
     id: "dpts",
     label: "Dép. & Régions",
     tableId: "DPTS_REGIONS",
+    chipColumns: ["Nom_region", "Territoire_depart", "Territoire_accueil"],
     filters: [
       { type: "text",     key: "q",                  placeholder: "Rechercher…", fields: [] },
       { type: "dropdown", key: "Nom_region",          label: "Région",            column: "Nom_region" },
@@ -162,6 +171,7 @@ const TABS: TabDef[] = [
     id: "faq",
     label: "FAQ",
     tableId: "FAQ",
+    chipColumns: ["Section_de_la_question", "Obligatoire_ou_non"],
     filters: [
       { type: "text",     key: "q",                      placeholder: "Rechercher…", fields: [] },
       { type: "dropdown", key: "Section_de_la_question", label: "Section",     column: "Section_de_la_question" },
@@ -208,13 +218,18 @@ function fmt(v: GristVal): string {
 
 /**
  * Grist value → nœud JSX pour l'affichage dans les cellules du tableau.
- *   • ChoiceList / RefList ["L", v1, v2, …] → badges chips côte à côte
+ *   • boolean                                 → badge coloré Oui/Non
+ *   • ChoiceList / RefList ["L", v1, v2, …]  → badges chips côte à côte
  *   • Timestamp Unix (Date / DateTime Grist)  → JJ/MM/AAAA via toLocaleDateString
+ *   • String dans une colonne chip (asChip)   → badge chip unique
  *   • Autres valeurs                          → String(v) comme fmt()
  */
-function renderCell(v: GristVal): ReactNode {
+function renderCell(v: GristVal, asChip?: boolean): ReactNode {
   if (v === null || v === undefined || v === "") return null;
-  if (typeof v === "boolean") return v ? "✓" : "✗";
+
+  if (typeof v === "boolean") {
+    return <span className={`db-bool db-bool--${v ? "true" : "false"}`}>{v ? "Oui" : "Non"}</span>;
+  }
 
   // ChoiceList / RefList : ["L", val1, val2, …]
   if (Array.isArray(v) && v[0] === "L") {
@@ -229,6 +244,11 @@ function renderCell(v: GristVal): ReactNode {
 
   // Timestamp Unix (colonnes Date / DateTime Grist)
   if (isUnixTs(v)) return fmtDate(v);
+
+  // Chip unique pour colonnes Choice / Ref résolue
+  if (asChip && typeof v === "string" && v) {
+    return <span className="db-chips"><span className="db-chip">{v}</span></span>;
+  }
 
   return String(v);
 }
@@ -322,13 +342,14 @@ const BUFFER = 6;    // lignes rendues en avance au-delà du viewport (évite le
 const COL_MIN = 40; // px — largeur minimum après resize
 
 function VirtualTable({
-  columns, rows, sortState, onSort, hiddenColumns,
+  columns, rows, sortState, onSort, hiddenColumns, chipCols,
 }: {
   columns: string[];
   rows: GristRow[];
   sortState: { col: string; dir: "asc" | "desc" } | null;
   onSort: (col: string) => void;
   hiddenColumns?: string[];
+  chipCols?: Set<string>;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [scrollTop, setScrollTop] = useState(0);
@@ -409,7 +430,11 @@ function VirtualTable({
                 {sortState?.col === col ? (sortState.dir === "asc" ? "↑" : "↓") : "⇅"}
               </span>
               {/* Poignée de resize — thin strip sur le bord droit */}
-              <span className="db-col-resize" onMouseDown={e => startResize(e, col)} />
+              <span
+                className="db-col-resize"
+                onMouseDown={e => startResize(e, col)}
+                onClick={e => e.stopPropagation()}
+              />
             </div>
           ))}
         </div>
@@ -434,7 +459,7 @@ function VirtualTable({
                       style={{ width: getW(col), minWidth: getW(col) }}
                       title={fmt(val)}
                     >
-                      <span className="db-cell-txt">{renderCell(val)}</span>
+                      <span className="db-cell-txt">{renderCell(val, chipCols?.has(col))}</span>
                     </div>
                   );
                 })}
@@ -731,6 +756,13 @@ export default function AccederDashboard() {
     [tabState.rows, tabDef, refMaps],
   );
 
+  /** Colonnes à afficher en chip : chipColumns explicites + colonnes refLookups */
+  const chipCols = useMemo(() => {
+    const s = new Set<string>(tabDef.chipColumns ?? []);
+    for (const k of Object.keys(tabDef.refLookups ?? {})) s.add(k);
+    return s;
+  }, [tabDef]);
+
   const filteredRows = useMemo(() => {
     let rows = resolvedRows;
     const allCols = tabState.columns;
@@ -839,6 +871,7 @@ export default function AccederDashboard() {
               sortState={sort}
               onSort={col => handleSort(activeTab, col)}
               hiddenColumns={tabDef.hiddenColumns}
+              chipCols={chipCols}
             />
           </>
         )}
