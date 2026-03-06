@@ -97,13 +97,17 @@ function isYes(val: string): boolean {
 }
 
 /**
- * Format ChoiceList pour CSV import Grist : valeurs séparées par "\n".
- * (Le format JSON ["L",...] est le format interne Grist — au CSV import
- *  Grist traite "L" comme une valeur de choix littérale, d'où l'affichage [L].)
+ * Format Grist pour CSV import d'une colonne ChoiceList ou RefList.
+ * Grist utilise le format JSON ["L","val1","val2"] pour les deux types :
+ *  - ChoiceList : les valeurs correspondent aux libellés de choix configurés
+ *  - RefList    : les valeurs correspondent à la colonne visible de la table liée
+ *                 (ex. $Nom_departement pour DPTS_REGIONS)
+ * Retourne "" si aucune valeur non vide (évite ["L"] parasites).
  */
-function toChoiceList(values: string[]): string {
+function toGristList(values: string[]): string {
   const clean = values.filter(Boolean);
-  return clean.join("\n");
+  if (clean.length === 0) return "";
+  return JSON.stringify(["L", ...clean]);
 }
 
 // ─── ACCOMPAGNANTS ────────────────────────────────────────────────────────────
@@ -150,8 +154,8 @@ const CAND_DIRECT: [string, string][] = [
   ["Adresse de domiciliation",          "Adresse"],
   ["Email candidat",                    "Email"],
   ["Téléphone candidat",                "Tel"],
-  // Département géré séparément (normalizeDept) — voir convertCandidats
-  // ["Département domicile inscription",  "Departement_domicile_inscription"],
+  // Département géré séparément (normalizeDept + toGristList) — voir convertCandidats
+  ["Département domicile inscription",  "Departement_domicile_inscription"],
   ["Régularité situation",              "Regularite_situation"],
   ["Numéro unique d'enregistrement",    "Numero_unique_enregistrement"],
   ["Primo arrivants",                   "Primo_arrivant"],
@@ -288,10 +292,15 @@ export function convertCandidats(
     rows: rows.map(r => {
       const o: Record<string, string> = {};
 
-      for (const [from, to] of CAND_DIRECT) o[to] = r[from] ?? "";
+      for (const [from, to] of CAND_DIRECT) {
+        // Département → RefList Grist : format ["L","Nom_departement"]
+        if (to === "Departement_domicile_inscription") {
+          o[to] = toGristList([normalizeDept(r[from] ?? "")]);
+        } else {
+          o[to] = r[from] ?? "";
+        }
+      }
       for (const [from, to] of CAND_DATES)  o[to] = parseEuropeanDate(r[from] ?? "");
-      // Département — normalisation des tirets/espaces typographiques
-      o["Departement_domicile_inscription"] = normalizeDept(r["Département domicile inscription"] ?? "");
 
       // Permis
       const permisChoices: string[] = [];
@@ -304,16 +313,16 @@ export function convertCandidats(
           permisStatut = val;
         }
       }
-      o["Permis"]        = toChoiceList(permisChoices);
+      o["Permis"]        = toGristList(permisChoices);
       o["Permis_statut"] = permisStatut;
 
-      // Besoin_divers
-      o["Besoin_divers"] = toChoiceList(
+      // Besoin_divers — ChoiceList Grist
+      o["Besoin_divers"] = toGristList(
         BESOIN_DIVERS_COLS.filter(([col]) => isYes(r[col] ?? "")).map(([, label]) => label),
       );
 
-      // Difficultes_diverses
-      o["Difficultes_diverses"] = toChoiceList(
+      // Difficultes_diverses — ChoiceList Grist
+      o["Difficultes_diverses"] = toGristList(
         DIFFICULTES_COLS.filter(([col]) => isYes(r[col] ?? "")).map(([, label]) => label),
       );
 
@@ -350,12 +359,12 @@ export function convertEtablissements(
     rows: rows.map(r => {
       const o: Record<string, string> = {};
       for (const [from, to] of ETAB_DIRECT) o[to] = r[from] ?? "";
-      o["Departement"] = normalizeDept(r["Département"] ?? "");
-      // Rôle — multiselect Airtable (virgule) → ChoiceList Grist
+      // Département → RefList Grist : format ["L","Nom_departement"]
+      // La colonne visible de DPTS_REGIONS doit être $Nom_departement (données stockées)
+      o["Departement"] = toGristList([normalizeDept(r["Département"] ?? "")]);
+      // Rôle — multiselect Airtable (virgule) → ChoiceList Grist : format ["L","val1",...]
       const roleRaw = r["Rôle"]?.trim() ?? "";
-      o["Role"] = roleRaw
-        ? toChoiceList(roleRaw.split(",").map(v => v.trim()).filter(Boolean))
-        : "";
+      o["Role"] = toGristList(roleRaw ? roleRaw.split(",").map(v => v.trim()) : []);
       // Date de création Airtable (nom de colonne variable selon le plan Airtable)
       o["Date_ajout_Airtable"] = (
         r["CreatedAt"] || r["Created"] || r["Created time"] || r["Date de création"] || ""
