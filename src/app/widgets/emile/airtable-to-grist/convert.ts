@@ -75,6 +75,20 @@ export function toCSV(rows: Record<string, string>[], headers: string[]): string
 export function parseEuropeanDate(raw: string): string {
   const s = raw?.trim();
   if (!s) return "";
+
+  // Format ISO-like YYYY-DD-MMThh:mm:ss (Airtable "Created time" en locale française)
+  // ex. "2025-26-05T20:48:00" → mois 26 impossible → c'est en réalité YYYY-DD-MM → swap
+  const isoM = s.match(/^(\d{4})-(\d{2})-(\d{2})(T.*)?$/);
+  if (isoM) {
+    const [, y, p2, p3, rest = ""] = isoM;
+    if (parseInt(p2) > 12) {
+      // p2 est le jour (>12 → ne peut pas être un mois), p3 est le mois → on inverse
+      return `${y}-${p3}-${p2}${rest}`;
+    }
+    return s; // déjà ISO valide YYYY-MM-DD[T...]
+  }
+
+  // Format américain MM/DD/YYYY HH:MM[:SS] (export CSV standard Airtable)
   const dtM = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})[T\s](\d{1,2}):(\d{2})(?::(\d{2}))?/);
   if (dtM) {
     const [, mo, da, y, hh, mi, ss = "00"] = dtM;  // groupe 1 = MM, groupe 2 = DD
@@ -85,7 +99,7 @@ export function parseEuropeanDate(raw: string): string {
     const [, mo, da, y] = dM;  // groupe 1 = MM, groupe 2 = DD
     return `${y}-${mo.padStart(2,"0")}-${da.padStart(2,"0")}`;
   }
-  return s; // déjà ISO ou autre format inconnu
+  return s; // autre format inconnu — passé tel quel
 }
 
 /**
@@ -320,6 +334,12 @@ export function convertCandidats(
       // Toggles Grist (booléen) — Airtable : checkbox ou "Oui"/"Non"
       o["Primo_arrivant"] = isYes(o["Primo_arrivant"]) ? "true" : "false";
       o["Bpi"]            = isYes(o["Bpi"])            ? "true" : "false";
+
+      // Situation_hebergement_installation — ChoiceList (multiselect Airtable séparé par virgule)
+      const sitHebRaw = o["Situation_hebergement_installation"];
+      o["Situation_hebergement_installation"] = toChoiceList(
+        sitHebRaw ? sitHebRaw.split(",").map(v => v.trim()).filter(Boolean) : [],
+      );
 
       // Vehicule — ChoiceList (multiselect Airtable séparé par virgule)
       const vehiculeRaw = o["Vehicule"];
