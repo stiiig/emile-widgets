@@ -311,7 +311,7 @@ const ETAB_DIRECT: [string, string][] = [
 
 export const ETAB_GRIST_HEADERS = [
   "Nom_etablissement", "Dispositif", "Organisme_gestionnaire",
-  "Departement", "Date_ajout_Airtable",
+  "Departement", "Role", "Date_ajout_Airtable",
 ];
 
 export function convertEtablissements(
@@ -322,6 +322,11 @@ export function convertEtablissements(
     rows: rows.map(r => {
       const o: Record<string, string> = {};
       for (const [from, to] of ETAB_DIRECT) o[to] = r[from] ?? "";
+      // Rôle — multiselect Airtable (virgule) → ChoiceList Grist
+      const roleRaw = r["Rôle"]?.trim() ?? "";
+      o["Role"] = roleRaw
+        ? toChoiceList(roleRaw.split(",").map(v => v.trim()).filter(Boolean))
+        : "";
       // CreatedAt Airtable est déjà ISO (ex: "2024-03-15T14:30:00.000Z") — on passe tel quel
       o["Date_ajout_Airtable"] = r["CreatedAt"]?.trim() ?? "";
       return o;
