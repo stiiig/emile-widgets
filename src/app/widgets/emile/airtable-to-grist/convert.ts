@@ -299,3 +299,32 @@ export function convertCandidats(
     }),
   };
 }
+
+// ─── ETABLISSEMENTS ───────────────────────────────────────────────────────────
+
+const ETAB_DIRECT: [string, string][] = [
+  ["Nom établissement",     "Nom_etablissement"],
+  ["Dispositif",            "Dispositif"],
+  ["Organisme gestionnaire","Organisme_gestionnaire"],
+  ["Département",           "Departement"],  // texte → Grist matche sur DPTS_REGIONS
+];
+
+export const ETAB_GRIST_HEADERS = [
+  "Nom_etablissement", "Dispositif", "Organisme_gestionnaire",
+  "Departement", "Date_ajout_Airtable",
+];
+
+export function convertEtablissements(
+  rows: Record<string, string>[],
+): { headers: string[]; rows: Record<string, string>[] } {
+  return {
+    headers: ETAB_GRIST_HEADERS,
+    rows: rows.map(r => {
+      const o: Record<string, string> = {};
+      for (const [from, to] of ETAB_DIRECT) o[to] = r[from] ?? "";
+      // CreatedAt Airtable est déjà ISO (ex: "2024-03-15T14:30:00.000Z") — on passe tel quel
+      o["Date_ajout_Airtable"] = r["CreatedAt"]?.trim() ?? "";
+      return o;
+    }),
+  };
+}

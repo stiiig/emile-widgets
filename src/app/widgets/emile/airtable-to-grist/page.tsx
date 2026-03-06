@@ -4,9 +4,10 @@
  * airtable-to-grist — Convertisseur CSV Airtable → CSV Grist
  *
  * Page statique côté client (aucun serveur).
- * Deux onglets :
- *  1. Accompagnants  — convertit la table Airtable ACCOMPAGNANTS
- *  2. Candidats      — convertit la table Airtable CANDIDATS
+ * Trois onglets :
+ *  1. Établissements — convertit la table Airtable ETABLISSEMENTS
+ *  2. Accompagnants  — convertit la table Airtable ACCOMPAGNANTS
+ *  3. Candidats      — convertit la table Airtable CANDIDATS
  *
  * Usage :
  *  1. Exporter la table Airtable en CSV (UTF-8)
@@ -19,11 +20,18 @@ import "./styles.css";
 import {
   parseCSV,
   toCSV,
+  convertEtablissements,
   convertAccompagnants,
   convertCandidats,
 } from "./convert";
 
-type TableType = "accompagnants" | "candidats";
+type TableType = "etablissements" | "accompagnants" | "candidats";
+
+const TABS: { key: TableType; label: string }[] = [
+  { key: "etablissements", label: "Établissements" },
+  { key: "accompagnants",  label: "Accompagnants"  },
+  { key: "candidats",      label: "Candidats"       },
+];
 
 interface ConvResult {
   fileName: string;
@@ -34,18 +42,26 @@ interface ConvResult {
 }
 
 export default function AirtableToGristPage() {
-  const [tab,           setTab]           = useState<TableType>("accompagnants");
-  const [accResult,     setAccResult]     = useState<ConvResult | null>(null);
-  const [candResult,    setCandResult]    = useState<ConvResult | null>(null);
-  const [accError,      setAccError]      = useState("");
-  const [candError,     setCandError]     = useState("");
+  const [tab, setTab] = useState<TableType>("etablissements");
 
+  const [etabResult,  setEtabResult]  = useState<ConvResult | null>(null);
+  const [accResult,   setAccResult]   = useState<ConvResult | null>(null);
+  const [candResult,  setCandResult]  = useState<ConvResult | null>(null);
+  const [etabError,   setEtabError]   = useState("");
+  const [accError,    setAccError]    = useState("");
+  const [candError,   setCandError]   = useState("");
+
+  const etabInputRef = useRef<HTMLInputElement>(null);
   const accInputRef  = useRef<HTMLInputElement>(null);
   const candInputRef = useRef<HTMLInputElement>(null);
 
   function handleFile(type: TableType, file: File) {
-    const setError  = type === "accompagnants" ? setAccError  : setCandError;
-    const setResult = type === "accompagnants" ? setAccResult : setCandResult;
+    const setError  = type === "etablissements" ? setEtabError
+                    : type === "accompagnants"  ? setAccError
+                    : setCandError;
+    const setResult = type === "etablissements" ? setEtabResult
+                    : type === "accompagnants"  ? setAccResult
+                    : setCandResult;
 
     setError("");
     const reader = new FileReader();
@@ -56,9 +72,9 @@ export default function AirtableToGristPage() {
         if (rows.length === 0) { setError("Le fichier semble vide ou mal formaté."); return; }
 
         const { headers, rows: converted } =
-          type === "accompagnants"
-            ? convertAccompagnants(rows)
-            : convertCandidats(rows);
+          type === "etablissements" ? convertEtablissements(rows)
+          : type === "accompagnants" ? convertAccompagnants(rows)
+          : convertCandidats(rows);
 
         setResult({
           fileName: file.name,
@@ -85,9 +101,15 @@ export default function AirtableToGristPage() {
     URL.revokeObjectURL(url);
   }
 
-  const result = tab === "accompagnants" ? accResult  : candResult;
-  const error  = tab === "accompagnants" ? accError   : candError;
-  const ref    = tab === "accompagnants" ? accInputRef : candInputRef;
+  const result = tab === "etablissements" ? etabResult
+               : tab === "accompagnants"  ? accResult
+               : candResult;
+  const error  = tab === "etablissements" ? etabError
+               : tab === "accompagnants"  ? accError
+               : candError;
+  const ref    = tab === "etablissements" ? etabInputRef
+               : tab === "accompagnants"  ? accInputRef
+               : candInputRef;
 
   return (
     <div className="atg-page">
@@ -102,13 +124,13 @@ export default function AirtableToGristPage() {
 
       {/* ── Onglets ── */}
       <nav className="atg-tabs">
-        {(["accompagnants", "candidats"] as TableType[]).map((t, i) => (
+        {TABS.map(({ key, label }, i) => (
           <button
-            key={t}
-            className={`atg-tab${tab === t ? " atg-tab--active" : ""}`}
-            onClick={() => setTab(t)}
+            key={key}
+            className={`atg-tab${tab === key ? " atg-tab--active" : ""}`}
+            onClick={() => setTab(key)}
           >
-            {i + 1}. {t.charAt(0).toUpperCase() + t.slice(1)}
+            {i + 1}. {label}
           </button>
         ))}
       </nav>
