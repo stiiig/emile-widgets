@@ -71,6 +71,12 @@ const WIDGETS = [
     desc: "Envoi du lien de validation de compte par email à l'orienteur",
     params: [],
   },
+  {
+    name: "Convertisseur Airtable → Grist",
+    path: "airtable-to-grist",
+    desc: "Convertit un export CSV Airtable en CSV importable dans Grist — 3 tables : Candidats, Accompagnants, Établissements. Aucun serveur, 100 % client-side.",
+    params: [],
+  },
 ] as const;
 
 export default function DevLinks() {

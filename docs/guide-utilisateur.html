@@ -404,6 +404,7 @@
     <li><a href="#fiche">La fiche candidat·e</a></li>
     <li><a href="#etablissement">Ajouter un établissement</a></li>
     <li><a href="#dashboard">Dashboard administrateur</a></li>
+    <li><a href="#convertisseur">Convertisseur Airtable → Grist</a></li>
   </ol>
   <div class="sidebar-note">
     📌 Ce guide couvre toutes les interfaces du programme EMILE accessibles aux orienteur·rice·s et administrateur·rice·s.
@@ -1181,6 +1182,7 @@
       <li><strong>Recherche textuelle</strong> — saisie libre qui filtre sur les colonnes pertinentes (prénom, nom, email…)</li>
       <li><strong>Dropdowns de filtre</strong> — sélection d'une valeur parmi toutes celles présentes dans la colonne, avec recherche intégrée</li>
       <li><strong>Tri par colonne</strong> — cliquez sur l'en-tête de n'importe quelle colonne pour trier (↑↓)</li>
+      <li><strong>Redimensionnement des colonnes</strong> — glissez le bord droit d'un en-tête pour ajuster la largeur</li>
       <li><strong>Rafraîchir</strong> — recharge les données depuis Grist sans rechargement de page</li>
     </ul>
 
@@ -1191,13 +1193,88 @@
     <ul class="steps-list">
       <li><strong>Dates</strong> — Les timestamps Unix (stockage interne Grist) sont convertis en format lisible <code>JJ/MM/AAAA</code></li>
       <li><strong>Listes de choix (ChoiceList / RefList)</strong> — Chaque valeur est affichée comme un badge bleu séparé</li>
-      <li><strong>Booléens</strong> — Affichés comme ✓ ou ✗</li>
+      <li><strong>Booléens</strong> — Badge vert <strong>Oui</strong> ou gris <strong>Non</strong></li>
+      <li><strong>Colonnes Choice / Ref</strong> — Chaque valeur est affichée comme un badge bleu (Foyer, Fonction, Dispositif…)</li>
     </ul>
 
     <div class="callout warning">
       <span class="icon">⏱️</span>
       <div>Le lien d'accès est valide <strong>24 heures</strong>. Passé ce délai, un nouveau lien doit être généré depuis N8N.
       Un message « Lien expiré » s'affiche automatiquement si le token n'est plus valide.</div>
+    </div>
+  </section>
+
+  <!-- ── 10 · Convertisseur Airtable → Grist ───────────────────────────────── -->
+  <section id="convertisseur">
+    <h2><span class="section-num">10</span> Convertisseur Airtable → Grist</h2>
+    <p class="section-intro">
+      Cet outil permet de migrer les données existantes d'Airtable vers Grist sans passer par un serveur.
+      Il convertit un export CSV Airtable en un CSV directement importable dans Grist, en remappant
+      les colonnes et en adaptant les formats de données (dates, listes de choix, etc.).
+    </p>
+
+    <h3>À qui s'adresse cet outil ?</h3>
+    <p>
+      Aux administrateur·rice·s du programme EMILE qui disposent déjà de données dans Airtable et souhaitent
+      les basculer vers Grist. L'outil est disponible à l'adresse :
+    </p>
+    <div class="callout info">
+      <span class="icon">🔗</span>
+      <div>
+        <code>https://stiiig.github.io/emile-widgets/widgets/emile/airtable-to-grist/</code>
+      </div>
+    </div>
+
+    <h3>Les trois tables supportées</h3>
+    <ul class="steps-list">
+      <li><strong>Candidats</strong> — Convertit la table CANDIDATS d'Airtable vers le format Grist attendu par EMILE</li>
+      <li><strong>Accompagnants</strong> — Convertit la table ACCOMPAGNANTS</li>
+      <li><strong>Établissements</strong> — Convertit la table ETABLISSEMENTS</li>
+    </ul>
+
+    <h3>Comment utiliser le convertisseur</h3>
+    <ol class="steps-list">
+      <li>
+        <strong>Exporter la table depuis Airtable</strong> — Dans Airtable, allez dans la table souhaitée,
+        cliquez sur <em>Download CSV</em> (ou équivalent). Assurez-vous d'exporter en UTF-8.
+      </li>
+      <li>
+        <strong>Sélectionner l'onglet correspondant</strong> — Dans le convertisseur, choisissez
+        <em>Candidats</em>, <em>Accompagnants</em> ou <em>Établissements</em> selon la table exportée.
+      </li>
+      <li>
+        <strong>Uploader le fichier CSV</strong> — Cliquez sur la zone d'upload et sélectionnez votre fichier.
+        Un aperçu des 5 premières lignes s'affiche immédiatement.
+      </li>
+      <li>
+        <strong>(Optionnel) Échantillon aléatoire</strong> — Cochez cette option pour ne conserver
+        que 30 lignes tirées au hasard. Utile pour tester l'import avant de traiter l'intégralité des données.
+      </li>
+      <li>
+        <strong>Télécharger le CSV converti</strong> — Cliquez sur <em>Télécharger</em> pour obtenir
+        le fichier prêt à importer dans Grist.
+      </li>
+      <li>
+        <strong>Importer dans Grist</strong> — Dans Grist, ouvrez la table cible, puis utilisez
+        <em>Import from file</em> et sélectionnez le CSV téléchargé.
+      </li>
+    </ol>
+
+    <div class="callout info">
+      <span class="icon">🔒</span>
+      <div>
+        <strong>Aucune donnée ne quitte votre navigateur.</strong> La conversion est entièrement réalisée
+        côté client (JavaScript). Aucun serveur ne reçoit vos données.
+      </div>
+    </div>
+
+    <div class="callout warning">
+      <span class="icon">⚠️</span>
+      <div>
+        Vérifiez après import que les colonnes de référence (Ref vers d'autres tables) sont bien résolues
+        dans Grist. Certains champs nécessitent une correspondance manuelle si les identifiants Airtable
+        diffèrent des row IDs Grist.
+      </div>
     </div>
   </section>
 
