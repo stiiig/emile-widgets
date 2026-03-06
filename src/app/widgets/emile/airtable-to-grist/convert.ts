@@ -70,16 +70,24 @@ export function parseEuropeanDate(raw: string): string {
 }
 
 /**
- * Normalise une valeur de département pour matcher le visibleCol DPTS_REGIONS dans Grist.
- * Remplace tirets typographiques (–, —) et espaces insécables par leurs équivalents ASCII.
- * Ex: "93\u00A0–\u00A0Seine-Saint-Denis" → "93 - Seine-Saint-Denis"
+ * Extrait le nom du département depuis une valeur Airtable pour matcher
+ * la colonne $Nom_departement (données stockées) de DPTS_REGIONS dans Grist.
+ *
+ * La colonne visible $Numero_et_nom est une formule Grist → non matchable au CSV import.
+ * On extrait uniquement le nom après " - " :
+ *   "75 - Paris"            → "Paris"
+ *   "93 - Seine-Saint-Denis"→ "Seine-Saint-Denis"
+ *   "2A - Corse-du-Sud"     → "Corse-du-Sud"
+ *   "Paris" (déjà un nom)   → "Paris"
  */
 function normalizeDept(raw: string): string {
-  return raw
+  const s = raw
     .trim()
     .replace(/\u2013|\u2014/g, "-")   // en dash / em dash → tiret simple
     .replace(/\u00A0/g, " ")           // espace insécable → espace normale
     .trim();
+  const idx = s.indexOf(" - ");
+  return idx >= 0 ? s.slice(idx + 3).trim() : s;
 }
 
 /** "Oui" / case cochée → true */
@@ -348,8 +356,10 @@ export function convertEtablissements(
       o["Role"] = roleRaw
         ? toChoiceList(roleRaw.split(",").map(v => v.trim()).filter(Boolean))
         : "";
-      // CreatedAt Airtable est déjà ISO (ex: "2024-03-15T14:30:00.000Z") — on passe tel quel
-      o["Date_ajout_Airtable"] = r["CreatedAt"]?.trim() ?? "";
+      // Date de création Airtable (nom de colonne variable selon le plan Airtable)
+      o["Date_ajout_Airtable"] = (
+        r["CreatedAt"] || r["Created"] || r["Created time"] || r["Date de création"] || ""
+      ).trim();
       return o;
     }),
   };
