@@ -88,10 +88,14 @@ function isYes(val: string): boolean {
   return v === "oui" || v === "yes" || v === "true" || v === "1" || v === "✓";
 }
 
-/** ["L","v1","v2"] — format natif Grist pour ChoiceList */
+/**
+ * Format ChoiceList pour CSV import Grist : valeurs séparées par "\n".
+ * (Le format JSON ["L",...] est le format interne Grist — au CSV import
+ *  Grist traite "L" comme une valeur de choix littérale, d'où l'affichage [L].)
+ */
 function toChoiceList(values: string[]): string {
   const clean = values.filter(Boolean);
-  return clean.length ? JSON.stringify(["L", ...clean]) : "";
+  return clean.join("\n");
 }
 
 // ─── ACCOMPAGNANTS ────────────────────────────────────────────────────────────
