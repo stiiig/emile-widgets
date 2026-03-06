@@ -3,13 +3,30 @@
 /**
  * Dashboard EMILE — /widgets/emile/acceder-dashboard
  *
- * Accès par magic link : ?token=TS.HMAC généré par N8N (validité 24 h).
- * À l'arrivée, le token est stocké en sessionStorage et l'URL est nettoyée
- * (replaceState) pour ne pas exposer le token dans les logs serveur / l'historique.
+ * ── Architecture ────────────────────────────────────────────────────────────
+ * Accès par magic link : ?token=TS.HMAC (24 h de validité).
+ *   • TS   = timestamp Unix en secondes au moment de la génération
+ *   • HMAC = HMAC-SHA256(TS, SECRET) calculé exclusivement dans N8N
  *
- * Sécurité : le secret HMAC reste exclusivement dans N8N.
- * Si le token est expiré ou invalide, N8N répond 401/403 et on efface
- * la session pour forcer un nouveau lien.
+ * Flux token :
+ *   1. URL ?token=X  → stocké en sessionStorage, URL nettoyée (replaceState)
+ *   2. Rechargement  → lu depuis sessionStorage (token non ré-exposé)
+ *   3. 401/403 N8N   → sessionStorage effacé, écran « Lien expiré »
+ *
+ * Sécurité : le secret HMAC ne quitte jamais N8N.
+ * Le token n'est plus dans l'URL après le premier chargement → absent des
+ * logs serveur, de l'historique navigateur et des entêtes Referer.
+ *
+ * ── Données ────────────────────────────────────────────────────────────────
+ * dashFetchTable() appelle le proxy N8N (NEXT_PUBLIC_DASHBOARD_URL) qui :
+ *   1. Vérifie la signature HMAC et l'expiration (> 24 h → 401)
+ *   2. Proxye la requête vers l'API Grist (table records)
+ *   3. Retourne { records: [{ id, fields }] }
+ *
+ * ── Rendu ──────────────────────────────────────────────────────────────────
+ * Tableau virtualisé (VirtualTable) : seules les lignes visibles + BUFFER
+ * sont rendues dans le DOM, évitant les ralentissements sur plusieurs milliers
+ * de lignes. Le scroll déclenche un setState qui recalcule la fenêtre.
  */
 
 import { useState, useEffect, useRef, useMemo, type ReactNode } from "react";
@@ -63,6 +80,11 @@ class TokenExpiredError extends Error {
 
 // ─── Tabs & filters ───────────────────────────────────────────────────────────
 
+/**
+ * Configuration des onglets du dashboard.
+ * Chaque onglet définit : la table Grist source, et les filtres disponibles
+ * (text = recherche libre, dropdown = filtre sur une colonne ChoiceList/Ref).
+ */
 const TABS: TabDef[] = [
   {
     id: "cand",
@@ -119,7 +141,12 @@ const TABS: TabDef[] = [
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-/** Détecte un timestamp Unix Grist (stocké en secondes) */
+/**
+ * Détecte un timestamp Unix Grist (stocké en secondes depuis l'epoch).
+ * Bornes : 800 000 000 ≈ 1995, 2 500 000 000 ≈ 2049.
+ * Permet d'exclure les petits entiers (row IDs Grist, booleans 0/1, etc.)
+ * tout en couvrant toutes les colonnes Date/DateTime plausibles.
+ */
 function isUnixTs(v: GristVal): v is number {
   return typeof v === "number" && Number.isInteger(v) && v > 800_000_000 && v < 2_500_000_000;
 }
@@ -131,7 +158,10 @@ function fmtDate(ts: number): string {
   });
 }
 
-/** Grist value → affichable string (pour les tooltips, le tri, la recherche) */
+/**
+ * Grist value → string affichable (utilisé pour : tooltip title=, tri, recherche texte).
+ * Ne retourne PAS de JSX — pour le rendu cellule utiliser renderCell().
+ */
 function fmt(v: GristVal): string {
   if (v === null || v === undefined || v === "") return "";
   if (typeof v === "boolean") return v ? "✓" : "✗";
@@ -144,7 +174,16 @@ function fmt(v: GristVal): string {
   return String(v);
 }
 
-/** Grist value → JSX (dates formatées, chips pour les ChoiceList/RefList) */
+/**
+ * Grist value → nœud JSX pour l'affichage dans les cellules du tableau.
+ *   • ChoiceList / RefList ["L", v1, v2, …] → badges chips côte à côte
+ *   • Timestamp Unix (Date / DateTime Grist)  → JJ/MM/AAAA via toLocaleDateString
+ *   • Autres valeurs                          → String(v) comme fmt()
+ *
+ * Note : les colonnes Choice (string simple) et Ref (entier row ID) sont
+ * indiscernables des strings/nombres normaux sans le schéma Grist — elles
+ * restent en texte plat jusqu'à implémentation du endpoint /columns.
+ */
 function renderCell(v: GristVal): ReactNode {
   if (v === null || v === undefined || v === "") return null;
   if (typeof v === "boolean") return v ? "✓" : "✗";
@@ -215,10 +254,10 @@ async function dashFetchTable(
 
 // ─── Virtual table ────────────────────────────────────────────────────────────
 
-const NUM_W  = 50;   // px — colonne n° de ligne
-const COL_W  = 160;  // px — colonne de données
-const ROW_H  = 36;   // px — hauteur de ligne
-const BUFFER = 6;    // lignes supplémentaires au-delà du viewport
+const NUM_W  = 50;   // px — largeur de la colonne de numéro de ligne
+const COL_W  = 160;  // px — largeur de chaque colonne de données
+const ROW_H  = 36;   // px — hauteur fixe de chaque ligne (doit être constante pour la virtualisation)
+const BUFFER = 6;    // lignes rendues en avance au-delà du viewport (évite le flash lors du scroll rapide)
 
 function VirtualTable({
   columns, rows, sortState, onSort,
@@ -449,7 +488,14 @@ export default function AccederDashboard() {
   const [sortStates, setSortStates] = useState<Record<string, { col: string; dir: "asc" | "desc" } | null>>(
     () => Object.fromEntries(TABS.map(t => [t.id, null]))
   );
+  /** Incrémenté par handleRefresh() pour forcer un nouveau fetch de l'onglet actif. */
   const [fetchKey, setFetchKey] = useState(0);
+  /**
+   * Ensemble des onglets dont le fetch est déjà en cours ou terminé.
+   * Empêche le double-fetch causé par React StrictMode (double-mount en dev)
+   * et les clics rapides sur les onglets.
+   * On supprime l'onglet de loadedRef en cas d'erreur pour permettre un retry.
+   */
   const loadedRef = useRef<Set<string>>(new Set());
 
   // ── Résolution du token (exécuté une seule fois côté client) ─────────────

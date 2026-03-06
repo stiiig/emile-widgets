@@ -21,8 +21,20 @@ Les pages fonctionnent en deux modes :
 | Récupérer lien de connexion | `/widgets/emile/recuperer-lien-connexion/` | Public (orienteur) |
 | Récupérer lien de validation | `/widgets/emile/recuperer-lien-validation/` | Public (orienteur) |
 | Ajout d'établissement | `/widgets/emile/ajout-etablissement/` | Grist iframe |
+| **Dashboard admin** | `/widgets/emile/acceder-dashboard/?token=TS.HMAC` | Magic link signé (24 h) |
 
 > **Page de test dev** : [`/emile/dev/links`](https://stiiig.github.io/emile-widgets/emile/dev/links) — liste tous les liens avec variantes de paramètres.
+
+---
+
+## Session dashboard (sessionStorage)
+
+L'onglet `acceder-dashboard` stocke le token magic link en **sessionStorage** (clé `db-emile-token`) :
+
+- Le token est extrait de `?token=` au premier chargement puis l'URL est **nettoyée** (`history.replaceState`)
+- Il persiste le temps de l'onglet navigateur (sessionStorage est vidé à la fermeture)
+- Un token invalide ou expiré (401/403 de N8N) efface la session → écran « Lien expiré »
+- Le token a une durée de vie de **24 h** (vérifiée côté N8N, pas côté client)
 
 ---
 
@@ -52,6 +64,7 @@ Elles sont définies comme secrets GitHub et injectées via `.github/workflows/d
 | `NEXT_PUBLIC_OCC_SAVE_CANDIDAT_URL` | `fiche-candidat` | Webhook n8n `occ-save-candidat` |
 | `NEXT_PUBLIC_OCC_REQUEST_LINK_URL` | `recuperer-lien-connexion` | Webhook n8n `occ-request-link` |
 | `NEXT_PUBLIC_OCC_REQUEST_VALIDATION_URL` | `recuperer-lien-validation` | Webhook n8n `occ-request-validation-link` |
+| `NEXT_PUBLIC_DASHBOARD_URL` | `acceder-dashboard` | Webhook n8n `dashboard-proxy-get` |
 
 ---
 
