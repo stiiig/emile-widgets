@@ -13,6 +13,7 @@
  */
 
 import { useState, useEffect, useRef, useMemo } from "react";
+import { SearchDropdown, type Option } from "@/components/SearchDropdown";
 import "./styles.css";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -274,6 +275,48 @@ function VirtualTable({
   );
 }
 
+// ─── Filter dropdown (wrapper SearchDropdown → string values) ─────────────────
+
+const RESET_OPT_ID = 0;
+
+function FilterDropdown({
+  stringOptions, value, label, onChange,
+}: {
+  stringOptions: string[];
+  value: string;
+  label: string;
+  onChange: (val: string) => void;
+}) {
+  const sdOptions: Option[] = useMemo(
+    () => [
+      { id: RESET_OPT_ID, label: `Tous` },
+      ...stringOptions.map((o, i) => ({ id: i + 1, label: o })),
+    ],
+    [stringOptions],
+  );
+
+  const valueId: number | null = useMemo(() => {
+    if (!value) return null;
+    const idx = stringOptions.indexOf(value);
+    return idx >= 0 ? idx + 1 : null;
+  }, [value, stringOptions]);
+
+  return (
+    <div style={{ flex: "1 1 160px", maxWidth: 220 }}>
+      <SearchDropdown
+        options={sdOptions}
+        valueId={valueId}
+        onChange={id => {
+          if (id === null || id === RESET_OPT_ID) onChange("");
+          else onChange(sdOptions.find(o => o.id === id)?.label ?? "");
+        }}
+        placeholder={`${label} — tous`}
+        searchable={stringOptions.length > 6}
+      />
+    </div>
+  );
+}
+
 // ─── Filter bar ───────────────────────────────────────────────────────────────
 
 function FilterBar({
@@ -311,17 +354,13 @@ function FilterBar({
             onChange={e => onChange(f.key, e.target.value)}
           />
         ) : (
-          <select
+          <FilterDropdown
             key={f.key}
-            className="db-filter-select"
+            stringOptions={dropdownOpts[f.key] ?? []}
             value={filters[f.key] ?? ""}
-            onChange={e => onChange(f.key, e.target.value)}
-          >
-            <option value="">{f.label} — tous</option>
-            {(dropdownOpts[f.key] ?? []).map(v => (
-              <option key={v} value={v}>{v}</option>
-            ))}
-          </select>
+            label={f.label ?? f.key}
+            onChange={val => onChange(f.key, val)}
+          />
         )
       )}
       {hasActive && (
