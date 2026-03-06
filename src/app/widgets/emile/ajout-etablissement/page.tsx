@@ -190,7 +190,7 @@ export default function EtablissementPage() {
             FAQ
           </button>
         </header>
-        <main className="ae-body ae-body--center">
+        <main className="ae-body">
           <div className="ae-done">
             <i className="fa-solid fa-circle-check" style={{ fontSize: "2.5rem", color: "#18753c" }} />
             <h1 className="ae-done__title">Enregistrement réussi&nbsp;!</h1>
