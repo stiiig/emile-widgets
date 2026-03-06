@@ -319,6 +319,8 @@ const COL_W  = 160;  // px — largeur de chaque colonne de données
 const ROW_H  = 36;   // px — hauteur fixe de chaque ligne (doit être constante pour la virtualisation)
 const BUFFER = 6;    // lignes rendues en avance au-delà du viewport (évite le flash lors du scroll rapide)
 
+const COL_MIN = 40; // px — largeur minimum après resize
+
 function VirtualTable({
   columns, rows, sortState, onSort, hiddenColumns,
 }: {
@@ -331,6 +333,8 @@ function VirtualTable({
   const containerRef = useRef<HTMLDivElement>(null);
   const [scrollTop, setScrollTop] = useState(0);
   const [viewH,     setViewH]     = useState(600);
+  /** Largeurs personnalisées par nom de colonne (COL_W par défaut si absent) */
+  const [colWidths, setColWidths] = useState<Record<string, number>>({});
 
   useEffect(() => {
     const el = containerRef.current;
@@ -352,7 +356,34 @@ function VirtualTable({
 
   const displayCols = columns.filter(c => !(hiddenColumns ?? []).includes(c));
 
-  const totalW   = NUM_W + displayCols.length * COL_W;
+  /** Largeur effective d'une colonne (personnalisée ou valeur par défaut) */
+  function getW(col: string) { return colWidths[col] ?? COL_W; }
+
+  /**
+   * Démarre le redimensionnement d'une colonne par glisser-déposer.
+   * Attach les listeners sur document pour capturer le mouvement hors de la cellule.
+   */
+  function startResize(e: React.MouseEvent, col: string) {
+    e.preventDefault();
+    e.stopPropagation(); // empêche le clic de trier la colonne
+    const startX = e.clientX;
+    const startW = getW(col);
+    document.body.style.cursor    = "col-resize";
+    document.body.style.userSelect = "none";
+    const onMove = (ev: MouseEvent) => {
+      setColWidths(prev => ({ ...prev, [col]: Math.max(COL_MIN, startW + ev.clientX - startX) }));
+    };
+    const onUp = () => {
+      document.removeEventListener("mousemove", onMove);
+      document.removeEventListener("mouseup",   onUp);
+      document.body.style.cursor    = "";
+      document.body.style.userSelect = "";
+    };
+    document.addEventListener("mousemove", onMove);
+    document.addEventListener("mouseup",   onUp);
+  }
+
+  const totalW   = NUM_W + displayCols.reduce((s, c) => s + getW(c), 0);
   const totalH   = rows.length * ROW_H;
   const startIdx = Math.max(0, Math.floor(scrollTop / ROW_H) - BUFFER);
   const endIdx   = Math.min(rows.length, Math.ceil((scrollTop + viewH) / ROW_H) + BUFFER);
@@ -369,7 +400,7 @@ function VirtualTable({
             <div
               key={col}
               className={`db-cell db-cell--head${sortState?.col === col ? " db-cell--sorted" : ""}`}
-              style={{ width: COL_W, minWidth: COL_W }}
+              style={{ width: getW(col), minWidth: getW(col), position: "relative" }}
               onClick={() => onSort(col)}
               title={col}
             >
@@ -377,6 +408,8 @@ function VirtualTable({
               <span className="db-sort-icon">
                 {sortState?.col === col ? (sortState.dir === "asc" ? "↑" : "↓") : "⇅"}
               </span>
+              {/* Poignée de resize — thin strip sur le bord droit */}
+              <span className="db-col-resize" onMouseDown={e => startResize(e, col)} />
             </div>
           ))}
         </div>
@@ -398,7 +431,7 @@ function VirtualTable({
                     <div
                       key={col}
                       className="db-cell"
-                      style={{ width: COL_W, minWidth: COL_W }}
+                      style={{ width: getW(col), minWidth: getW(col) }}
                       title={fmt(val)}
                     >
                       <span className="db-cell-txt">{renderCell(val)}</span>

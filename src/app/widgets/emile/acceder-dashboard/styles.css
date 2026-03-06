@@ -288,6 +288,21 @@
 }
 .db-cell--head .db-sort-icon { color: #5560b0; }
 
+/* ─── Poignée de redimensionnement de colonne ─────────────────────────────── */
+.db-col-resize {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 5px;
+  cursor: col-resize;
+  z-index: 1;
+}
+.db-col-resize:hover,
+.db-col-resize:active {
+  background: rgba(0, 0, 145, 0.35);
+}
+
 /* ─── Chips (ChoiceList / RefList) ───────────────────────────────────────── */
 .db-chips {
   display: flex;
