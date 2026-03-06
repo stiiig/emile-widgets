@@ -322,8 +322,9 @@
   font-weight: 600;
   padding: 0.08rem 0.42rem;
   white-space: nowrap;
-  flex-shrink: 0;
-  max-width: 130px;
+  flex-shrink: 1;
+  min-width: 0;
+  max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   line-height: 1.4;
