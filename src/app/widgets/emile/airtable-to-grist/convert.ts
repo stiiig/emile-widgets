@@ -71,19 +71,19 @@ export function toCSV(rows: Record<string, string>[], headers: string[]): string
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-/** DD/MM/YYYY HH:MM[:SS] ou DD/MM/YYYY → ISO 8601 */
+/** MM/DD/YYYY HH:MM[:SS] ou MM/DD/YYYY → ISO 8601 (Airtable CSV exporte en format américain) */
 export function parseEuropeanDate(raw: string): string {
   const s = raw?.trim();
   if (!s) return "";
   const dtM = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})[T\s](\d{1,2}):(\d{2})(?::(\d{2}))?/);
   if (dtM) {
-    const [, d, m, y, hh, mm, ss = "00"] = dtM;
-    return `${y}-${m.padStart(2,"0")}-${d.padStart(2,"0")}T${hh.padStart(2,"0")}:${mm}:${ss}`;
+    const [, mo, da, y, hh, mi, ss = "00"] = dtM;  // groupe 1 = MM, groupe 2 = DD
+    return `${y}-${mo.padStart(2,"0")}-${da.padStart(2,"0")}T${hh.padStart(2,"0")}:${mi}:${ss}`;
   }
   const dM = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
   if (dM) {
-    const [, d, m, y] = dM;
-    return `${y}-${m.padStart(2,"0")}-${d.padStart(2,"0")}`;
+    const [, mo, da, y] = dM;  // groupe 1 = MM, groupe 2 = DD
+    return `${y}-${mo.padStart(2,"0")}-${da.padStart(2,"0")}`;
   }
   return s; // déjà ISO ou autre format inconnu
 }
@@ -169,8 +169,8 @@ const CAND_DIRECT: [string, string][] = [
   ["Adresse de domiciliation",          "Adresse"],
   ["Email candidat",                    "Email"],
   ["Téléphone candidat",                "Tel"],
-  // Département géré séparément (normalizeDept) — voir convertCandidats
-  // ["Département domicile inscription",  "Departement_domicile_inscription"],
+  // Département géré via normalizeDept dans la boucle — voir convertCandidats
+  ["Département domicile inscription",  "Departement_domicile_inscription"],
   ["Régularité situation",              "Regularite_situation"],
   ["Numéro unique d'enregistrement",    "Numero_unique_enregistrement"],
   ["Primo arrivants",                   "Primo_arrivant"],
@@ -222,7 +222,7 @@ const CAND_DIRECT: [string, string][] = [
   ["Adresse lieu de travail / formation","Adresse_lieu_de_travail_formation"],
   ["Intitulé du poste",                 "Intitule_du_poste"],
   ["Nom employeur / formateur",         "Nom_employeur_formateur"],
-  ["Bilan(s) séjour(s) immersion",      "Bilan_s_sejour_s_immersion"],
+  // "Bilan(s) séjour(s) immersion" — skippé (non importé dans Grist)
   ["Volontariat mobilité",              "Volontariat_mobilite"],
   ["Composition du foyer",              "Foyer"],
   ["Responsable Candidat",              "Responsable_candidat"],
@@ -307,10 +307,25 @@ export function convertCandidats(
     rows: rows.map(r => {
       const o: Record<string, string> = {};
 
-      for (const [from, to] of CAND_DIRECT) o[to] = r[from] ?? "";
+      for (const [from, to] of CAND_DIRECT) {
+        if (to === "Departement_domicile_inscription") {
+          // RefList → texte brut matchant $Nom_departement de DPTS_REGIONS
+          o[to] = normalizeDept(r[from] ?? "");
+        } else {
+          o[to] = r[from] ?? "";
+        }
+      }
       for (const [from, to] of CAND_DATES)  o[to] = parseEuropeanDate(r[from] ?? "");
-      // Département — normalisation des tirets/espaces typographiques
-      o["Departement_domicile_inscription"] = normalizeDept(r["Département domicile inscription"] ?? "");
+
+      // Toggles Grist (booléen) — Airtable : checkbox ou "Oui"/"Non"
+      o["Primo_arrivant"] = isYes(o["Primo_arrivant"]) ? "true" : "false";
+      o["Bpi"]            = isYes(o["Bpi"])            ? "true" : "false";
+
+      // Vehicule — ChoiceList (multiselect Airtable séparé par virgule)
+      const vehiculeRaw = o["Vehicule"];
+      o["Vehicule"] = toChoiceList(
+        vehiculeRaw ? vehiculeRaw.split(",").map(v => v.trim()).filter(Boolean) : [],
+      );
 
       // Permis
       const permisChoices: string[] = [];
