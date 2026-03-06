@@ -57,6 +57,31 @@
   padding: 0 1.5rem 4rem;
 }
 
+/* ── Option échantillon ── */
+.atg-sample {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #333;
+  cursor: pointer;
+  user-select: none;
+}
+.atg-sample input[type="checkbox"] {
+  width: 1rem;
+  height: 1rem;
+  accent-color: #000091;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.atg-sample__hint {
+  font-weight: 400;
+  color: #888;
+  font-size: 0.82rem;
+}
+
 /* ── Zone dépôt ── */
 .atg-drop {
   border: 2px dashed #b0badf;

@@ -12,7 +12,8 @@
  * Usage :
  *  1. Exporter la table Airtable en CSV (UTF-8)
  *  2. Uploader ici → aperçu des 5 premières lignes
- *  3. Télécharger le CSV Grist prêt à l'import
+ *  3. Optionnel : cocher « Échantillon aléatoire » pour ne garder que 30 lignes
+ *  4. Télécharger le CSV Grist prêt à l'import
  */
 
 import { useRef, useState } from "react";
@@ -33,6 +34,8 @@ const TABS: { key: TableType; label: string }[] = [
   { key: "candidats",      label: "Candidats"       },
 ];
 
+const SAMPLE_N = 30;
+
 interface ConvResult {
   fileName: string;
   rowCount: number;
@@ -41,27 +44,85 @@ interface ConvResult {
   csvBlob: string;
 }
 
+/** Données brutes conservées pour re-convertir si l'option échantillon change */
+interface RawData {
+  rows: Record<string, string>[];
+  fileName: string;
+}
+
+/** Fisher-Yates — retourne n lignes tirées au hasard sans remise */
+function sampleRows(rows: Record<string, string>[], n: number): Record<string, string>[] {
+  if (rows.length <= n) return rows;
+  const arr = [...rows];
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr.slice(0, n);
+}
+
 export default function AirtableToGristPage() {
   const [tab, setTab] = useState<TableType>("etablissements");
+  const [sampleMode, setSampleMode] = useState(false);
 
-  const [etabResult,  setEtabResult]  = useState<ConvResult | null>(null);
-  const [accResult,   setAccResult]   = useState<ConvResult | null>(null);
-  const [candResult,  setCandResult]  = useState<ConvResult | null>(null);
-  const [etabError,   setEtabError]   = useState("");
-  const [accError,    setAccError]    = useState("");
-  const [candError,   setCandError]   = useState("");
+  // Résultats de conversion par onglet
+  const [etabResult, setEtabResult] = useState<ConvResult | null>(null);
+  const [accResult,  setAccResult]  = useState<ConvResult | null>(null);
+  const [candResult, setCandResult] = useState<ConvResult | null>(null);
+
+  // Messages d'erreur par onglet
+  const [etabError, setEtabError] = useState("");
+  const [accError,  setAccError]  = useState("");
+  const [candError, setCandError] = useState("");
+
+  // Données brutes conservées pour re-appliquer l'échantillonnage sans ré-upload
+  const [etabRaw, setEtabRaw] = useState<RawData | null>(null);
+  const [accRaw,  setAccRaw]  = useState<RawData | null>(null);
+  const [candRaw, setCandRaw] = useState<RawData | null>(null);
 
   const etabInputRef = useRef<HTMLInputElement>(null);
   const accInputRef  = useRef<HTMLInputElement>(null);
   const candInputRef = useRef<HTMLInputElement>(null);
 
+  // ── Conversion ──────────────────────────────────────────────────────────────
+
+  function processAndSetResult(
+    type: TableType,
+    rawRows: Record<string, string>[],
+    sample: boolean,
+    fileName: string,
+  ) {
+    const setError  = type === "etablissements" ? setEtabError  : type === "accompagnants" ? setAccError  : setCandError;
+    const setResult = type === "etablissements" ? setEtabResult : type === "accompagnants" ? setAccResult : setCandResult;
+
+    try {
+      // L'échantillonnage s'applique uniquement à Accompagnants et Candidats
+      const inputRows = (sample && type !== "etablissements")
+        ? sampleRows(rawRows, SAMPLE_N)
+        : rawRows;
+
+      const { headers, rows: converted } =
+        type === "etablissements" ? convertEtablissements(inputRows)
+        : type === "accompagnants" ? convertAccompagnants(inputRows)
+        : convertCandidats(inputRows);
+
+      setResult({
+        fileName,
+        rowCount: converted.length,
+        headers,
+        preview: converted.slice(0, 5),
+        csvBlob: "\ufeff" + toCSV(converted, headers), // BOM UTF-8 pour Excel
+      });
+      setError("");
+    } catch (err: any) {
+      setError("Erreur de conversion : " + (err?.message ?? String(err)));
+      setResult(null);
+    }
+  }
+
   function handleFile(type: TableType, file: File) {
-    const setError  = type === "etablissements" ? setEtabError
-                    : type === "accompagnants"  ? setAccError
-                    : setCandError;
-    const setResult = type === "etablissements" ? setEtabResult
-                    : type === "accompagnants"  ? setAccResult
-                    : setCandResult;
+    const setError = type === "etablissements" ? setEtabError : type === "accompagnants" ? setAccError : setCandError;
+    const setRaw   = type === "etablissements" ? setEtabRaw   : type === "accompagnants" ? setAccRaw   : setCandRaw;
 
     setError("");
     const reader = new FileReader();
@@ -70,25 +131,21 @@ export default function AirtableToGristPage() {
         const text = e.target?.result as string;
         const rows = parseCSV(text);
         if (rows.length === 0) { setError("Le fichier semble vide ou mal formaté."); return; }
-
-        const { headers, rows: converted } =
-          type === "etablissements" ? convertEtablissements(rows)
-          : type === "accompagnants" ? convertAccompagnants(rows)
-          : convertCandidats(rows);
-
-        setResult({
-          fileName: file.name,
-          rowCount: converted.length,
-          headers,
-          preview: converted.slice(0, 5),
-          csvBlob: "\ufeff" + toCSV(converted, headers), // BOM UTF-8 pour Excel
-        });
+        setRaw({ rows, fileName: file.name });
+        processAndSetResult(type, rows, sampleMode, file.name);
       } catch (err: any) {
         setError("Erreur de conversion : " + (err?.message ?? String(err)));
       }
     };
     reader.onerror = () => setError("Impossible de lire le fichier.");
     reader.readAsText(file, "utf-8");
+  }
+
+  /** Quand la checkbox change → re-convertir avec les données déjà chargées */
+  function handleSampleChange(checked: boolean) {
+    setSampleMode(checked);
+    const raw = tab === "etablissements" ? etabRaw : tab === "accompagnants" ? accRaw : candRaw;
+    if (raw) processAndSetResult(tab, raw.rows, checked, raw.fileName);
   }
 
   function download(result: ConvResult, type: TableType) {
@@ -101,15 +158,11 @@ export default function AirtableToGristPage() {
     URL.revokeObjectURL(url);
   }
 
-  const result = tab === "etablissements" ? etabResult
-               : tab === "accompagnants"  ? accResult
-               : candResult;
-  const error  = tab === "etablissements" ? etabError
-               : tab === "accompagnants"  ? accError
-               : candError;
-  const ref    = tab === "etablissements" ? etabInputRef
-               : tab === "accompagnants"  ? accInputRef
-               : candInputRef;
+  // ── Valeurs dérivées de l'onglet actif ──────────────────────────────────────
+
+  const result = tab === "etablissements" ? etabResult : tab === "accompagnants" ? accResult : candResult;
+  const error  = tab === "etablissements" ? etabError  : tab === "accompagnants" ? accError  : candError;
+  const ref    = tab === "etablissements" ? etabInputRef : tab === "accompagnants" ? accInputRef : candInputRef;
 
   return (
     <div className="atg-page">
@@ -137,6 +190,19 @@ export default function AirtableToGristPage() {
 
       {/* ── Corps ── */}
       <main className="atg-main">
+
+        {/* Option échantillon — Accompagnants et Candidats seulement */}
+        {tab !== "etablissements" && (
+          <label className="atg-sample">
+            <input
+              type="checkbox"
+              checked={sampleMode}
+              onChange={e => handleSampleChange(e.target.checked)}
+            />
+            Échantillon aléatoire de {SAMPLE_N} lignes
+            <span className="atg-sample__hint">(utile pour tester l'import dans Grist)</span>
+          </label>
+        )}
 
         {/* Zone de dépôt */}
         <div
