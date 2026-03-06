@@ -1,9 +1,18 @@
 // Page de test — liste tous les widgets EMILE
-// Accessible sur /dev/links (local) ou https://stiiig.github.io/emile-widgets/dev/links
+// Accessible sur /emile/dev/links (local) ou https://stiiig.github.io/emile-widgets/emile/dev/links
 
 const BASE = "https://stiiig.github.io/emile-widgets/widgets/emile";
 
 const WIDGETS = [
+  {
+    name: "Dashboard EMILE",
+    path: "acceder-dashboard",
+    desc: "Tableau de bord (candidats, accompagnants, établissements…) — accès par magic link 24 h",
+    params: [
+      { label: "Avec token valide", qs: "?token=TS.HMAC" },
+      { label: "Sans token (Accès refusé)", qs: "" },
+    ],
+  },
   {
     name: "Inscription candidat·e",
     path: "inscription-candidat",
@@ -78,26 +87,9 @@ export default function DevLinks() {
         <h1 style={{ fontSize: "1.3rem", fontWeight: 700, margin: "0 0 0.35rem" }}>
           🔗 Liens de test — Widgets EMILE
         </h1>
-        <p style={{ color: "#666", margin: "0 0 1rem", fontSize: "0.8rem" }}>
+        <p style={{ color: "#666", margin: "0", fontSize: "0.8rem" }}>
           Base : <code style={{ background: "#f0f0f0", padding: "0.1rem 0.4rem", borderRadius: 3 }}>{BASE}</code>
         </p>
-        <a
-          href="/dev/links"
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "0.5rem",
-            padding: "0.55rem 1.1rem",
-            background: "#000091",
-            color: "#fff",
-            borderRadius: 8,
-            fontWeight: 700,
-            fontSize: "0.85rem",
-            textDecoration: "none",
-          }}
-        >
-          📊 Ouvrir le Dashboard EMILE
-        </a>
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>

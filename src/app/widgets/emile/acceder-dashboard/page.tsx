@@ -1,14 +1,15 @@
 "use client";
 
 /**
- * Dashboard EMILE — /dev/links
+ * Dashboard EMILE — /widgets/emile/acceder-dashboard
  *
- * Tableau de bord avec 5 onglets (Candidats, Accompagnants, Établissements,
- * Dép. & Régions, FAQ). Chaque onglet affiche un tableau virtualisé des
- * données Grist avec filtres et tri par colonne.
+ * Accès par magic link : ?token=TS.HMAC généré par N8N (validité 24 h).
+ * À l'arrivée, le token est stocké en sessionStorage et l'URL est nettoyée
+ * (replaceState) pour ne pas exposer le token dans les logs serveur / l'historique.
  *
- * Sécurité : la connexion Grist (server / docId / token) est stockée
- * uniquement dans le localStorage du navigateur — jamais dans le code.
+ * Sécurité : le secret HMAC reste exclusivement dans N8N.
+ * Si le token est expiré ou invalide, N8N répond 401/403 et on efface
+ * la session pour forcer un nouveau lien.
  */
 
 import { useState, useEffect, useRef, useMemo } from "react";
@@ -35,9 +36,9 @@ interface FilterDef {
   key: string;
   placeholder?: string;
   label?: string;
-  /** colonnes de recherche pour type="text" — vide = toutes les colonnes */
+  /** Colonnes de recherche pour type="text" — vide = toutes les colonnes */
   fields?: string[];
-  /** colonne cible pour type="dropdown" */
+  /** Colonne cible pour type="dropdown" */
   column?: string;
 }
 
@@ -48,24 +49,15 @@ interface TabDef {
   filters: FilterDef[];
 }
 
-interface Config {
-  server: string;
-  docId: string;
-  token: string;
-}
+// ─── Token ────────────────────────────────────────────────────────────────────
 
-// ─── Config ───────────────────────────────────────────────────────────────────
+type TokenStatus = "resolving" | "missing" | "expired" | "ok";
 
-const LS_KEY = "db-emile-cfg";
+const SS_KEY = "db-emile-token";
 
-function loadConfig(): Config | null {
-  if (typeof window === "undefined") return null;
-  try { return JSON.parse(localStorage.getItem(LS_KEY) ?? "null"); }
-  catch { return null; }
-}
-
-function saveConfig(c: Config) {
-  localStorage.setItem(LS_KEY, JSON.stringify(c));
+/** Signale un token invalide ou expiré (401/403 de N8N) */
+class TokenExpiredError extends Error {
+  constructor() { super("token_expired"); }
 }
 
 // ─── Tabs & filters ───────────────────────────────────────────────────────────
@@ -117,9 +109,9 @@ const TABS: TabDef[] = [
     label: "FAQ",
     tableId: "FAQ",
     filters: [
-      { type: "text",     key: "q",                        placeholder: "Rechercher…", fields: [] },
-      { type: "dropdown", key: "Section_de_la_question",   label: "Section",    column: "Section_de_la_question" },
-      { type: "dropdown", key: "Obligatoire_ou_non",       label: "Obligatoire", column: "Obligatoire_ou_non" },
+      { type: "text",     key: "q",                      placeholder: "Rechercher…", fields: [] },
+      { type: "dropdown", key: "Section_de_la_question", label: "Section",     column: "Section_de_la_question" },
+      { type: "dropdown", key: "Obligatoire_ou_non",     label: "Obligatoire", column: "Obligatoire_ou_non" },
     ],
   },
 ];
@@ -138,7 +130,7 @@ function fmt(v: GristVal): string {
   return String(v);
 }
 
-/** Extrait les valeurs individuelles d'un champ (ChoiceList, texte, etc.) pour les dropdowns */
+/** Extrait les valeurs individuelles d'un champ pour les dropdowns */
 function extractChoices(v: GristVal): string[] {
   if (Array.isArray(v) && v[0] === "L") return (v.slice(1) as GristVal[]).map(x => String(x ?? "")).filter(Boolean);
   const s = fmt(v).trim();
@@ -155,14 +147,23 @@ function rowMatchesDropdown(row: GristRow, column: string, value: string): boole
   return extractChoices(row[column]).includes(value);
 }
 
-// ─── Grist API ────────────────────────────────────────────────────────────────
+// ─── API dashboard ────────────────────────────────────────────────────────────
 
-async function gristFetchTable(cfg: Config, tableId: string): Promise<{ rows: GristRow[]; columns: string[] }> {
-  const base = cfg.server.replace(/\/$/, "");
-  const url  = `${base}/api/docs/${cfg.docId}/tables/${tableId}/records`;
-  const res  = await fetch(url, {
-    headers: { Authorization: `Bearer ${cfg.token}` },
-  });
+const DASH_URL = (process.env.NEXT_PUBLIC_DASHBOARD_URL ?? "").replace(/\/$/, "");
+
+/**
+ * Récupère une table Grist via le proxy N8N dashboard.
+ * N8N vérifie le HMAC et l'expiration (24 h) avant de proxyer vers Grist.
+ * Répond 401/403 si le token est invalide ou expiré → TokenExpiredError.
+ */
+async function dashFetchTable(
+  token: string,
+  tableId: string,
+): Promise<{ rows: GristRow[]; columns: string[] }> {
+  if (!DASH_URL) throw new Error("NEXT_PUBLIC_DASHBOARD_URL non configuré");
+  const url = `${DASH_URL}?table=${encodeURIComponent(tableId)}&token=${encodeURIComponent(token)}`;
+  const res = await fetch(url);
+  if (res.status === 401 || res.status === 403) throw new TokenExpiredError();
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
     throw new Error(`${res.status} — ${(body as any)?.error ?? res.statusText}`);
@@ -207,14 +208,14 @@ function VirtualTable({
     return () => { el.removeEventListener("scroll", onScroll); ro.disconnect(); };
   }, []);
 
-  // Reset scroll when rows change (filter applied)
+  // Reset scroll quand les lignes changent (filtre appliqué)
   useEffect(() => {
     containerRef.current?.scrollTo({ top: 0 });
     setScrollTop(0);
   }, [rows]);
 
-  const totalW  = NUM_W + columns.length * COL_W;
-  const totalH  = rows.length * ROW_H;
+  const totalW   = NUM_W + columns.length * COL_W;
+  const totalH   = rows.length * ROW_H;
   const startIdx = Math.max(0, Math.floor(scrollTop / ROW_H) - BUFFER);
   const endIdx   = Math.min(rows.length, Math.ceil((scrollTop + viewH) / ROW_H) + BUFFER);
 
@@ -332,54 +333,27 @@ function FilterBar({
   );
 }
 
-// ─── Config panel ─────────────────────────────────────────────────────────────
+// ─── Écrans d'erreur token ────────────────────────────────────────────────────
 
-function ConfigPanel({ initial, onSave, onClose }: {
-  initial: Config | null;
-  onSave: (c: Config) => void;
-  onClose?: () => void;
-}) {
-  const [server, setServer] = useState(initial?.server ?? "https://docs.getgrist.com");
-  const [docId,  setDocId]  = useState(initial?.docId  ?? "");
-  const [token,  setToken]  = useState(initial?.token  ?? "");
-
-  function submit(e: React.FormEvent) {
-    e.preventDefault();
-    const c: Config = { server: server.trim(), docId: docId.trim(), token: token.trim() };
-    saveConfig(c);
-    onSave(c);
-  }
-
+function TokenScreen({ status }: { status: "missing" | "expired" }) {
   return (
-    <div className="db-cfg-overlay" onClick={e => { if (e.target === e.currentTarget) onClose?.(); }}>
-      <form className="db-cfg-panel" onSubmit={submit}>
-        <h2 className="db-cfg-title">⚙ Connexion Grist</h2>
-        <p className="db-cfg-hint">
-          Stocké uniquement dans votre localStorage — jamais transmis au serveur de l&apos;application.
-          Nécessite que CORS soit activé depuis cette origine sur votre instance Grist.
-        </p>
-
-        <label className="db-cfg-label">
-          Serveur Grist
-          <input className="db-cfg-input" value={server} onChange={e => setServer(e.target.value)}
-            placeholder="https://docs.getgrist.com" required />
-        </label>
-        <label className="db-cfg-label">
-          ID du document
-          <input className="db-cfg-input" value={docId} onChange={e => setDocId(e.target.value)}
-            placeholder="abc123def456" required />
-        </label>
-        <label className="db-cfg-label">
-          Token API personnel
-          <input className="db-cfg-input" type="password" value={token} onChange={e => setToken(e.target.value)}
-            placeholder="••••••••••••••••" autoComplete="off" required />
-        </label>
-
-        <div className="db-cfg-actions">
-          <button className="db-cfg-save" type="submit">Enregistrer</button>
-          {onClose && <button className="db-cfg-cancel" type="button" onClick={onClose}>Annuler</button>}
-        </div>
-      </form>
+    <div className="db-page">
+      <header className="db-header">
+        <span className="db-header__title">📊 Dashboard EMILE</span>
+      </header>
+      <div className="db-state db-state--error">
+        {status === "missing" ? (
+          <>
+            <strong>🔒 Accès refusé</strong>
+            <span>Lien d&apos;accès manquant. Contactez l&apos;administrateur pour obtenir un lien valide.</span>
+          </>
+        ) : (
+          <>
+            <strong>⏱ Lien expiré</strong>
+            <span>Ce lien n&apos;est plus valide (durée de vie : 24 h). Contactez l&apos;administrateur pour en obtenir un nouveau.</span>
+          </>
+        )}
+      </div>
     </div>
   );
 }
@@ -388,11 +362,11 @@ function ConfigPanel({ initial, onSave, onClose }: {
 
 const EMPTY_TABLE: TableState = { rows: [], columns: [], loading: false, error: "" };
 
-export default function DevDashboard() {
-  const [config,     setConfig]     = useState<Config | null>(null);
-  const [showCfg,    setShowCfg]    = useState(false);
-  const [activeTab,  setActiveTab]  = useState(TABS[0].id);
-  const [tableData,  setTableData]  = useState<Record<string, TableState>>(
+export default function AccederDashboard() {
+  const [tokenStatus,   setTokenStatus]   = useState<TokenStatus>("resolving");
+  const [token,         setToken]         = useState("");
+  const [activeTab,     setActiveTab]     = useState(TABS[0].id);
+  const [tableData,     setTableData]     = useState<Record<string, TableState>>(
     () => Object.fromEntries(TABS.map(t => [t.id, { ...EMPTY_TABLE }]))
   );
   const [filterStates, setFilterStates] = useState<Record<string, Record<string, string>>>(
@@ -401,52 +375,60 @@ export default function DevDashboard() {
   const [sortStates, setSortStates] = useState<Record<string, { col: string; dir: "asc" | "desc" } | null>>(
     () => Object.fromEntries(TABS.map(t => [t.id, null]))
   );
-
-  // Clé de fetch : change lors d'un refresh forcé
   const [fetchKey, setFetchKey] = useState(0);
-  // Ensemble des onglets déjà chargés (par config.docId:tabId)
   const loadedRef = useRef<Set<string>>(new Set());
 
-  // Chargement initial de la config depuis localStorage
+  // ── Résolution du token (exécuté une seule fois côté client) ─────────────
   useEffect(() => {
-    const c = loadConfig();
-    setConfig(c);
-    if (!c) setShowCfg(true);
+    const p = new URLSearchParams(window.location.search);
+    const urlToken = p.get("token");
+    if (urlToken) {
+      // Token dans l'URL : on le persiste en sessionStorage et on nettoie l'URL
+      sessionStorage.setItem(SS_KEY, urlToken);
+      window.history.replaceState(null, "", window.location.pathname);
+      setToken(urlToken);
+      setTokenStatus("ok");
+    } else {
+      const ssToken = sessionStorage.getItem(SS_KEY);
+      if (ssToken) {
+        setToken(ssToken);
+        setTokenStatus("ok");
+      } else {
+        setTokenStatus("missing");
+      }
+    }
   }, []);
 
-  // Fetch de la table active si pas encore chargée
+  // ── Fetch de la table active ─────────────────────────────────────────────
   useEffect(() => {
-    if (!config) return;
+    if (tokenStatus !== "ok" || !token) return;
     const tab = TABS.find(t => t.id === activeTab)!;
-    const key = `${config.docId}:${activeTab}`;
-    if (loadedRef.current.has(key)) return;
-    loadedRef.current.add(key);
+    if (loadedRef.current.has(activeTab)) return;
+    loadedRef.current.add(activeTab);
 
     setTableData(prev => ({ ...prev, [activeTab]: { ...prev[activeTab], loading: true, error: "" } }));
-    gristFetchTable(config, tab.tableId)
+    dashFetchTable(token, tab.tableId)
       .then(({ rows, columns }) => {
         setTableData(prev => ({ ...prev, [activeTab]: { rows, columns, loading: false, error: "" } }));
       })
       .catch((err: unknown) => {
-        loadedRef.current.delete(key); // permet un retry
-        setTableData(prev => ({ ...prev, [activeTab]: { ...prev[activeTab], loading: false, error: String(err) } }));
+        loadedRef.current.delete(activeTab);
+        if (err instanceof TokenExpiredError) {
+          sessionStorage.removeItem(SS_KEY);
+          setTokenStatus("expired");
+          return;
+        }
+        setTableData(prev => ({
+          ...prev,
+          [activeTab]: { ...prev[activeTab], loading: false, error: String(err) },
+        }));
       });
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab, config, fetchKey]);
-
-  function handleConfigSave(c: Config) {
-    setConfig(c);
-    setShowCfg(false);
-    // Réinitialise tout pour forcer un rechargement
-    loadedRef.current.clear();
-    setTableData(Object.fromEntries(TABS.map(t => [t.id, { ...EMPTY_TABLE }])));
-    setFetchKey(k => k + 1);
-  }
+  }, [activeTab, token, tokenStatus, fetchKey]);
 
   function handleRefresh() {
-    if (!config) return;
-    const key = `${config.docId}:${activeTab}`;
-    loadedRef.current.delete(key);
+    if (!token) return;
+    loadedRef.current.delete(activeTab);
     setTableData(prev => ({ ...prev, [activeTab]: { ...EMPTY_TABLE } }));
     setFetchKey(k => k + 1);
   }
@@ -467,7 +449,7 @@ export default function DevDashboard() {
     });
   }
 
-  // ── Données dérivées de l'onglet actif ──────────────────────────────────────
+  // ── Données dérivées de l'onglet actif ──────────────────────────────────
   const tabDef   = TABS.find(t => t.id === activeTab)!;
   const tabState = tableData[activeTab];
   const filters  = filterStates[activeTab] ?? {};
@@ -476,7 +458,6 @@ export default function DevDashboard() {
   const filteredRows = useMemo(() => {
     let rows = tabState.rows;
     const allCols = tabState.columns;
-
     for (const f of tabDef.filters) {
       const val = filters[f.key];
       if (!val) continue;
@@ -486,7 +467,6 @@ export default function DevDashboard() {
         rows = rows.filter(r => rowMatchesDropdown(r, f.column!, val));
       }
     }
-
     if (sort) {
       const { col, dir } = sort;
       rows = [...rows].sort((a, b) => {
@@ -494,38 +474,34 @@ export default function DevDashboard() {
         return dir === "asc" ? cmp : -cmp;
       });
     }
-
     return rows;
   }, [tabState, tabDef, filters, sort]);
 
-  // ── Rendu ────────────────────────────────────────────────────────────────────
+  // ── Écrans d'erreur token ────────────────────────────────────────────────
+  if (tokenStatus === "resolving") {
+    return (
+      <div className="db-page">
+        <header className="db-header">
+          <span className="db-header__title">📊 Dashboard EMILE</span>
+        </header>
+        <div className="db-state db-state--loading">
+          <span className="db-spinner" /> Chargement…
+        </div>
+      </div>
+    );
+  }
 
+  if (tokenStatus === "missing" || tokenStatus === "expired") {
+    return <TokenScreen status={tokenStatus} />;
+  }
+
+  // ── Rendu principal ──────────────────────────────────────────────────────
   return (
     <div className="db-page">
 
-      {/* Header */}
       <header className="db-header">
         <span className="db-header__title">📊 Dashboard EMILE</span>
-        <div className="db-header__right">
-          {config && (
-            <span className="db-header__server" title={`Doc : ${config.docId}`}>
-              {config.server.replace(/^https?:\/\//, "")}
-            </span>
-          )}
-          <button className="db-header__cfg" onClick={() => setShowCfg(true)} title="Configurer la connexion">
-            ⚙
-          </button>
-        </div>
       </header>
-
-      {/* Config panel (modal) */}
-      {showCfg && (
-        <ConfigPanel
-          initial={config}
-          onSave={handleConfigSave}
-          onClose={config ? () => setShowCfg(false) : undefined}
-        />
-      )}
 
       {/* Onglets */}
       <nav className="db-tabs">
@@ -545,11 +521,7 @@ export default function DevDashboard() {
 
       {/* Contenu principal */}
       <main className="db-main">
-        {!config ? (
-          <div className="db-state">
-            Configurez la connexion Grist pour accéder aux données.
-          </div>
-        ) : tabState.loading ? (
+        {tabState.loading ? (
           <div className="db-state db-state--loading">
             <span className="db-spinner" /> Chargement de {tabDef.tableId}…
           </div>
