@@ -78,9 +78,26 @@ export default function DevLinks() {
         <h1 style={{ fontSize: "1.3rem", fontWeight: 700, margin: "0 0 0.35rem" }}>
           🔗 Liens de test — Widgets EMILE
         </h1>
-        <p style={{ color: "#666", margin: 0, fontSize: "0.8rem" }}>
+        <p style={{ color: "#666", margin: "0 0 1rem", fontSize: "0.8rem" }}>
           Base : <code style={{ background: "#f0f0f0", padding: "0.1rem 0.4rem", borderRadius: 3 }}>{BASE}</code>
         </p>
+        <a
+          href="/dev/links"
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "0.5rem",
+            padding: "0.55rem 1.1rem",
+            background: "#000091",
+            color: "#fff",
+            borderRadius: 8,
+            fontWeight: 700,
+            fontSize: "0.85rem",
+            textDecoration: "none",
+          }}
+        >
+          📊 Ouvrir le Dashboard EMILE
+        </a>
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
