@@ -1,0 +1,1147 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Documentation technique — EMILE</title>
+  <style>
+    /* ── Variables ─────────────────────────────────────────────────────── */
+    :root {
+      --blue:       #000091;
+      --blue-light: #e3e3fd;
+      --blue-mid:   #6a6af4;
+      --green:      #18753c;
+      --green-bg:   #b8fec9;
+      --red:        #ce0500;
+      --red-bg:     #ffe9e9;
+      --orange-bg:  #fff3cd;
+      --grey-bg:    #f5f7fb;
+      --border:     #dde3f5;
+      --text:       #1e1e2e;
+      --muted:      #666;
+      --font:       'Segoe UI', system-ui, Arial, sans-serif;
+      --mono:       'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+      --sidebar-w:  240px;
+      --code-bg:    #1e1e2e;
+      --code-text:  #cdd6f4;
+    }
+
+    /* ── Reset & base ──────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--font);
+      font-size: 0.9rem;
+      color: var(--text);
+      background: var(--grey-bg);
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* ── Sidebar ───────────────────────────────────────────────────────── */
+    .sidebar {
+      width: var(--sidebar-w);
+      flex-shrink: 0;
+      background: #fff;
+      border-right: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+      padding: 1.5rem 0 2rem;
+    }
+    .sidebar-logo {
+      display: block;
+      background: var(--blue);
+      color: #fff;
+      font-size: 1.4rem;
+      font-weight: 900;
+      letter-spacing: 1px;
+      padding: 0.6rem 1.2rem;
+      margin: 0 1rem 1.5rem;
+      border-radius: 8px;
+      text-decoration: none;
+      font-style: italic;
+    }
+    .sidebar h3 {
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--muted);
+      padding: 0 1.2rem;
+      margin-bottom: 0.5rem;
+    }
+    .sidebar ol {
+      list-style: none;
+      padding: 0;
+      counter-reset: nav;
+    }
+    .sidebar ol li { counter-increment: nav; }
+    .sidebar ol li a {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.45rem 1.2rem;
+      color: var(--text);
+      text-decoration: none;
+      font-size: 0.82rem;
+      border-left: 3px solid transparent;
+      transition: background 0.12s, border-color 0.12s;
+    }
+    .sidebar ol li a::before {
+      content: counter(nav);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 1.4rem;
+      height: 1.4rem;
+      background: var(--blue-light);
+      color: var(--blue);
+      border-radius: 50%;
+      font-size: 0.65rem;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .sidebar ol li a:hover { background: var(--grey-bg); border-left-color: var(--blue-mid); }
+    .sidebar-note {
+      margin: 1.5rem 1.2rem 0;
+      padding: 0.75rem;
+      background: var(--blue-light);
+      border-radius: 6px;
+      font-size: 0.75rem;
+      color: var(--blue);
+      line-height: 1.5;
+    }
+
+    /* ── Main content ──────────────────────────────────────────────────── */
+    main {
+      flex: 1;
+      max-width: 900px;
+      padding: 2rem 2.5rem 4rem;
+    }
+
+    /* ── Page header ───────────────────────────────────────────────────── */
+    .page-header {
+      background: var(--blue);
+      color: #fff;
+      border-radius: 12px;
+      padding: 2rem 2.5rem;
+      margin-bottom: 2.5rem;
+    }
+    .page-header .brand { font-size: 2rem; font-weight: 900; font-style: italic; }
+    .page-header h1 { font-size: 1.4rem; font-weight: 400; margin-top: 0.3rem; opacity: 0.9; }
+    .page-header .meta { font-size: 0.75rem; opacity: 0.6; margin-top: 0.6rem; }
+
+    /* ── Sections ──────────────────────────────────────────────────────── */
+    section {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 2rem 2rem 2.5rem;
+      margin-bottom: 2rem;
+    }
+    section h2 {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--blue);
+      margin-bottom: 0.4rem;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    .section-num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 2rem;
+      height: 2rem;
+      background: var(--blue);
+      color: #fff;
+      border-radius: 50%;
+      font-size: 0.85rem;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .section-intro {
+      color: var(--muted);
+      font-size: 0.85rem;
+      margin-bottom: 1.5rem;
+      line-height: 1.6;
+      border-left: 3px solid var(--blue-light);
+      padding-left: 0.75rem;
+    }
+    h3 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin: 1.5rem 0 0.5rem;
+      color: var(--text);
+    }
+    p { margin-bottom: 0.75rem; line-height: 1.6; }
+
+    /* ── Code blocks ───────────────────────────────────────────────────── */
+    pre {
+      background: var(--code-bg);
+      color: var(--code-text);
+      border-radius: 8px;
+      padding: 1.1rem 1.25rem;
+      overflow-x: auto;
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      line-height: 1.65;
+      margin: 1rem 0;
+    }
+    code {
+      font-family: var(--mono);
+      font-size: 0.82em;
+      background: #eef0fb;
+      color: var(--blue);
+      padding: 0.1rem 0.35rem;
+      border-radius: 3px;
+    }
+    pre code {
+      background: none;
+      color: inherit;
+      padding: 0;
+      font-size: inherit;
+      border-radius: 0;
+    }
+    /* Syntax hint colors (manual, no lib needed) */
+    .c-comment { color: #6272a4; }
+    .c-key     { color: #ff79c6; }
+    .c-str     { color: #f1fa8c; }
+    .c-num     { color: #bd93f9; }
+    .c-fn      { color: #50fa7b; }
+    .c-kw      { color: #8be9fd; }
+    .c-type    { color: #ffb86c; }
+
+    /* ── Flow diagrams ─────────────────────────────────────────────────── */
+    .flow {
+      background: var(--code-bg);
+      color: var(--code-text);
+      border-radius: 8px;
+      padding: 1.1rem 1.25rem;
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      line-height: 1.75;
+      margin: 1rem 0;
+      white-space: pre;
+      overflow-x: auto;
+    }
+
+    /* ── Callout boxes ─────────────────────────────────────────────────── */
+    .callout {
+      border-radius: 6px;
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      font-size: 0.83rem;
+      line-height: 1.55;
+      display: flex;
+      gap: 0.6rem;
+      align-items: flex-start;
+    }
+    .callout .icon { font-size: 1rem; flex-shrink: 0; margin-top: 0.05rem; }
+    .callout.info    { background: var(--blue-light); color: var(--blue); }
+    .callout.success { background: var(--green-bg);   color: var(--green); }
+    .callout.warning { background: var(--orange-bg);  color: #856404; }
+    .callout.danger  { background: var(--red-bg);     color: var(--red); }
+    .callout strong  { font-weight: 700; }
+
+    /* ── Tables ────────────────────────────────────────────────────────── */
+    .recap-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+      margin: 1rem 0;
+    }
+    .recap-table th {
+      background: var(--blue);
+      color: #fff;
+      text-align: left;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.75rem;
+    }
+    .recap-table td { padding: 0.45rem 0.75rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+    .recap-table tr:last-child td { border-bottom: none; }
+    .recap-table tr:nth-child(even) td { background: var(--grey-bg); }
+    .badge {
+      display: inline-block;
+      padding: 0.1rem 0.45rem;
+      border-radius: 3px;
+      font-size: 0.68rem;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .badge.get    { background: #e8f5e9; color: var(--green); }
+    .badge.post   { background: #fff3e0; color: #e65100; }
+    .badge.patch  { background: #fce4ec; color: #c2185b; }
+    .badge.ok     { background: var(--green-bg); color: var(--green); }
+    .badge.warn   { background: var(--orange-bg); color: #856404; }
+    .badge.info   { background: var(--blue-light); color: var(--blue); }
+
+    /* ── Dividers ──────────────────────────────────────────────────────── */
+    hr { border: none; border-top: 1px solid var(--border); margin: 1.5rem 0; }
+
+    /* ── Print / Mobile ────────────────────────────────────────────────── */
+    @media print {
+      .sidebar { display: none; }
+      body { display: block; }
+      main { max-width: 100%; padding: 1rem; }
+      section { break-inside: avoid; border: 1px solid #ccc; }
+    }
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      main { padding: 1rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Sidebar ─────────────────────────────────────────────────────────────── -->
+<nav class="sidebar">
+  <a class="sidebar-logo" href="#top">emile</a>
+  <h3>Sommaire</h3>
+  <ol>
+    <li><a href="#overview">Vue d'ensemble</a></li>
+    <li><a href="#stack">Stack &amp; déploiement</a></li>
+    <li><a href="#modes">Modes d'accès</a></li>
+    <li><a href="#proxy">Proxy N8N &amp; CORS</a></li>
+    <li><a href="#tokens">Tokens HMAC</a></li>
+    <li><a href="#workflows">Workflows N8N</a></li>
+    <li><a href="#rest-api">Client REST (rest.ts)</a></li>
+    <li><a href="#grist-iframe">Mode iframe Grist</a></li>
+    <li><a href="#lib">Librairie src/lib/</a></li>
+    <li><a href="#widgets">Widgets</a></li>
+    <li><a href="#dashboard">Dashboard admin</a></li>
+    <li><a href="#converter">Convertisseur Airtable→Grist</a></li>
+  </ol>
+  <div class="sidebar-note">
+    🔧 Document à destination des développeur·se·s et administrateur·rice·s techniques du programme EMILE.
+  </div>
+</nav>
+
+<!-- ── Main ────────────────────────────────────────────────────────────────── -->
+<main id="top">
+
+  <div class="page-header">
+    <div class="brand">emile</div>
+    <h1>Documentation technique — Architecture &amp; API</h1>
+    <div class="meta">Mars 2026 · Next.js 15 · React 19 · Grist · N8N · GitHub Pages</div>
+  </div>
+
+  <!-- ── 1 · Vue d'ensemble ──────────────────────────────────────────────── -->
+  <section id="overview">
+    <h2><span class="section-num">1</span> Vue d'ensemble</h2>
+    <p class="section-intro">
+      EMILE est un ensemble de widgets React hébergés sur GitHub Pages. Ils s'intègrent dans Grist (mode iframe)
+      ou fonctionnent en standalone via un proxy N8N (mode REST). Aucun backend applicatif dédié — la logique
+      métier est répartie entre Grist (stockage), N8N (API proxy + HMAC) et le frontend (React/Next.js).
+    </p>
+
+    <div class="flow">Browser (GitHub Pages stiiig.github.io)
+         │
+         ├── Mode iframe ──▶ grist-plugin-api.js ──▶ Grist document (réseau interne)
+         │                   (injecté par Grist)
+         │
+         └── Mode REST ────▶ N8N (accessible internet)
+                             │  vérifie HMAC, porte la clé API Grist
+                             └──▶ Grist REST API (réseau interne, inaccessible browser)</div>
+
+    <h3>Composants du système</h3>
+    <table class="recap-table">
+      <thead><tr><th>Composant</th><th>Rôle</th><th>Hébergement</th></tr></thead>
+      <tbody>
+        <tr><td><strong>GitHub Pages</strong></td><td>Héberge les widgets statiques (Next.js export)</td><td><code>stiiig.github.io/emile-widgets</code></td></tr>
+        <tr><td><strong>Next.js 15</strong></td><td>Framework React, static export (<code>output: "export"</code>)</td><td>Build CI/CD → GitHub Pages</td></tr>
+        <tr><td><strong>Grist</strong></td><td>Base de données (tables, colonnes, pièces jointes)</td><td>Instance interne <code>grist.incubateur.dnum...</code></td></tr>
+        <tr><td><strong>N8N</strong></td><td>Proxy API + vérification HMAC + workflows métier</td><td>Instance interne, <strong>exposée internet</strong></td></tr>
+        <tr><td><strong>GitHub Actions</strong></td><td>CI/CD : build Next.js + déploiement Pages</td><td>GitHub</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ── 2 · Stack & déploiement ────────────────────────────────────────── -->
+  <section id="stack">
+    <h2><span class="section-num">2</span> Stack &amp; déploiement</h2>
+    <p class="section-intro">
+      Le projet est un monorepo Next.js 15 avec export statique. Aucun serveur Node.js en production —
+      tous les fichiers générés sont des HTML/JS/CSS statiques déployés sur GitHub Pages.
+    </p>
+
+    <h3>Dépendances principales</h3>
+    <pre><code>{
+  "next": "15.x",
+  "react": "19.x",
+  "react-dom": "19.x"
+  <span class="c-comment">// Zéro dépendance UI externe — tout le CSS est custom (DSFR via CDN uniquement dans ajout-etablissement)</span>
+}</code></pre>
+
+    <h3>Configuration Next.js</h3>
+    <pre><code><span class="c-comment">// next.config.js</span>
+<span class="c-kw">const</span> repo = process.env.GITHUB_REPOSITORY?.split(<span class="c-str">"/"</span>)[<span class="c-num">1</span>] || <span class="c-str">""</span>;
+<span class="c-kw">const</span> isGitHubActions = !!process.env.GITHUB_ACTIONS;
+
+module.exports = {
+  output: <span class="c-str">"export"</span>,          <span class="c-comment">// export statique — pas de serveur Node</span>
+  trailingSlash: <span class="c-kw">true</span>,
+  images: { unoptimized: <span class="c-kw">true</span> },
+  ...(isGitHubActions &amp;&amp; repo ? {
+    basePath: <span class="c-str">`/${repo}`</span>,    <span class="c-comment">// /emile-widgets en prod, vide en dev</span>
+    assetPrefix: <span class="c-str">`/${repo}/`</span>,
+  } : {}),
+};</code></pre>
+
+    <div class="callout warning">
+      <span class="icon">⚠️</span>
+      <div>
+        <strong>basePath en production uniquement.</strong> En développement local (<code>npm run dev</code>),
+        <code>basePath</code> est vide — les URLs ne préfixent pas <code>/emile-widgets</code>.
+        Les liens hardcodés vers GitHub Pages (<code>https://stiiig.github.io/emile-widgets/...</code>)
+        ne fonctionnent pas en local par design.
+      </div>
+    </div>
+
+    <h3>Pipeline CI/CD (GitHub Actions)</h3>
+    <pre><code><span class="c-comment"># .github/workflows/deploy.yml — déclenchement sur push main</span>
+jobs:
+  build:
+    steps:
+      - checkout
+      - npm ci
+      - npm run build          <span class="c-comment"># Next.js static export → out/</span>
+        env:                   <span class="c-comment"># 9 variables NEXT_PUBLIC_* (secrets GitHub)</span>
+          NEXT_PUBLIC_GRIST_PROXY_URL: ...
+          NEXT_PUBLIC_DASHBOARD_URL:   ...
+          <span class="c-comment"># + 7 autres URLs N8N (voir section Variables d'env)</span>
+      - cp -r docs out/docs    <span class="c-comment"># copie la doc HTML dans le site déployé</span>
+      - upload-pages-artifact  <span class="c-comment"># artifact = dossier out/</span>
+  deploy:
+    uses: deploy-pages@v4      <span class="c-comment"># déploiement GitHub Pages depuis l'artifact</span></code></pre>
+
+    <h3>Variables d'environnement</h3>
+    <p>Toutes les URLs N8N sont <em>baked</em> dans le bundle JS au moment du build (<code>NEXT_PUBLIC_*</code>).
+    Elles sont stockées dans les <strong>GitHub Secrets</strong> du repo.</p>
+    <table class="recap-table">
+      <thead><tr><th>Variable</th><th>Usage</th></tr></thead>
+      <tbody>
+        <tr><td><code>NEXT_PUBLIC_GRIST_PROXY_URL</code></td><td>Proxy principal Grist (GET + POST)</td></tr>
+        <tr><td><code>NEXT_PUBLIC_OCC_GENERATE_URL</code></td><td>Génération token OCC orienteur</td></tr>
+        <tr><td><code>NEXT_PUBLIC_OCC_VALIDATE_URL</code></td><td>Activation compte orienteur</td></tr>
+        <tr><td><code>NEXT_PUBLIC_OCC_LIST_URL</code></td><td>Liste candidats d'un orienteur</td></tr>
+        <tr><td><code>NEXT_PUBLIC_OCC_GET_CANDIDAT_URL</code></td><td>Fiche candidat (orienteur)</td></tr>
+        <tr><td><code>NEXT_PUBLIC_OCC_SAVE_CANDIDAT_URL</code></td><td>Sauvegarde dossier candidat</td></tr>
+        <tr><td><code>NEXT_PUBLIC_OCC_REQUEST_LINK_URL</code></td><td>Renvoi lien connexion orienteur</td></tr>
+        <tr><td><code>NEXT_PUBLIC_OCC_REQUEST_VALIDATION_URL</code></td><td>Renvoi lien validation compte</td></tr>
+        <tr><td><code>NEXT_PUBLIC_DASHBOARD_URL</code></td><td>Dashboard admin (magic link 24 h)</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ── 3 · Modes d'accès ───────────────────────────────────────────────── -->
+  <section id="modes">
+    <h2><span class="section-num">3</span> Modes d'accès</h2>
+    <p class="section-intro">
+      Chaque widget peut fonctionner dans un ou plusieurs modes selon le contexte d'invocation.
+      La détection est automatique au runtime dans <code>src/lib/grist/init.ts</code>.
+    </p>
+
+    <table class="recap-table">
+      <thead><tr><th>Mode</th><th>Condition de déclenchement</th><th>Source données</th><th>Auth</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>grist</strong> (iframe)</td>
+          <td>Widget chargé dans un iframe Grist (<code>window.self !== window.top</code> + <code>grist-plugin-api.js</code> injecté)</td>
+          <td><code>grist.docApi</code> (API native Grist)</td>
+          <td>Session Grist de l'utilisateur</td>
+        </tr>
+        <tr>
+          <td><strong>rest</strong></td>
+          <td><code>NEXT_PUBLIC_GRIST_PROXY_URL</code> défini + pas d'iframe Grist</td>
+          <td>Proxy N8N → Grist REST API</td>
+          <td>Token HMAC (OCC ou magic link)</td>
+        </tr>
+        <tr>
+          <td><strong>mock</strong></td>
+          <td>Développement local sans proxy configuré</td>
+          <td>Données statiques (<code>src/lib/grist/mock.ts</code>)</td>
+          <td>Aucune</td>
+        </tr>
+        <tr>
+          <td><strong>boot</strong></td>
+          <td>En cours d'initialisation (transitoire)</td>
+          <td>—</td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td><strong>none</strong></td>
+          <td>Pas d'iframe, pas de proxy configuré, pas de mock</td>
+          <td>—</td>
+          <td>Affiche "Non disponible"</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>Matrice widgets × modes</h3>
+    <table class="recap-table">
+      <thead><tr><th>Widget</th><th>iframe</th><th>REST/standalone</th><th>Accès</th></tr></thead>
+      <tbody>
+        <tr><td><code>inscription-candidat</code></td><td>✅</td><td>✅</td><td><span class="badge info">public</span></td></tr>
+        <tr><td><code>creation-compte-orienteur</code></td><td>✅</td><td>✅</td><td><span class="badge info">public</span></td></tr>
+        <tr><td><code>ajout-etablissement</code></td><td>✅</td><td>✅</td><td><span class="badge info">public</span></td></tr>
+        <tr><td><code>validation-compte</code></td><td>—</td><td>✅ <code>?token=X.HMAC</code></td><td><span class="badge info">token HMAC</span></td></tr>
+        <tr><td><code>recuperer-lien-connexion</code></td><td>—</td><td>✅</td><td><span class="badge info">public</span></td></tr>
+        <tr><td><code>recuperer-lien-validation</code></td><td>—</td><td>✅</td><td><span class="badge info">public</span></td></tr>
+        <tr><td><code>liste-candidats</code></td><td>—</td><td>✅ <code>?token=OCC</code></td><td><span class="badge info">token OCC</span></td></tr>
+        <tr><td><code>fiche-candidat</code></td><td>✅</td><td>✅ <code>?token=OCC&amp;id=ROW</code></td><td><span class="badge info">token OCC</span></td></tr>
+        <tr><td><code>acceder-dashboard</code></td><td>—</td><td>✅ <code>?token=TS.HMAC</code></td><td><span class="badge warn">admin magic link 24h</span></td></tr>
+        <tr><td><code>airtable-to-grist</code></td><td>—</td><td>✅ (public)</td><td><span class="badge info">public, client-side</span></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ── 4 · Proxy N8N & CORS ────────────────────────────────────────────── -->
+  <section id="proxy">
+    <h2><span class="section-num">4</span> Proxy N8N &amp; CORS</h2>
+    <p class="section-intro">
+      Les widgets tournent sur <code>stiiig.github.io</code>. L'API Grist est sur
+      <code>grist.incubateur.dnum.din.developpement-durable.gouv.fr</code>. Deux raisons rendent
+      l'appel direct impossible depuis le browser.
+    </p>
+
+    <h3>Problème 1 — CORS</h3>
+    <p>
+      La politique <em>Same-Origin</em> du navigateur bloque tout appel JS cross-domain sauf si le serveur
+      répond avec <code>Access-Control-Allow-Origin: *</code>. L'instance Grist interne ne le fait pas.
+      N8N s'intercale côté serveur : il appelle Grist sans contrainte cross-origin, puis renvoie la réponse
+      avec le header CORS approprié.
+    </p>
+
+    <h3>Problème 2 — Clé API</h3>
+    <p>
+      L'API Grist REST exige <code>Authorization: Bearer &lt;clé&gt;</code>. Mettre la clé dans le bundle JS
+      l'exposerait à quiconque ouvre les DevTools. La clé est stockée dans les <strong>credentials N8N</strong>
+      (type <em>Header Auth</em>), jamais visible côté browser.
+    </p>
+
+    <h3>Architecture du proxy</h3>
+    <div class="flow">Browser (stiiig.github.io)
+      │
+      │  GET https://n8n.incubateur.dnum.../webhook/grist-proxy?table=CANDIDATS&token=…
+      │  ← pas de clé API, pas de contrainte CORS côté browser
+      ▼
+N8N (accessible internet)
+      │  1. vérifie signature HMAC du token (credential EMILE_HMAC_SECRET)
+      │  2. ajoute Authorization: Bearer &lt;clé de service Grist&gt;
+      │  3. GET https://grist.incubateur.dnum.../api/docs/{docId}/tables/CANDIDATS/records
+      ▼
+Grist (réseau interne — inaccessible depuis internet)
+      │  { "records": [{ "id": 42, "fields": {...} }] }
+      ▼
+N8N → ajoute Access-Control-Allow-Origin: *
+      ▼
+Browser → données disponibles dans React</div>
+
+    <h3>Éviter le preflight CORS OPTIONS</h3>
+    <p>
+      Les requêtes <em>simples</em> (spec WHATWG Fetch) ne déclenchent pas de preflight.
+      N8N ne gère pas la méthode <code>OPTIONS</code>. La règle dans <code>rest.ts</code> :
+    </p>
+    <ul style="margin: 0.75rem 0 0.75rem 1.25rem; line-height: 1.8; font-size: 0.84rem;">
+      <li><strong>Lectures</strong> : <code>GET</code> → toujours simple</li>
+      <li><strong>Écritures</strong> : <code>POST</code> avec <code>Content-Type: text/plain;charset=UTF-8</code> → simple (pas de preflight)</li>
+      <li><strong>Upload PJ</strong> : <code>POST</code> avec <code>multipart/form-data</code> → simple</li>
+      <li>❌ Ne jamais utiliser <code>Content-Type: application/json</code> ni <code>PATCH</code> depuis le browser vers N8N</li>
+    </ul>
+
+    <div class="callout info">
+      <span class="icon">ℹ️</span>
+      <div>
+        Le champ <code>_action</code> dans le body JSON sérialisé en <code>text/plain</code> permet à N8N
+        de distinguer <code>AddRecord</code> (<code>"_action":"add"</code>) de <code>UpdateRecord</code>
+        (<code>"_action":"update"</code>) dans le même workflow POST.
+      </div>
+    </div>
+
+    <h3>Clé de service Grist</h3>
+    <p>
+      Depuis mars 2026, N8N utilise un <strong>compte applicatif Grist dédié</strong> (clé de service)
+      avec droits Éditeur limités au seul document EMILE. Le document est en accès restreint
+      (<em>Public access = Aucun accès</em>). En cas de compromission, révoquer la clé dans Grist
+      et la regénérer dans les credentials N8N — aucun changement de code frontend requis.
+    </p>
+  </section>
+
+  <!-- ── 5 · Tokens HMAC ─────────────────────────────────────────────────── -->
+  <section id="tokens">
+    <h2><span class="section-num">5</span> Tokens HMAC</h2>
+    <p class="section-intro">
+      Deux types de tokens sont utilisés : les tokens OCC (orienteurs) et le magic link admin (dashboard).
+      Les deux reposent sur HMAC-SHA256 avec un secret partagé stocké uniquement dans N8N.
+    </p>
+
+    <h3>Token OCC — accès orienteur</h3>
+    <pre><code>token = rowId + "." + HMAC-SHA256(rowId.toString(), EMILE_HMAC_SECRET)
+
+Exemple : "42.a3f8c2d1e9b7…"
+           ↑               ↑
+           rowId dans       signature sur 64 hex chars
+           ACCOMPAGNANTS</code></pre>
+
+    <p>
+      Le token identifie de manière cryptographiquement vérifiée un enregistrement dans
+      <code>ACCOMPAGNANTS</code>. N8N extrait le <code>rowId</code> avant le point, recalcule le HMAC
+      et compare les deux signatures.
+    </p>
+
+    <h3>Magic link dashboard — accès admin 24 h</h3>
+    <pre><code>token = TS + "." + HMAC-SHA256(TS.toString(), EMILE_HMAC_SECRET)
+
+Exemple : "1772798332.b4d9f1…"
+           ↑                 ↑
+           timestamp Unix    signature
+           (secondes)
+
+Expiration : N8N rejette si (Date.now()/1000 - TS) > 86400 (24 h)</code></pre>
+
+    <div class="callout warning">
+      <span class="icon">⚠️</span>
+      <div>
+        <strong>Secret unique.</strong> Les workflows <code>occ-generate</code>, <code>occ-validate</code>,
+        <code>occ-list</code>, <code>occ-get-candidat</code> et le workflow dashboard utilisent tous
+        le credential <code>EMILE HMAC Secret</code> (type Crypto dans N8N). Si une isolation renforcée
+        est requise, utiliser deux credentials distincts.
+      </div>
+    </div>
+
+    <h3>Propriétés de sécurité</h3>
+    <table class="recap-table">
+      <thead><tr><th>Propriété</th><th>Token OCC</th><th>Magic link dashboard</th></tr></thead>
+      <tbody>
+        <tr><td>Forgeable sans le secret</td><td>❌ Non</td><td>❌ Non</td></tr>
+        <tr><td>Expiration</td><td>❌ Permanent</td><td>✅ 24 h</td></tr>
+        <tr><td>Révocable unitairement</td><td>❌ Non (rotation secret = invalide tout)</td><td>❌ Non</td></tr>
+        <tr><td>Lié à un enregistrement</td><td>✅ rowId dans ACCOMPAGNANTS</td><td>❌ Non (accès global)</td></tr>
+        <tr><td>Stockage côté client</td><td><code>localStorage</code> (<code>emile_occ_token</code>)</td><td><code>sessionStorage</code> (<code>db-emile-token</code>)</td></tr>
+        <tr><td>Nettoyé de l'URL</td><td>Oui (<code>history.replaceState</code>)</td><td>Oui (<code>history.replaceState</code>)</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Session orienteur — localStorage</h3>
+    <table class="recap-table">
+      <thead><tr><th>Événement</th><th>Action localStorage</th></tr></thead>
+      <tbody>
+        <tr><td>Token OCC validé par <code>occ-list</code> ou <code>occ-get-candidat</code></td><td><code>setItem("emile_occ_token", token)</code></td></tr>
+        <tr><td>Token invalide / expiré</td><td><code>removeItem("emile_occ_token")</code></td></tr>
+        <tr><td>Déconnexion (bouton logout)</td><td><code>removeItem</code> + reload</td></tr>
+        <tr><td><code>fiche-candidat</code> sans <code>?id=</code> mais token en session</td><td>Auto-sélection du candidat avec le <code>id</code> le plus élevé (le plus récent)</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ── 6 · Workflows N8N ────────────────────────────────────────────────── -->
+  <section id="workflows">
+    <h2><span class="section-num">6</span> Workflows N8N</h2>
+    <p class="section-intro">
+      8 workflows actifs. Tous exposés sur le même domaine N8N interne.
+      Path webhook = dernier segment de l'URL de la variable d'env correspondante.
+    </p>
+
+    <h3>grist-proxy-get — lecture Grist <span class="badge get">GET</span></h3>
+    <p>Variable : <code>NEXT_PUBLIC_GRIST_PROXY_URL</code> (partagée avec post)</p>
+    <div class="flow">Webhook GET /webhook/grist-proxy?table=X[&amp;filter=JSON]  ou  ?attachId=Y
+    │
+    ├─ attachId présent → GET /attachments/{id}/download → Respond Binary
+    └─ table présent    → GET /tables/{table}/records[?filter=...]  → Respond JSON</div>
+    <p>Couvre : tables de données, tables de référence, métadonnées internes (<code>_grist_Tables</code>,
+    <code>_grist_Tables_column</code>, <code>_grist_Attachments</code>).</p>
+
+    <h3>grist-proxy-post — écritures + pièces jointes <span class="badge post">POST</span></h3>
+    <p>Variable : <code>NEXT_PUBLIC_GRIST_PROXY_URL</code></p>
+    <div class="flow">Webhook POST /webhook/grist-proxy
+    │
+    ├─ Content-Type: text/plain (écriture JSON sérialisé)
+    │   ├─ _action = "add"    → POST /tables/{table}/records  → { retValues: [newId] }
+    │   └─ _action = "update" → PATCH /tables/{table}/records → {}
+    │
+    └─ Content-Type: multipart/form-data (champ "upload")
+        → POST /attachments → { data: "[42]" }</div>
+
+    <h3>occ-generate — génération token OCC <span class="badge get">GET</span></h3>
+    <p>Variable : <code>NEXT_PUBLIC_OCC_GENERATE_URL</code></p>
+    <div class="flow">GET /webhook/occ-generate?rowId=X
+    │
+    ├─ HMAC-SHA256(rowId, secret) → token = rowId.HMAC
+    │
+    ├─ Respond { rowId, token, url }  ← réponse immédiate au frontend
+    │
+    └─ (background) PATCH ACCOMPAGNANTS.Lien_validation = url</div>
+    <div class="callout info">
+      <span class="icon">💡</span>
+      <div>N8N répond <strong>avant</strong> le PATCH Grist. Le frontend reçoit le token sans attendre
+      la persistance. Appelé par <code>creation-compte-orienteur</code> et <code>inscription-candidat</code>.</div>
+    </div>
+
+    <h3>occ-validate — activation compte <span class="badge get">GET</span></h3>
+    <p>Variable : <code>NEXT_PUBLIC_OCC_VALIDATE_URL</code></p>
+    <div class="flow">GET /webhook/occ-validate?token=X.HMAC
+    │
+    ├─ Vérifie HMAC → si invalide : { "status": "invalid" }
+    │
+    └─ GET ACCOMPAGNANTS?filter={"id":[rowId]}
+        ├─ Compte_valide = "Oui" → { "status": "already_validated" }
+        └─ sinon → PATCH Compte_valide = "Oui" → { "status": "ok", "nom": "..." }</div>
+
+    <h3>occ-list — liste des candidats <span class="badge get">GET</span></h3>
+    <p>Variable : <code>NEXT_PUBLIC_OCC_LIST_URL</code></p>
+    <div class="flow">GET /webhook/occ-list?token=X.HMAC
+    │
+    ├─ Vérifie HMAC → si invalide : { "status": "invalid" }
+    │
+    ├─ GET ACCOMPAGNANTS?filter={"id":[rowId]}  → nom de l'orienteur
+    │
+    └─ GET CANDIDATS?filter={"Responsable_candidat":[rowId]}
+        → { "status": "ok", "orienteurNom": "…", "candidats": [...] }</div>
+    <div class="callout warning">
+      <span class="icon">⚠️</span>
+      <div>
+        <code>Responsable_candidat</code> est une colonne Reference dans CANDIDATS → stocke un entier (rowId).
+        Le filtre doit utiliser l'entier, <strong>pas le nom affiché</strong>.
+        Ne jamais exposer le champ <code>$Age</code> calculé côté Grist — calculer l'âge côté frontend
+        depuis <code>dateNaissance</code>.
+      </div>
+    </div>
+
+    <h3>occ-get-candidat — fiche candidat <span class="badge get">GET</span></h3>
+    <p>Variable : <code>NEXT_PUBLIC_OCC_GET_CANDIDAT_URL</code></p>
+    <div class="flow">GET /webhook/occ-get-candidat?token=X.HMAC&amp;id=ROW_ID
+    │
+    ├─ Vérifie HMAC token orienteur → si invalide : { "status": "invalid" }
+    │
+    └─ GET CANDIDATS?filter={"id":[id]}
+        → vérifie Responsable_candidat === rowId orienteur
+        → { "status": "ok", "candidat": { tous les champs } }</div>
+
+    <h3>occ-request-link — renvoi lien connexion <span class="badge post">POST</span></h3>
+    <p>Variable : <code>NEXT_PUBLIC_OCC_REQUEST_LINK_URL</code></p>
+    <div class="flow">POST /webhook/occ-request-link  { email }
+    │
+    ├─ Normalise email (minuscules)
+    ├─ GET ACCOMPAGNANTS?filter={"Email":[email]} → rowId
+    │   └─ non trouvé → { "status": "not_found" }
+    │
+    └─ GET occ-generate?rowId=X → extrait token
+        → reconstruit URL liste-candidats?token=X.HMAC (⚠️ pas l'url de occ-generate)
+        → { "status": "ok", "url": "..." }</div>
+
+    <h3>occ-request-validation-link — renvoi lien validation <span class="badge post">POST</span></h3>
+    <p>Variable : <code>NEXT_PUBLIC_OCC_REQUEST_VALIDATION_URL</code></p>
+    <div class="flow">POST /webhook/occ-request-validation-link  { email }
+    │
+    (identique à occ-request-link jusqu'à rowId)
+    │
+    └─ GET occ-generate?rowId=X
+        → utilise directement $json.url (pointe déjà vers validation-compte)
+        → { "status": "ok", "url": "..." }</div>
+
+    <div class="callout danger">
+      <span class="icon">🔺</span>
+      <div>
+        <strong>Différence critique entre les deux workflows de renvoi de lien :</strong><br>
+        <code>occ-request-link</code> doit <strong>reconstruire</strong> l'URL manuellement
+        (cible : <code>liste-candidats</code>).<br>
+        <code>occ-request-validation-link</code> utilise directement le champ <code>url</code>
+        de <code>occ-generate</code> (cible : <code>validation-compte</code>).
+      </div>
+    </div>
+
+    <h3>Récapitulatif des workflows</h3>
+    <table class="recap-table">
+      <thead><tr><th>Workflow</th><th>Méthode</th><th>Variable env</th><th>Appelé par</th></tr></thead>
+      <tbody>
+        <tr><td><code>grist-proxy-get</code></td><td><span class="badge get">GET</span></td><td><code>GRIST_PROXY_URL</code></td><td>Tous les widgets</td></tr>
+        <tr><td><code>grist-proxy-post</code></td><td><span class="badge post">POST</span></td><td><code>GRIST_PROXY_URL</code></td><td>Formulaires, fiche-candidat</td></tr>
+        <tr><td><code>occ-generate</code></td><td><span class="badge get">GET</span></td><td><code>OCC_GENERATE_URL</code></td><td>creation-compte, inscription-candidat</td></tr>
+        <tr><td><code>occ-validate</code></td><td><span class="badge get">GET</span></td><td><code>OCC_VALIDATE_URL</code></td><td>validation-compte</td></tr>
+        <tr><td><code>occ-list</code></td><td><span class="badge get">GET</span></td><td><code>OCC_LIST_URL</code></td><td>liste-candidats, fiche-candidat</td></tr>
+        <tr><td><code>occ-get-candidat</code></td><td><span class="badge get">GET</span></td><td><code>OCC_GET_CANDIDAT_URL</code></td><td>fiche-candidat</td></tr>
+        <tr><td><code>occ-request-link</code></td><td><span class="badge post">POST</span></td><td><code>OCC_REQUEST_LINK_URL</code></td><td>recuperer-lien-connexion</td></tr>
+        <tr><td><code>occ-request-validation-link</code></td><td><span class="badge post">POST</span></td><td><code>OCC_REQUEST_VALIDATION_URL</code></td><td>recuperer-lien-validation</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ── 7 · Client REST ─────────────────────────────────────────────────── -->
+  <section id="rest-api">
+    <h2><span class="section-num">7</span> Client REST (rest.ts)</h2>
+    <p class="section-intro">
+      <code>src/lib/grist/rest.ts</code> implémente l'interface <code>GristDocAPI</code> via le proxy N8N.
+      Il est instancié par <code>init.ts</code> quand <code>NEXT_PUBLIC_GRIST_PROXY_URL</code> est défini.
+    </p>
+
+    <h3>Interface GristDocAPI</h3>
+    <pre><code><span class="c-kw">export type</span> <span class="c-type">GristDocAPI</span> = {
+  fetchTable: (tableId: <span class="c-type">string</span>) =&gt; <span class="c-type">Promise</span>&lt;<span class="c-kw">any</span>&gt;;
+  applyUserActions: (actions: <span class="c-kw">any</span>[]) =&gt; <span class="c-type">Promise</span>&lt;<span class="c-kw">any</span>&gt;;
+  getAttachmentDownloadUrl?: (attachId: <span class="c-type">number</span>) =&gt; <span class="c-type">string</span>;  <span class="c-comment">// REST uniquement</span>
+  uploadAttachments?: (files: <span class="c-type">FileList</span>) =&gt; <span class="c-type">Promise</span>&lt;<span class="c-type">number</span>[]&gt;; <span class="c-comment">// REST uniquement</span>
+};</code></pre>
+
+    <h3>Mapping opérations → requêtes N8N</h3>
+    <table class="recap-table">
+      <thead><tr><th>Appel frontend</th><th>Requête N8N</th><th>Traduit par N8N en</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><code>fetchTable("CANDIDATS")</code></td>
+          <td><code>GET ?table=CANDIDATS</code></td>
+          <td><code>GET /tables/CANDIDATS/records</code></td>
+        </tr>
+        <tr>
+          <td><code>fetchTable("_grist_Tables")</code></td>
+          <td><code>GET ?table=_grist_Tables</code></td>
+          <td><code>GET /tables/_grist_Tables/records</code></td>
+        </tr>
+        <tr>
+          <td><code>getAttachmentDownloadUrl(42)</code></td>
+          <td><code>GET ?attachId=42</code></td>
+          <td><code>GET /attachments/42/download</code> → binaire</td>
+        </tr>
+        <tr>
+          <td><code>uploadAttachments(files)</code></td>
+          <td><code>POST multipart/form-data</code> champ <code>upload</code></td>
+          <td><code>POST /attachments</code> → <code>[42]</code></td>
+        </tr>
+        <tr>
+          <td><code>applyUserActions([["AddRecord", "TABLE", null, fields]])</code></td>
+          <td><code>POST text/plain {"_action":"add","table":"TABLE","fields":{...}}</code></td>
+          <td><code>POST /tables/TABLE/records</code> → <code>{ retValues: [newId] }</code></td>
+        </tr>
+        <tr>
+          <td><code>applyUserActions([["UpdateRecord", "TABLE", id, fields]])</code></td>
+          <td><code>POST text/plain {"_action":"update","table":"TABLE","id":42,"fields":{...}}</code></td>
+          <td><code>PATCH /tables/TABLE/records</code></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>Format de réponse Grist</h3>
+    <pre><code><span class="c-comment">// GET /tables/TABLE/records → format natif Grist</span>
+{
+  <span class="c-str">"records"</span>: [
+    { <span class="c-str">"id"</span>: <span class="c-num">42</span>, <span class="c-str">"fields"</span>: { <span class="c-str">"Prenom"</span>: <span class="c-str">"Alice"</span>, <span class="c-str">"Foyer"</span>: <span class="c-str">"Couple sans enfant"</span>, ... } },
+    ...
+  ]
+}
+
+<span class="c-comment">// Types de valeurs Grist :</span>
+<span class="c-comment">// - string, number, boolean, null</span>
+<span class="c-comment">// - ChoiceList / RefList : ["L", val1, val2, ...]  ← sentinelle "L" + valeurs</span>
+<span class="c-comment">// - Ref : entier (rowId dans la table référencée)</span>
+<span class="c-comment">// - Date : entier Unix (secondes depuis epoch) — détection : 800_000_000 &lt; v &lt; 2_500_000_000</span>
+<span class="c-comment">// - DateTime : float Unix (ex. 1772798332.28237)</span></code></pre>
+  </section>
+
+  <!-- ── 8 · Mode iframe Grist ───────────────────────────────────────────── -->
+  <section id="grist-iframe">
+    <h2><span class="section-num">8</span> Mode iframe Grist</h2>
+    <p class="section-intro">
+      En mode plugin Grist, le widget est chargé dans un iframe. Grist injecte
+      <code>grist-plugin-api.js</code> qui expose l'objet global <code>grist</code>.
+    </p>
+
+    <h3>Initialisation (init.ts)</h3>
+    <pre><code><span class="c-comment">// src/lib/grist/init.ts — logique de sélection du mode</span>
+<span class="c-kw">const</span> isInFrame = window.self !== window.top;
+
+<span class="c-kw">if</span> (isInFrame) {
+  <span class="c-comment">// Charge grist-plugin-api.js (script Grist), attend grist.ready()</span>
+  <span class="c-comment">// Mode = "grist"</span>
+} <span class="c-kw">else if</span> (NEXT_PUBLIC_GRIST_PROXY_URL) {
+  <span class="c-comment">// Instancie createRestDocApi() → GristDocAPI via proxy N8N</span>
+  <span class="c-comment">// Mode = "rest"</span>
+} <span class="c-kw">else</span> {
+  <span class="c-comment">// Mode = "none" (ou "mock" en dev)</span>
+}</code></pre>
+
+    <h3>API Grist native vs REST proxy</h3>
+    <table class="recap-table">
+      <thead><tr><th>Opération</th><th>iframe (grist.docApi)</th><th>REST (rest.ts)</th></tr></thead>
+      <tbody>
+        <tr><td>Lire une table</td><td><code>grist.docApi.fetchTable(id)</code></td><td><code>GET ?table=id</code> via proxy</td></tr>
+        <tr><td>Écrire (AddRecord)</td><td><code>grist.docApi.applyUserActions([...])</code></td><td><code>POST text/plain</code> via proxy</td></tr>
+        <tr><td>Métadonnées colonnes</td><td><code>fetchTable("_grist_Tables_column")</code></td><td>Idem (même interface)</td></tr>
+        <tr><td>Accès à la sélection courante</td><td><code>grist.onRecord()</code> / <code>grist.onRecords()</code></td><td>❌ Non disponible (standalone)</td></tr>
+        <tr><td>Droits utilisateur</td><td>Session Grist de l'utilisateur</td><td>Droits de la clé de service N8N (Éditeur)</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout warning">
+      <span class="icon">⚠️</span>
+      <div>
+        En mode REST, <strong>tous les utilisateurs ont les droits de la clé de service</strong>
+        (Éditeur). L'isolation est assurée uniquement par la vérification HMAC côté N8N —
+        chaque workflow valide le token et filtre les données par <code>rowId</code> orienteur.
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 9 · Librairie src/lib/ ──────────────────────────────────────────── -->
+  <section id="lib">
+    <h2><span class="section-num">9</span> Librairie <code>src/lib/</code></h2>
+    <p class="section-intro">
+      Deux modules : <code>grist/</code> (abstraction API et initialisation) et <code>emile/</code>
+      (constantes, utilitaires métier EMILE).
+    </p>
+
+    <h3>src/lib/grist/</h3>
+    <table class="recap-table">
+      <thead><tr><th>Fichier</th><th>Rôle</th></tr></thead>
+      <tbody>
+        <tr><td><code>init.ts</code></td><td>Détecte le mode (iframe / rest / mock / none), charge <code>grist-plugin-api.js</code> si iframe, instancie le bon <code>GristDocAPI</code></td></tr>
+        <tr><td><code>rest.ts</code></td><td>Implémentation REST de <code>GristDocAPI</code> via proxy N8N. Gère GET, POST text/plain, multipart upload</td></tr>
+        <tr><td><code>meta.ts</code></td><td>Types (<code>GristDocAPI</code>, <code>ColMeta</code>, <code>RefType</code>). Fonctions <code>loadColumnsMetaFor()</code>, <code>parseWidgetOptions()</code>, <code>parseRefType()</code>, <code>isListCell()</code></td></tr>
+        <tr><td><code>hooks.ts</code></td><td>Hooks React : <code>useGristInit()</code> (mode + docApi), <code>useDepartementOptions()</code> (charge DPTS_REGIONS)</td></tr>
+        <tr><td><code>refs.ts</code></td><td>Gestion des colonnes Reference : chargement de la table référencée, construction <code>Map&lt;rowId, label&gt;</code></td></tr>
+        <tr><td><code>mock.ts</code></td><td>Données statiques pour le développement local sans N8N</td></tr>
+        <tr><td><code>choiceList.ts</code></td><td>Encode/décode le format Grist ChoiceList (<code>["L", v1, v2]</code>)</td></tr>
+        <tr><td><code>logChannel.ts</code></td><td>Canal de log structuré (préfixe widget, niveau)</td></tr>
+        <tr><td><code>safeJson.ts</code></td><td>Parse JSON sans lever d'exception</td></tr>
+      </tbody>
+    </table>
+
+    <h3>src/lib/emile/</h3>
+    <table class="recap-table">
+      <thead><tr><th>Fichier</th><th>Rôle</th></tr></thead>
+      <tbody>
+        <tr><td><code>constants.ts</code></td><td><code>FALLBACK_COLS</code> (métadonnées colonnes CANDIDATS hors accès Grist), <code>FALLBACK_FONCTION_OPTIONS</code>, <code>PINNED_PAYS</code>, <code>DIAL_CODES</code></td></tr>
+        <tr><td><code>utils.ts</code></td><td><code>choicesToOptions()</code>, <code>deptSortKey()</code> (tri département 01–99 + DOM-TOM)</td></tr>
+        <tr><td><code>validators.ts</code></td><td>Validation des champs de formulaires (email, téléphone, IBAN…)</td></tr>
+        <tr><td><code>fieldmap.ts</code></td><td>Mapping noms de colonnes Grist ↔ labels UI (inscription candidat, fiche candidat)</td></tr>
+        <tr><td><code>groups.ts</code></td><td>Groupements de champs par section (formulaire multi-étapes)</td></tr>
+        <tr><td><code>tabs.ts</code></td><td>Configuration des onglets de la fiche candidat</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Colonnes Grist — types importants</h3>
+    <pre><code><span class="c-comment">// Détection d'un ChoiceList / RefList en valeur de cellule :</span>
+Array.isArray(v) &amp;&amp; v[<span class="c-num">0</span>] === <span class="c-str">"L"</span>
+<span class="c-comment">// → éléments : v.slice(1)</span>
+
+<span class="c-comment">// Détection d'un timestamp Unix Grist (Date / DateTime) :</span>
+<span class="c-kw">typeof</span> v === <span class="c-str">"number"</span> &amp;&amp; v &gt; <span class="c-num">800_000_000</span> &amp;&amp; v &lt; <span class="c-num">2_500_000_000</span>
+<span class="c-comment">// Couvre dates de 1995 à 2049, exclut row IDs Grist (toujours petits)</span>
+
+<span class="c-comment">// Détection d'une colonne Ref (entier = rowId vers autre table) :</span>
+<span class="c-kw">typeof</span> v === <span class="c-str">"number"</span> &amp;&amp; !isUnixTs(v)
+<span class="c-comment">// → résoudre via refLookups (voir section Dashboard)</span>
+
+<span class="c-comment">// Métadonnées colonnes (type Grist brut) :</span>
+<span class="c-comment">// "Text", "Numeric", "Int", "Bool", "Date", "DateTime"</span>
+<span class="c-comment">// "Choice", "ChoiceList", "Ref:TABLE", "RefList:TABLE"</span></code></pre>
+  </section>
+
+  <!-- ── 10 · Widgets ────────────────────────────────────────────────────── -->
+  <section id="widgets">
+    <h2><span class="section-num">10</span> Widgets</h2>
+    <p class="section-intro">
+      Chaque widget est une page Next.js sous <code>src/app/widgets/emile/</code>.
+      Tous partagent les mêmes libs Grist mais ont leurs propres styles CSS (pas de système de design global).
+    </p>
+
+    <table class="recap-table">
+      <thead><tr><th>Widget</th><th>Tables Grist</th><th>Workflows N8N</th><th>Note</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><code>inscription-candidat</code></td>
+          <td>CANDIDATS (AddRecord), ACCOMPAGNANTS (filtre email), DPTS_REGIONS, ETABLISSEMENTS</td>
+          <td>grist-proxy (GET+POST), occ-generate</td>
+          <td>Multi-étapes. Génère un token OCC orienteur après inscription.</td>
+        </tr>
+        <tr>
+          <td><code>creation-compte-orienteur</code></td>
+          <td>ACCOMPAGNANTS (AddRecord), ETABLISSEMENTS, DPTS_REGIONS</td>
+          <td>grist-proxy (GET+POST), occ-generate</td>
+          <td>AddRecord ACCOMPAGNANTS → génération token OCC → lien envoyé.</td>
+        </tr>
+        <tr>
+          <td><code>ajout-etablissement</code></td>
+          <td>ETABLISSEMENTS (AddRecord), DPTS_REGIONS</td>
+          <td>grist-proxy (GET+POST)</td>
+          <td>Vérification doublon sur Nom_etablissement avant AddRecord.</td>
+        </tr>
+        <tr>
+          <td><code>validation-compte</code></td>
+          <td>ACCOMPAGNANTS (lecture + PATCH Compte_valide)</td>
+          <td>occ-validate</td>
+          <td>Lit <code>?token=X.HMAC</code> depuis l'URL.</td>
+        </tr>
+        <tr>
+          <td><code>recuperer-lien-connexion</code></td>
+          <td>—</td>
+          <td>occ-request-link</td>
+          <td>Email → token OCC → URL liste-candidats.</td>
+        </tr>
+        <tr>
+          <td><code>recuperer-lien-validation</code></td>
+          <td>—</td>
+          <td>occ-request-validation-link</td>
+          <td>Email → token OCC → URL validation-compte.</td>
+        </tr>
+        <tr>
+          <td><code>liste-candidats</code></td>
+          <td>CANDIDATS (via occ-list)</td>
+          <td>occ-list</td>
+          <td>Session localStorage. Lien vers fiche-candidat par candidat.</td>
+        </tr>
+        <tr>
+          <td><code>fiche-candidat</code></td>
+          <td>CANDIDATS (lecture + UpdateRecord), pièces jointes</td>
+          <td>occ-get-candidat, grist-proxy (POST update + upload)</td>
+          <td>Mode iframe (Grist) ou REST (token OCC). Auto-sélection candidat récent.</td>
+        </tr>
+        <tr>
+          <td><code>acceder-dashboard</code></td>
+          <td>CANDIDATS, ACCOMPAGNANTS, ETABLISSEMENTS, DPTS_REGIONS, FAQ</td>
+          <td>DASHBOARD_URL (proxy dédié avec vérification 24h)</td>
+          <td>Magic link TS.HMAC. Tableau virtualisé. Voir section 11.</td>
+        </tr>
+        <tr>
+          <td><code>airtable-to-grist</code></td>
+          <td>—</td>
+          <td>Aucun (100% client-side)</td>
+          <td>Conversion CSV. Voir section 12.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>Composants partagés</h3>
+    <table class="recap-table">
+      <thead><tr><th>Composant</th><th>Rôle</th></tr></thead>
+      <tbody>
+        <tr><td><code>SearchDropdown</code></td><td>Dropdown avec recherche intégrée, utilisé dans tous les formulaires. Props : <code>options</code>, <code>valueId</code>, <code>onChange</code>, <code>searchable</code></td></tr>
+        <tr><td><code>FAQPanel</code></td><td>Panneau latéral FAQ chargé depuis Grist. Affiché par tous les widgets via bouton "?" en header</td></tr>
+        <tr><td><code>AttachmentField</code></td><td>Affichage, téléchargement (fetch+blob) et upload de pièces jointes Grist</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ── 11 · Dashboard admin ────────────────────────────────────────────── -->
+  <section id="dashboard">
+    <h2><span class="section-num">11</span> Dashboard admin</h2>
+    <p class="section-intro">
+      Le dashboard est distinct des autres widgets. Il utilise un proxy N8N dédié avec vérification
+      d'expiration 24 h, un tableau virtualisé pour gérer des milliers de lignes, et une résolution
+      client-side des colonnes Ref.
+    </p>
+
+    <h3>Magic link dashboard</h3>
+    <pre><code><span class="c-comment">// Format token dashboard : TS.HMAC</span>
+token = timestamp_unix + <span class="c-str">"."</span> + HMAC-SHA256(timestamp, SECRET)
+
+<span class="c-comment">// Flux côté client :</span>
+<span class="c-num">1</span>. <span class="c-str">?token=X</span> dans l'URL → <span class="c-fn">sessionStorage.setItem</span>(<span class="c-str">"db-emile-token"</span>, X)
+<span class="c-num">2</span>. <span class="c-fn">history.replaceState</span>() → URL nettoyée (token absent des logs serveur + historique)
+<span class="c-num">3</span>. Rechargement de page → token lu depuis sessionStorage
+<span class="c-num">4</span>. 401/403 N8N → sessionStorage effacé → écran "Lien expiré"</code></pre>
+
+    <h3>Tableau virtualisé (VirtualTable)</h3>
+    <p>
+      Seules les lignes visibles + un buffer de 6 lignes sont rendues dans le DOM.
+      Cela permet d'afficher des milliers de lignes sans dégradation de performance.
+    </p>
+    <pre><code><span class="c-comment">// Constantes de la virtualisation :</span>
+ROW_H  = <span class="c-num">36</span>  <span class="c-comment">// px — hauteur fixe obligatoire</span>
+BUFFER = <span class="c-num">6</span>   <span class="c-comment">// lignes rendues au-delà du viewport</span>
+COL_W  = <span class="c-num">160</span> <span class="c-comment">// px — largeur par défaut des colonnes</span>
+COL_MIN = <span class="c-num">40</span> <span class="c-comment">// px — largeur minimum après resize</span>
+
+<span class="c-comment">// Calcul de la fenêtre visible :</span>
+startIdx = Math.max(<span class="c-num">0</span>, Math.floor(scrollTop / ROW_H) - BUFFER)
+endIdx   = Math.min(rows.length, Math.ceil((scrollTop + viewH) / ROW_H) + BUFFER)
+<span class="c-comment">// Seules rows[startIdx..endIdx] sont rendues dans le DOM</span></code></pre>
+
+    <h3>Résolution des colonnes Ref (refLookups)</h3>
+    <p>
+      Les colonnes <code>Ref:TABLE</code> de Grist stockent un entier (rowId). Pour afficher
+      une valeur lisible, <code>refLookups</code> décrit quelle table charger et quelle colonne afficher.
+    </p>
+    <pre><code><span class="c-comment">// Configuration dans TabDef :</span>
+refLookups: {
+  <span class="c-str">"Etablissement"</span>:             { tableId: <span class="c-str">"ETABLISSEMENTS"</span>, displayCol: <span class="c-str">"Nom_etablissement"</span> },
+  <span class="c-str">"Etablissement_Departement"</span>: { tableId: <span class="c-str">"DPTS_REGIONS"</span>,   displayCol: <span class="c-str">"Numero_et_nom"</span>     },
+}
+
+<span class="c-comment">// Résolution : Map&lt;rowId, displayValue&gt; construite après chargement de la table cible</span>
+<span class="c-comment">// resolveRefs() remplace les entiers par les valeurs lisibles avant filtrage et affichage</span>
+<span class="c-comment">// Clone paresseux des rows — pas d'allocation si aucune valeur ne change</span></code></pre>
+
+    <h3>Affichage des cellules (renderCell)</h3>
+    <table class="recap-table">
+      <thead><tr><th>Type de valeur</th><th>Rendu</th></tr></thead>
+      <tbody>
+        <tr><td><code>boolean</code></td><td>Badge vert <strong>Oui</strong> / gris <strong>Non</strong> (<code>.db-bool</code>)</td></tr>
+        <tr><td><code>["L", v1, v2, …]</code> (ChoiceList/RefList)</td><td>Chips côte à côte (<code>.db-chip</code>)</td></tr>
+        <tr><td>Timestamp Unix (Date/DateTime)</td><td>Format <code>JJ/MM/AAAA</code> via <code>toLocaleDateString("fr-FR")</code></td></tr>
+        <tr><td>String dans colonne chip (<code>chipColumns</code>)</td><td>Chip unique (<code>.db-chip</code>) — s'adapte à la largeur de la colonne</td></tr>
+        <tr><td>Autres</td><td><code>String(v)</code></td></tr>
+      </tbody>
+    </table>
+
+    <h3>Configuration des onglets (TabDef)</h3>
+    <pre><code><span class="c-kw">interface</span> <span class="c-type">TabDef</span> {
+  id:           <span class="c-type">string</span>;
+  label:        <span class="c-type">string</span>;
+  tableId:      <span class="c-type">string</span>;                    <span class="c-comment">// table Grist source</span>
+  filters:      <span class="c-type">FilterDef</span>[];               <span class="c-comment">// filtres texte + dropdowns</span>
+  hiddenColumns?: <span class="c-type">string</span>[];              <span class="c-comment">// colonnes masquées (techniques)</span>
+  refLookups?:  Record&lt;<span class="c-type">string</span>, { tableId, displayCol }&gt;;  <span class="c-comment">// résolution Ref</span>
+  chipColumns?: <span class="c-type">string</span>[];              <span class="c-comment">// colonnes Choice → rendu chip unique</span>
+}
+<span class="c-comment">// chipCols final = chipColumns ∪ keys(refLookups) — calculé par useMemo</span></code></pre>
+  </section>
+
+  <!-- ── 12 · Convertisseur Airtable→Grist ──────────────────────────────── -->
+  <section id="converter">
+    <h2><span class="section-num">12</span> Convertisseur Airtable → Grist</h2>
+    <p class="section-intro">
+      Outil de migration 100% client-side. Aucun serveur, aucune donnée ne transite hors du navigateur.
+      Accessible sur <code>/widgets/emile/airtable-to-grist/</code>.
+    </p>
+
+    <h3>Architecture</h3>
+    <pre><code>src/app/widgets/emile/airtable-to-grist/
+  ├── page.tsx      <span class="c-comment">// UI React (3 onglets, upload, aperçu, download)</span>
+  ├── convert.ts    <span class="c-comment">// Logique de conversion (import uniquement)</span>
+  └── styles.css</code></pre>
+
+    <h3>Fonctions de convert.ts</h3>
+    <table class="recap-table">
+      <thead><tr><th>Fonction</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>parseCSV(text)</code></td><td>Parseur RFC 4180 complet. Gère les champs multi-lignes entre guillemets, le BOM UTF-8, les fins de ligne Windows/Unix.</td></tr>
+        <tr><td><code>toCSV(rows, headers)</code></td><td>Sérialise en CSV avec guillemets sur tous les champs contenant virgule, guillemet ou saut de ligne.</td></tr>
+        <tr><td><code>convertEtablissements(rows)</code></td><td>Remapping colonnes Airtable ETABLISSEMENTS → Grist ETABLISSEMENTS</td></tr>
+        <tr><td><code>convertAccompagnants(rows)</code></td><td>Remapping colonnes Airtable ACCOMPAGNANTS → Grist ACCOMPAGNANTS</td></tr>
+        <tr><td><code>convertCandidats(rows)</code></td><td>Remapping colonnes Airtable CANDIDATS → Grist CANDIDATS. Transformation des types Airtable (dates, cases, listes).</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Cas particuliers de la conversion</h3>
+    <ul style="margin: 0.75rem 0 0.75rem 1.25rem; line-height: 1.9; font-size: 0.84rem;">
+      <li><strong>Colonnes Ref Grist</strong> — stockent un rowId entier. Après import CSV, les colonnes Ref nécessitent une résolution manuelle dans Grist (les IDs Airtable ne correspondent pas aux rowIds Grist).</li>
+      <li><strong>Dates Airtable</strong> — format ISO 8601 → converties en timestamps Unix (secondes) pour Grist.</li>
+      <li><strong>ChoiceList Airtable</strong> — séparateur virgule → format Grist <code>["L", v1, v2]</code>.</li>
+      <li><strong>Échantillon aléatoire</strong> — algorithme Fisher-Yates sur les lignes parsées, 30 lignes max.</li>
+    </ul>
+
+    <div class="callout info">
+      <span class="icon">🔒</span>
+      <div>
+        Toute la conversion se fait en mémoire dans le navigateur via <code>FileReader.readAsText()</code>.
+        Le fichier CSV n'est jamais envoyé à un serveur.
+      </div>
+    </div>
+  </section>
+
+</main>
+</body>
+</html>
