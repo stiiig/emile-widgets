@@ -69,6 +69,19 @@ export function parseEuropeanDate(raw: string): string {
   return s; // déjà ISO ou autre format inconnu
 }
 
+/**
+ * Normalise une valeur de département pour matcher le visibleCol DPTS_REGIONS dans Grist.
+ * Remplace tirets typographiques (–, —) et espaces insécables par leurs équivalents ASCII.
+ * Ex: "93\u00A0–\u00A0Seine-Saint-Denis" → "93 - Seine-Saint-Denis"
+ */
+function normalizeDept(raw: string): string {
+  return raw
+    .trim()
+    .replace(/\u2013|\u2014/g, "-")   // en dash / em dash → tiret simple
+    .replace(/\u00A0/g, " ")           // espace insécable → espace normale
+    .trim();
+}
+
 /** "Oui" / case cochée → true */
 function isYes(val: string): boolean {
   const v = val?.trim().toLowerCase();
@@ -125,7 +138,8 @@ const CAND_DIRECT: [string, string][] = [
   ["Adresse de domiciliation",          "Adresse"],
   ["Email candidat",                    "Email"],
   ["Téléphone candidat",                "Tel"],
-  ["Département domicile inscription",  "Departement_domicile_inscription"],
+  // Département géré séparément (normalizeDept) — voir convertCandidats
+  // ["Département domicile inscription",  "Departement_domicile_inscription"],
   ["Régularité situation",              "Regularite_situation"],
   ["Numéro unique d'enregistrement",    "Numero_unique_enregistrement"],
   ["Primo arrivants",                   "Primo_arrivant"],
@@ -264,6 +278,8 @@ export function convertCandidats(
 
       for (const [from, to] of CAND_DIRECT) o[to] = r[from] ?? "";
       for (const [from, to] of CAND_DATES)  o[to] = parseEuropeanDate(r[from] ?? "");
+      // Département — normalisation des tirets/espaces typographiques
+      o["Departement_domicile_inscription"] = normalizeDept(r["Département domicile inscription"] ?? "");
 
       // Permis
       const permisChoices: string[] = [];
@@ -306,7 +322,7 @@ const ETAB_DIRECT: [string, string][] = [
   ["Nom établissement",     "Nom_etablissement"],
   ["Dispositif",            "Dispositif"],
   ["Organisme gestionnaire","Organisme_gestionnaire"],
-  ["Département",           "Departement"],  // texte → Grist matche sur DPTS_REGIONS
+  // Département géré séparément (normalizeDept) pour matcher DPTS_REGIONS dans Grist
 ];
 
 export const ETAB_GRIST_HEADERS = [
@@ -322,6 +338,7 @@ export function convertEtablissements(
     rows: rows.map(r => {
       const o: Record<string, string> = {};
       for (const [from, to] of ETAB_DIRECT) o[to] = r[from] ?? "";
+      o["Departement"] = normalizeDept(r["Département"] ?? "");
       // Rôle — multiselect Airtable (virgule) → ChoiceList Grist
       const roleRaw = r["Rôle"]?.trim() ?? "";
       o["Role"] = roleRaw
