@@ -252,6 +252,7 @@ export const FALLBACK_COLS: ColMeta[] = [
         "Couple avec enfant(s)",
         "Couple sans enfant",
         "Famille monoparentale",
+        "Personne isolée",
       ],
     },
     isFormula: false,

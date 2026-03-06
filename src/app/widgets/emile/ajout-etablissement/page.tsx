@@ -190,7 +190,7 @@ export default function EtablissementPage() {
             FAQ
           </button>
         </header>
-        <main className="ae-body ae-body--center">
+        <main className="ae-body">
           <div className="ae-done">
             <i className="fa-solid fa-circle-check" style={{ fontSize: "2.5rem", color: "#18753c" }} />
             <h1 className="ae-done__title">Enregistrement réussi&nbsp;!</h1>
@@ -246,6 +246,14 @@ export default function EtablissementPage() {
       <main className="ae-body">
 
         <form className="ae-form" onSubmit={handleSubmit}>
+
+          {/* Erreur — affichée en tête de formulaire */}
+          {error && (
+            <div className="ae-validation-error">
+              <i className="fa-solid fa-circle-exclamation" />
+              <span>{error}</span>
+            </div>
+          )}
 
           {/* Nom */}
           <div className="ae-field">
@@ -308,14 +316,6 @@ export default function EtablissementPage() {
               disabled={colsLoading}
             />
           </div>
-
-          {/* Erreur de validation */}
-          {error && (
-            <div className="ae-validation-error">
-              <i className="fa-solid fa-circle-exclamation" />
-              <span>{error}</span>
-            </div>
-          )}
 
           {/* Bouton */}
           <div className="ae-nav-row">
